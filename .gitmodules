@@ -1,21 +1,21 @@
 [submodule "MAVProxy"]
 	path = MAVProxy
-	url = ./MAVProxy
+	url = https://github.com/ArduPilot/MAVProxy
 [submodule "icarous"]
 	path = icarous
-	url = ./PolyCARP/
+	url = https://github.com/nasa/icarous
 [submodule "PolyCARP"]
 	path = PolyCARP
-	url = ./PolyCARP
+	url = https://github.com/nasa/PolyCARP
 [submodule "ardupilot"]
 	path = ardupilot
-	url = ./ardupilot/
+	url = https://github.com/ArduPilot/ardupilot
 [submodule "pyredemet"]
 	path = pyredemet
-	url = ./pyredemet/
+	url = https://github.com/josuehfa/pyredemet
 [submodule "pymavlink"]
 	path = pymavlink
-	url = ./pymavlink/
+	url = https://github.com/ArduPilot/pymavlink
 [submodule "webgs"]
 	path = webgs
-	url = ./webgs/
+	url =  https://github.com/nasa/webgs
