@@ -1,0 +1,21 @@
+[submodule "MAVProxy"]
+	path = MAVProxy
+	url = ./MAVProxy
+[submodule "icarous"]
+	path = icarous
+	url = ./PolyCARP/
+[submodule "PolyCARP"]
+	path = PolyCARP
+	url = ./PolyCARP
+[submodule "ardupilot"]
+	path = ardupilot
+	url = ./ardupilot/
+[submodule "pyredemet"]
+	path = pyredemet
+	url = ./pyredemet/
+[submodule "pymavlink"]
+	path = pymavlink
+	url = ./pymavlink/
+[submodule "webgs"]
+	path = webgs
+	url = ./webgs/
