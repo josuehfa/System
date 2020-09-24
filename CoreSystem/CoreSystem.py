@@ -13,6 +13,85 @@ from CoreClass import *
 
 
 
+def containsSTSC(point_list, polygon):
+    '''Filter the data from STSC inside an specific polygon'''
+    from shapely.geometry import Point
+    from shapely.geometry.polygon import Polygon
+
+    points_in = []
+    polygon_shp = Polygon(polygon)
+    for _pnt in point_list:
+        point = (float(_pnt['la']),float(_pnt['lo']))
+        point_shp =  Point(point)
+        if polygon_shp.contains(point_shp):
+            points_in.append(point)
+    return points_in
+
+
+def showContains(point_list, polygon_list, location=[-11,-50], zoom_start=1, filepath='/home/josuehfa/System/CoreSystem/map.html'):
+    '''Use Folium to plot an interative map with the constrained points'''
+    import folium
+    import webbrowser
+   
+    #Create a Map instance
+    m = folium.Map(location=location,zoom_start=zoom_start,control_scale=True)
+    for _pnt in point_list:
+        folium.Circle(radius=100, location=[_pnt[0], _pnt[1]], color='crimson', fill=True).add_to(m)
+    for _plg in polygon_list:
+        folium.PolyLine(_plg, weight=2, color="blue").add_to(m)
+    m.save(filepath)
+    webbrowser.open('file://'+filepath)
+
+def transPointsToPolygons(points, radius=0.05):
+    '''Use the points from STSC to create polygon to be converted in geofences'''
+    polygon_list = []
+    for _pnt in points:
+        x = _pnt[0]
+        y = _pnt[1]
+        polygon = [(x-radius,y+radius),(x+radius,y+radius),
+                   (x+radius,y+radius),(x+radius,y-radius),
+                   (x+radius,y-radius),(x-radius,y-radius),
+                   (x-radius,y-radius),(x-radius,y+radius)]
+        polygon_list.append(polygon)
+    return polygon_list
+
+
+def CreateGeofence(polygons):
+
+    fenceList = []
+    for idx, polygon in enumerate(polygons):
+        id = idx
+        type = 1 #Exclide
+        numV = len(polygon)
+        floor = 0
+        roof = 100
+        Vertices = []
+
+        for vertex in polygon:
+            coord = (vertex[0], vertex[1])
+            Vertices.append(coord)
+
+        Geofence = {'id': id, 'type': type, 'numV': numV, 'floor': floor,
+                    'roof': roof, 'Vertices': Vertices}
+        fenceList.append(Geofence)
+
+    return fenceList
+
+#Create a geofence class with ABC to be able to call the same class with differents contructors
+def loadGeofence(polygons):
+    '''load fence points '''
+    fenceList = []
+    try:
+        fenceList = CreateGeofence(polygons)
+    except Exception as msg:
+        print("Unable to load %s - %s" % (polygons, msg))
+        return
+    return fenceList
+    #for fence in fenceList:
+    #    if fence not in sentFenceList:
+    #        Send_fence(fence)
+
+
 # Start sim vehicle simulation script
 #sim = subprocess.Popen(["/home/josuehfa/System/ardupilot/Tools/autotest/sim_vehicle.py","-v","ArduCopter","-l","37.1021769,-76.3872069,5,0","-S","1"],stdout=subprocess.PIPE , shell=True)
 #time.sleep(30)
@@ -33,50 +112,26 @@ api_key = data["api_key"]
 redemet = pyredemet(api_key)
 
 data = '2020092322'
-anima=1
-stsc_data = redemet.get_produto_stsc(data=data, anima=anima)
+stsc_data = redemet.get_produto_stsc(data=data, anima=1)
 
-Pt = namedtuple('Pt', 'x, y')               # Point
-Edge = namedtuple('Edge', 'a, b')           # Polygon edge from a to b
-Poly = namedtuple('Poly', 'name, edges')    # Polygon
+polygon = [(-5.00, -58.67), (-5.38, -39.33),
+            (-5.38, -39.33), (-18.09, -39.41),
+            (-18.09, -39.41), (-17.83, -53.82),
+            (-17.83, -53.82), (-5.00, -58.67)]
 
-poly = Poly(name='geofance', edges=(
-            Edge(a=Pt(x=-5.00, y=-58.67), b=Pt(x=-5.38, y=-39.33)),
-            Edge(a=Pt(x=-5.38, y=-39.33), b=Pt(x=-18.09, y=-39.41)),
-            Edge(a=Pt(x=-18.09, y=-39.41), b=Pt(x=-17.83, y=-53.82)),
-            Edge(a=Pt(x=-17.83, y=-53.82), b=Pt(x=-5.00, y=-58.67))
-            ))
-stsc_check = []
-for idx, data in enumerate(stsc_data['stsc'][0]):
-    point = Pt(x=float(data['la']), y=float(data['lo']))
-    if ispointinside(point, poly):
-        stsc_check.append(point)
 
-import os
-import webbrowser
-import folium
-#Create a Map instance
-m = folium.Map(location=[-11,-50],zoom_start=10,control_scale=True)
-for point in stsc_check:
-    folium.Circle(radius=100, location=[point.x,point.y],color='crimson',fill=False).add_to(m)
-
-polygon = [[-5.00, -58.67], [-5.38, -39.33],
-            [-5.38, -39.33], [-18.09, -39.41],
-            [-18.09, -39.41], [-17.83, -53.82],
-            [-17.83, -53.82], [-5.00, -58.67]]
-
-folium.PolyLine(polygon, weight=2, color="blue").add_to(m)
-
-filepath = '/home/josuehfa/System/CoreSystem/map.html'
-
-m.save(filepath)
-webbrowser.open('file://'+filepath)
+points_in = containsSTSC(stsc_data['stsc'][0], polygon)
+polygon_list = transPointsToPolygons(points_in, radius=0.05)
+polygon_show = polygon_list + [polygon]
+showContains(points_in, polygon_show, location=[-16,-50], zoom_start=6, filepath='/home/josuehfa/System/CoreSystem/map.html')
+geolist = loadGeofence(polygon_list)
+# radius 0.1 deg
 
 pais = 'Brasil'
 data_ini = '202007071200'
 data_fim = '202007071800'
 sigmet_data = redemet.get_mensagens_sigmet(pais=pais, data_ini=data_ini, data_fim=data_fim)
-# radius 0.1 deg
+
 
 def decoder_sigmet(sigmet_data):
     sigmet_list = {}
@@ -84,17 +139,11 @@ def decoder_sigmet(sigmet_data):
         if idx < 10: idx = '0'+str(idx) #Put a 0 in the begginer, redemet protocol
         else: idx = str(idx)
         lat_lon = {"lat_lon":sigmet_data['data'][idx]['lat_lon']}
-
         flight_level = sigmet_data['data'][idx]['fenomeno_comp']
         
-        
-        
+
         
         #sigmet.append({lat_lon:sigmet_data['data'][idx]},()}
-
-
-
-
 
 
 # Open a mavlink UDP port
