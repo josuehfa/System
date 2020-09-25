@@ -167,6 +167,38 @@ class BatchGSModule():
             if fence not in self.sentFenceList:
                 self.Send_fence(fence)
 
+    def loadGeofence(self, polygons, _type):
+        '''load fence points from a polygon. type: 0 (include) / 1 (exclude) '''
+        try:
+            self.PolygonsToGeofence(polygons, _type)
+        except Exception as msg:
+            print("Unable to load %s - %s" % (polygons, msg))
+            return
+
+        for fence in self.fenceList:
+            if fence not in self.sentFenceList:
+                self.Send_fence(fence)
+    
+    def PolygonsToGeofence(self, polygons, _type):
+    
+        fenceList = []
+        for idx, polygon in enumerate(polygons):
+            id = idx
+            type = _type 
+            numV = len(polygon)
+            floor = 0
+            roof = 100
+            Vertices = []
+
+            for vertex in polygon:
+                coord = (vertex[0], vertex[1])
+                Vertices.append(coord)
+
+            Geofence = {'id': id, 'type': type, 'numV': numV, 'floor': floor,
+                        'roof': roof, 'Vertices': Vertices}
+            self.fenceList.append(Geofence)
+
+    
     def StartMission(self):
         self.master.mav.command_long_send(self.target_system, self.target_component,
                                           mavutil.mavlink.MAV_CMD_MISSION_START,

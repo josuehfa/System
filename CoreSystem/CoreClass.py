@@ -1,96 +1,68 @@
 #!/usr/bin/ebv python
 # coding=utf-8
 
-
+import os
+import os.path
 import sys
-from pprint import pprint as pp
-from collections import namedtuple
+import time
+import json
+import folium
+import webbrowser
+from shapely.geometry import Point
+from shapely.geometry.polygon import Polygon
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+from pyredemet.src.pyredemet import *
 
-""" Based om http://rosettacode.org/wiki/Ray-casting_algorithm#Python
-"""
+class RedemetCore():
+    def __init__(self, config='config.json'):
+        '''Class Constructor'''
+        self.point_list = []
+        self.polygon_list = []
 
-Pt = namedtuple('Pt', 'x, y')               # Point
-Edge = namedtuple('Edge', 'a, b')           # Polygon edge from a to b
-Poly = namedtuple('Poly', 'name, edges')    # Polygon
+        with open(os.path.join(os.path.dirname(__file__),config)) as json_file:
+            data = json.load(json_file)
+        api_key = data["api_key"]
+        self.redemet = pyredemet(api_key)
 
+    def decoderSTSC(self, date_ini, anima=1):
+        '''Return all points of STSC'''
+        stsc_data = self.redemet.get_produto_stsc(date_ini, anima)
+        stsc_points = stsc_data['stsc'][0]
+        for _pnt in stsc_points:
+            point = (float(_pnt['la']),float(_pnt['lo']))
+            self.point_list.append(point)
 
-def rayintersectseg(p, edge):
-    ''' takes a point p=Pt() and an edge of two endpoints a,b=Pt() of a line segment returns boolean
-    '''
-    _eps = 0.00001
-    _huge = sys.float_info.max
-    _tiny = sys.float_info.min 
-    a,b = edge
-    if a.y > b.y:
-        a,b = b,a
-    if p.y == a.y or p.y == b.y:
-        p = Pt(p.x, p.y + _eps)
+    def decoderSTSC(self, date_ini, anima=1, polygon):
+        '''Filter the data from STSC inside an specific polygon'''
+        stsc_data = self.redemet.get_produto_stsc(date_ini, anima)
+        stsc_points = stsc_data['stsc'][0]
+        polygon_shp = Polygon(polygon)
+        for _pnt in stsc_points:
+            point = (float(_pnt['la']),float(_pnt['lo']))
+            point_shp =  Point(point)
+            if polygon_shp.contains(point_shp):
+                self.point_list.append(point)
+    
+    def showPolygons(self, location=[-11,-50], zoom_start=5, filepath='/home/josuehfa/System/CoreSystem/map.html'):
+        '''Use Folium to plot an interative map with points and polygons'''
+        #Create a Map instance
+        m = folium.Map(location=location,zoom_start=zoom_start,control_scale=True)
+        for _pnt in self.point_list:
+            folium.Circle(radius=100, location=[_pnt[0], _pnt[1]], color='crimson', fill=True).add_to(m)
+        for _plg in self.polygon_list:
+            folium.PolyLine(_plg, weight=2, color="blue").add_to(m)
+        m.save(filepath)
+        webbrowser.open('file://'+filepath)
 
-    intersect = False
-
-    if (p.y > b.y or p.y < a.y) or (
-        p.x > max(a.x, b.x)):
-        return False
-
-    if p.x < min(a.x, b.x):
-        intersect = True
-    else:
-        if abs(a.x - b.x) > _tiny:
-            m_red = (b.y - a.y) / float(b.x - a.x)
-        else:
-            m_red = _huge
-        if abs(a.x - p.x) > _tiny:
-            m_blue = (p.y - a.y) / float(p.x - a.x)
-        else:
-            m_blue = _huge
-        intersect = m_blue >= m_red
-    return intersect
-
-def _odd( x): return x%2 == 1
-
-def ispointinside( p, poly):
-    ln = len(poly)
-    return _odd(sum(rayintersectseg(p, edge)
-                    for edge in poly.edges ))
-
-#def polypp(poly):
-#    print ("\n  Polygon(name='%s', edges=(" + poly.name)
-#    print ('   ' + ',\n    '.join(str(e) for e in poly.edges) + '\n    ))')
-
-# if __name__ == '__main__':
-#     polys = [
-#         Poly(name='avwilliams', edges=(
-#             Edge(a=Pt(x=38.9913160, y=-76.937079), b=Pt(x=38.991333, y=-76.936119)),
-#             Edge(a=Pt(x=38.991333, y=-76.936119), b=Pt(x=38.990287, y=-76.936108)),
-#             Edge(a=Pt(x=38.990287, y=-76.936108), b=Pt(x=38.990278, y=-76.937057)),
-#             Edge(a=Pt(x=38.990278, y=-76.937057), b=Pt(x=38.990495,y=-76.937052)),
-#             Edge(a=Pt(x=38.990495,y=-76.937052), b=Pt(x=38.990499,y=-76.936424)),
-#             Edge(a=Pt(x=38.990499,y=-76.936424), b=Pt(x=38.991091,y=-76.93643)),
-#             Edge(a=Pt(x=38.991091,y=-76.93643), b=Pt(x=38.991104,y=-76.937079)),
-#             Edge(a=Pt(x=38.991104,y=-76.937079), b=Pt(x=38.9913160, y=-76.937079))
-#             )),
-#     ]  
-
-#     #if len(sys.argv) != 3:
-#     #    print ("Incorrect number of arguments.  Please submit a lat and a long....")
-
-#     #userpoint = (Pt(x=float(sys.argv[1]), y=float(sys.argv[2])))
-
-#     testpoints = (Pt(x=0, y=0), Pt(x=-38.990842, y=-76.93625),
-#                   Pt(x=38.9021466, y=-77), Pt(x=0, y=5),
-#                   Pt(x=10, y=5), Pt(x=8, y=5),
-#                   Pt(x=10, y=10))
- 
-#     #print "\n TESTING WHETHER POINTS ARE WITHIN POLYGONS"
-#     inside = False
-#     for poly in polys:
+    def transPointsToPolygons(points, radius=0.05):
+        '''Use the points from STSC to create polygon to be converted in geofences'''
         
-#         #polypp(poly)
-#         #print ('   ' + '\t'.join(str(p), str(ispointinside(p, poly))))
-#         #                       for p in testpoints[:3])
-#         if ispointinside(testpoints[1], poly):
-#             inside = True
-#             #if ispointinside(userpoint, poly):
-            
-
-#     print (inside)
+        for _pnt in points:
+            x = _pnt[0]
+            y = _pnt[1]
+            polygon = [(x-radius,y+radius),(x+radius,y+radius),
+                    (x+radius,y+radius),(x+radius,y-radius),
+                    (x+radius,y-radius),(x-radius,y-radius),
+                    (x-radius,y-radius),(x-radius,y+radius)]
+            self.polygon_list.append(polygon)
+        

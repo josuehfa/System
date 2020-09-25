@@ -21,27 +21,27 @@ A system for path planning and navigation of UAS using ICAROUS, Ardupilot, RedeM
 ### Checkout ICAROUS
 - `git clone --recursive https://github.com/nasa/icarous.git`
 
-##### Installing and Compilation
+#### Installing and Compilation
 - `cd icarous`
 - `bash UpdateModules.sh`
 - `make`
 - `make install`
   
-##### StartUp:
+#### StartUp:
 - `cd System/icarous/exe/cpu1`
 - `./core-cpu1 -C 1 -I 0`
 
 ### Checkout WebGS
 - `git clone --recursive https://github.com/nasa/webgs.git`
-##### Installing dependencies:
+#### Installing dependencies:
 
  1. NodeJS and NPM 
 - `curl -sL https://deb.nodesource.com/setup_14.x | sudo -E bash -`
 - `sudo apt-get install -y nodejs`
-##### Installing WebGS:
+#### Installing WebGS:
 - `cd webgs`
 - `./install.sh`
-##### StartUp:
+#### StartUp:
 
 The simplest way:
 
@@ -52,7 +52,7 @@ See more options inside WebGS Repository
 ### Checkout ArduPilot
 - `git clone --recursive https://github.com/ArduPilot/ardupilot.git`
 
-##### StartUp:
+#### StartUp:
 - `cd System/icarous/Scripts`
 - `./runSITL.sh`
 
@@ -60,7 +60,7 @@ See more options inside WebGS Repository
 ### Checkout PolyCARP
 - `git clone --recursive https://github.com/nasa/PolyCARP.git`
 
-##### Installing
+#### Installing
 You need to add the PolyCarp python folder in PYTHONPATH to use it inside ICAROUS and MAVProxy.
 - `export PYTHONPATH="System/PolyCARP/Python"`
 
@@ -70,11 +70,11 @@ Following some tips about ICAROUS communication we need to use the release  1.8.
 - `git clone --recursive https://github.com/ArduPilot/MAVProxy.git`
 - `git checkout 6dd4a04`
 
-##### Installing
+#### Installing
 Use the script inside ICAROUS to install MAVProxy
 - `cd System/icarous/Python/CustomModules`
 - `bash SetupMavProxy.sh System`
-##### StartUp:
+#### StartUp:
 - `cd System/icarous/Scripts`
 - `./runGS.sh`
 
@@ -82,6 +82,6 @@ Use the script inside ICAROUS to install MAVProxy
 
 - `git clone --recursive  https://github.com/josuehfa/pyredemet.git`
 
-##### StartUp:
+#### StartUp:
 You need to create an account inside RedeMet and get an API there.
 

@@ -6,10 +6,11 @@ import time
 import json
 import signal
 import requests
+from BatchGSModule import *
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from pyredemet.src.pyredemet import *
-from BatchGSModule import *
-from CoreClass import *
+
+#from CoreClass import *
 
 
 
@@ -114,11 +115,14 @@ redemet = pyredemet(api_key)
 data = '2020092322'
 stsc_data = redemet.get_produto_stsc(data=data, anima=1)
 
-polygon = [(-5.00, -58.67), (-5.38, -39.33),
-            (-5.38, -39.33), (-18.09, -39.41),
-            (-18.09, -39.41), (-17.83, -53.82),
-            (-17.83, -53.82), (-5.00, -58.67)]
-
+#polygon = [(-5.00, -58.67), (-5.38, -39.33),
+#            (-5.38, -39.33), (-18.09, -39.41),
+#            (-18.09, -39.41), (-17.83, -53.82),
+#            (-17.83, -53.82), (-5.00, -58.67)]
+polygon = [(-12.0, -47.98), (-12.0, -46.99),
+            (-12.0, -46.99), (-12.67, -46.99),
+            (-12.67, -46.99), (-12.67, -47.98),
+            (-12.67, -47.98), (-12.0, -47.98)]
 
 points_in = containsSTSC(stsc_data['stsc'][0], polygon)
 polygon_list = transPointsToPolygons(points_in, radius=0.05)
@@ -127,19 +131,19 @@ showContains(points_in, polygon_show, location=[-16,-50], zoom_start=6, filepath
 geolist = loadGeofence(polygon_list)
 # radius 0.1 deg
 
-pais = 'Brasil'
-data_ini = '202007071200'
-data_fim = '202007071800'
-sigmet_data = redemet.get_mensagens_sigmet(pais=pais, data_ini=data_ini, data_fim=data_fim)
+#pais = 'Brasil'
+#data_ini = '202007071200'
+#data_fim = '202007071800'
+#sigmet_data = redemet.get_mensagens_sigmet(pais=pais, data_ini=data_ini, data_fim=data_fim)
 
 
-def decoder_sigmet(sigmet_data):
-    sigmet_list = {}
-    for idx in range(0,len(sigmet_data['data'])):
-        if idx < 10: idx = '0'+str(idx) #Put a 0 in the begginer, redemet protocol
-        else: idx = str(idx)
-        lat_lon = {"lat_lon":sigmet_data['data'][idx]['lat_lon']}
-        flight_level = sigmet_data['data'][idx]['fenomeno_comp']
+#def decoder_sigmet(sigmet_data):
+#    sigmet_list = {}
+#    for idx in range(0,len(sigmet_data['data'])):
+#        if idx < 10: idx = '0'+str(idx) #Put a 0 in the begginer, redemet protocol
+#        else: idx = str(idx)
+#        lat_lon = {"lat_lon":sigmet_data['data'][idx]['lat_lon']}
+#        flight_level = sigmet_data['data'][idx]['fenomeno_comp']
         
 
         
@@ -157,7 +161,8 @@ except Exception as msg:
 master.wait_heartbeat()
 GS = BatchGSModule(master,1,0)
 GS.loadWaypoint("/home/josuehfa/System/icarous/Scripts/flightplan4.txt")
-GS.loadGeofence("/home/josuehfa/System/icarous/Scripts/geofence2.xml")
+GS.loadGeofence(polygon_list, _type = 1)
+#GS.loadGeofence("/home/josuehfa/System/icarous/Scripts/geofence2.xml")
 GS.StartMission()
 time.sleep(120)
 input()
