@@ -2,7 +2,7 @@ import os, time, platform
 import xml.etree.ElementTree as ET
 from pymavlink import mavutil, mavwp
 import pymavlink
-
+from multipledispatch import dispatch
 from pymavlink.dialects.v10 import icarous
 
 import numpy as np
@@ -155,7 +155,8 @@ class BatchGSModule():
         self.start_lat = 0
         self.start_lon = 0
 
-    def loadGeofence(self, filename):
+    @dispatch(str)
+    def loadGeofence(self, filename="/home/josuehfa/System/icarous/Scripts/geofence2.xml"):
         '''load fence points from a file'''
         try:
             self.GetGeofence(filename)
@@ -167,6 +168,7 @@ class BatchGSModule():
             if fence not in self.sentFenceList:
                 self.Send_fence(fence)
 
+    @dispatch(list,int)
     def loadGeofence(self, polygons, _type):
         '''load fence points from a polygon. type: 0 (include) / 1 (exclude) '''
         try:
@@ -176,14 +178,15 @@ class BatchGSModule():
             return
 
         for fence in self.fenceList:
-            if fence not in self.sentFenceList:
+            if fence['id'] not in self.sentFenceList:
                 self.Send_fence(fence)
+                self.sentFenceList.append(fence['id'])
     
     def PolygonsToGeofence(self, polygons, _type):
     
         fenceList = []
         for idx, polygon in enumerate(polygons):
-            id = idx
+            id = len(self.fenceList)
             type = _type 
             numV = len(polygon)
             floor = 0

@@ -85,3 +85,13 @@ Use the script inside ICAROUS to install MAVProxy
 #### StartUp:
 You need to create an account inside RedeMet and get an API there.
 
+### OMPL
+#### Download
+OMPL script link here:
+- `https://ompl.kavrakilab.org/install-ompl-ubuntu.sh`
+#### Running
+Make the script executable:
+- `chmod u+x install-ompl-ubuntu.sh`
+  
+Run the script to install OMPL with Python bindings.
+- `./install-ompl-ubuntu.sh --python`
