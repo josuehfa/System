@@ -1,8 +1,4 @@
-
-
 #!/usr/bin/env python
-# Author: Luis G. Torres, Mark Moll
-
 import sys
 try:
     from ompl import util as ou
@@ -56,22 +52,6 @@ class PathPlanning():
 
     class ValidityChecker(ob.StateValidityChecker):
         
-        # Returns whether the given state's position overlaps the
-        # circular obstacle
-        #def isValid(self, state):
-        #    return self.clearance(state) > 0.0
-
-        # Returns the distance from the given state's position to the
-        # boundary of the circular obstacle.
-        #def clearance(self, state):
-            # Extract the robot's (x,y) position from its state
-        #    x = state[0]
-        #    y = state[1]
-        #    z = state[2]
-            # Distance formula between two points, offset by the circle's
-            # radius
-        #    return sqrt((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) - 0.25
-
         #Obstable structure: [(polygon,base,topo),(polygon,base,topo)]
         def obstacle(self,start, goal, obstacle,dimension):
             self.obstacle = obstacle
@@ -148,22 +128,16 @@ class PathPlanning():
                                 sys.float_info.min))
 
 
-
-
     def getPathLengthObjective(self,si):
         return ob.PathLengthOptimizationObjective(si)
-
 
     def getThresholdPathLengthObj(self,si):
         obj = ob.PathLengthOptimizationObjective(si)
         obj.setCostThreshold(ob.Cost(1.51))
         return obj
 
-
-
     def getClearanceObjective(self,si):
         return ClearanceObjective(si)
-
 
     def getBalancedObjective1(self,si):
         lengthObj = ob.PathLengthOptimizationObjective(si)
@@ -174,12 +148,10 @@ class PathPlanning():
         opt.addObjective(clearObj, 1.0)
         return opt
 
-
     def getPathLengthObjWithCostToGo(self,si):
         obj = ob.PathLengthOptimizationObjective(si)
         obj.setCostToGoHeuristic(ob.CostToGoHeuristic(ob.goalRegionCostToGo))
         return obj
-
 
     # Keep these in alphabetical order and all lower case
     def allocatePlanner(self,si, plannerType):
@@ -199,7 +171,6 @@ class PathPlanning():
             return og.SORRTstar(si)
         else:
             ou.OMPL_ERROR("Planner-type is not implemented in allocation function.")
-
 
     # Keep these in alphabetical order and all lower case
     def allocateObjective(self,si, objectiveType):
@@ -301,9 +272,6 @@ class PathPlanning():
 
 
 
-
-
-            
 
     def plotPlannerStates(self):
         from mpl_toolkits.mplot3d import Axes3D
