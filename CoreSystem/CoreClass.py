@@ -98,4 +98,3 @@ class RedemetCore():
         
         return self.polygon_list
 
-

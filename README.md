@@ -39,6 +39,7 @@ A system for path planning and navigation of UAS using ICAROUS, Ardupilot, RedeM
 #### Installing dependencies:
 
  1. NodeJS and NPM 
+ 2. 
 `curl -sL https://deb.nodesource.com/setup_14.x | sudo -E bash -`
 `sudo apt-get install -y nodejs`
 
@@ -100,3 +101,28 @@ Make the script executable:
   
 Run the script to install OMPL with Python bindings.
 `./install-ompl-ubuntu.sh --python`
+
+
+
+
+
+## RUN EXAMPLE
+
+
+#### load mission flight plan
+wp load /home/josuehfa/System/icarous/Scripts/flightplan4.txt
+
+#### load geofence
+geofence load /home/josuehfa/System/icarous/Scripts/geofence2.xml
+
+#### load traffic
+traffic load 50 90 5 0 90 0
+
+#### start mission from the home position
+long MISSION_START
+
+
+
+
+
+

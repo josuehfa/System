@@ -1,7 +1,4 @@
 #!/usr/bin/env python
-  
-  
-  
 # Author: Luis G. Torres, Mark Moll
 
 import sys
@@ -19,24 +16,59 @@ except ImportError:
     from ompl import geometric as og
 from math import sqrt
 import argparse
+from shapely.geometry import Point
+from shapely.geometry.polygon import Polygon
+
+
+polygon = [(0.3, 0.2), (0.3,0.5),
+           (0.3, 0.5), (0.6,0.5),
+           (0.6, 0.5), (0.6,0.2),
+           (0.6, 0.2), (0.3,0.2)]
+base = 0.2
+topo = 0.6
+obstacle = [(polygon, base, topo)]
+
 
 
 class ValidityChecker(ob.StateValidityChecker):
+    
     # Returns whether the given state's position overlaps the
     # circular obstacle
-    def isValid(self, state):
-        return self.clearance(state) > 0.0
+    #def isValid(self, state):
+    #    return self.clearance(state) > 0.0
 
     # Returns the distance from the given state's position to the
     # boundary of the circular obstacle.
-    def clearance(self, state):
+    #def clearance(self, state):
         # Extract the robot's (x,y) position from its state
+    #    x = state[0]
+    #    y = state[1]
+    #    z = state[2]
+        # Distance formula between two points, offset by the circle's
+        # radius
+    #    return sqrt((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) - 0.25
+
+    #Obstable structure: [(polygon,base,topo),(polygon,base,topo)]
+    def isValid(self,state):
+        return self.clearence(state)
+
+    def clearence(self,state):
         x = state[0]
         y = state[1]
         z = state[2]
-        # Distance formula between two points, offset by the circle's
-        # radius
-        return sqrt((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5) + (z-0.5)*(z-0.5)) - 0.25
+
+        for polygon in obstacle:
+            polygon_shp = Polygon(polygon[0])
+            point_shp =  Point((x,y))
+            if polygon_shp.contains(point_shp):
+                if z > polygon[1] or z < polygon[2]: 
+                    return False
+                else:
+                    return True
+            else:
+                return True
+ 
+
 
 
 
@@ -232,6 +264,16 @@ if __name__ == "__main__":
     else:
         ou.OMPL_ERROR("Invalid log-level integer.")
 
+
+    #polygon = [(-12.0, -47.98), (-12.0, -46.99),
+    #           (-12.0, -46.99), (-12.6, -46.99),
+    #           (-12.6, -46.99), (-12.6, -47.98),
+    #           (-12.6, -47.98), (-12.0, -47.98)]
+    #base = 20
+    #topo = 100
+    #obstacle = [(polygon, base, topo)]
+
+
     # Solve the planning problem
     plan(args.runtime, args.planner, args.objective, args.file)
 
@@ -242,17 +284,48 @@ if __name__ == "__main__":
     fig = plt.figure()
     ax = fig.gca(projection='3d')
     ax.plot(data[:,0],data[:,1],data[:,2],'.-')
+
+    for polygon in obstacle:
+        _x = []
+        _y = []
+        for point in polygon[0]:
+            _x.append(point[0])
+            _y.append(point[1])
+        # setup the figure and axes
+        #fig = plt.figure(figsize=(8, 3))
+        #ax1 = fig.add_subplot(121, projection='3d')
+        #ax2 = fig.add_subplot(122, projection='3d')
+
+        # fake data
+        #_x = np.arange(4)
+        #_y = np.arange(5)
+        #_xx, _yy = np.meshgrid(_x, _y)
+        #x, y = _xx.ravel(), _yy.ravel()
+
+        #top = x + y
+        #bottom = np.zeros_like(top)
+        width = depth = 1
+
+        #ax.bar3d(_x, _y, polygon[1], width, depth, polygon[2], shade=True)
+        #ax1.set_title('Shaded')
+
+        #ax2.bar3d(x, y, bottom, width, depth, top, shade=False)
+        #ax2.set_title('Not Shaded')
+
+    
+    plt.show()
+
     #circle = plt.Circle((0.5,0.5),0.25)
     #ax.add_artist(circle)
 
-    N=20
-    stride=1
-    radius = 0.25
-    u = np.linspace(0, 2 * np.pi, N)
-    v = np.linspace(0, np.pi, N)
-    x = np.outer(np.cos(u), np.sin(v)) * radius + 0.5
-    y = np.outer(np.sin(u), np.sin(v)) * radius + 0.5
-    z = np.outer(np.ones(np.size(u)), np.cos(v)) * radius + 0.5
-    ax.plot_surface(x, y, z, linewidth=0.0, cstride=stride, rstride=stride)
+    #N=20
+    #stride=1
+    #radius = 0.25
+    #u = np.linspace(0, 2 * np.pi, N)
+    #v = np.linspace(0, np.pi, N)
+    #x = np.outer(np.cos(u), np.sin(v)) * radius + 0.5
+    #y = np.outer(np.sin(u), np.sin(v)) * radius + 0.5
+    #z = np.outer(np.ones(np.size(u)), np.cos(v)) * radius + 0.5
+    #ax.plot_surface(x, y, z, linewidth=0.0, cstride=stride, rstride=stride)
 
-    plt.show()
+ 
