@@ -34,11 +34,12 @@ class PathPlanning():
         self.dimension = dimension
         self.solution = []
         self.PlannerStates = []
+    
 
-    def plan(self,runTime, plannerType, objectiveType, fname):
+    def plan(self,runTime, plannerType, objectiveType):
         if self.planner in ['BFMTstar', 'BITstar', 'FMTstar', 'InformedRRTstar', 'PRMstar', 'RRTstar', \
         'SORRTstar']:
-            result = self.OMPL_plan(runTime, plannerType, objectiveType, fname)
+            result = self.OMPL_plan(runTime, plannerType, objectiveType)
             return result
         elif self.planner == 'PSO':
             result = self.PSO_plan()
@@ -53,12 +54,14 @@ class PathPlanning():
     class ValidityChecker(ob.StateValidityChecker):
         
         #Obstable structure: [(polygon,base,topo),(polygon,base,topo)]
-        def obstacle(self,start, goal, obstacle,dimension):
+        def obstacle(self,start, goal, region, obstacle,dimension):
+            self.start = start 
+            self.goal = goal
+            self.region = region
             self.obstacle = obstacle
             self.dimension = dimension
             self.last_point = None
-            self.start = start 
-            self.goal = goal
+            
 
         def setInteractive(self):
             self.interactive_planner = []
@@ -71,29 +74,33 @@ class PathPlanning():
             return self.clearence(state)
 
         def clearence(self,state):            
-            if dimension == '2D':
+            if self.dimension == '2D':
                 valid = True
                 x = state[0]
                 y = state[1]
-                for polygon in self.obstacle:
-                    polygon_shp = Polygon(polygon[0])
-                    point_shp =  Point((x,y))
-                    if polygon_shp.contains(point_shp):
-                        valid = False
-                        return False
-                    elif (x,y) == self.start or (x,y) == self.goal:
-                        valid = True
+                point_shp =  Point((x,y))
+                region_shp = Polygon(self.region)
+                if region_shp.contains(point_shp) or (x,y) == self.start or (x,y) == self.goal: #Inside region of interest
+                    for polygon in self.obstacle:
+                        polygon_shp = Polygon(polygon[0])
+                        if polygon_shp.contains(point_shp): #Inside Obstacle
+                            valid = False
+                            return False
+                        elif (x,y) == self.start or (x,y) == self.goal:
+                            valid = True
+                        else:
+                            if self.last_point != None:
+                                line = LineString([self.last_point, (x,y)])
+                                if line.intersects(polygon_shp):
+                                    valid = False
+                                    return False
+                    if valid == True:
+                        self.last_point = (x,y)
+                        return True
                     else:
-                        if self.last_point != None:
-                            line = LineString([self.last_point, (x,y)])
-                            if line.intersects(polygon_shp):
-                                valid = False
-                                return False
-                if valid == True:
-                    self.last_point = (x,y)
-                    return True
+                        return False
                 else:
-                    return False
+                        return False
 
             elif dimension == '3D':
                 x = state[0]
@@ -220,15 +227,32 @@ class PathPlanning():
                 fig, ax = plt.subplots()
                 #Obstacle
                 for polygon in self.obstacle:
-                    x,y = zip(*polygon[0])
-                    line, = ax.plot(x, y, 'r-')
+                    lat,lon = zip(*polygon[0])
+                    lat = list(lat)
+                    lon = list(lon)
+                    lat.append(polygon[0][0][0])
+                    lon.append(polygon[0][0][1])
+                #    ax.plot(lon, lat, linestyle='-', color='red')
+                    ax.fill(lon, lat, facecolor='gray', edgecolor='black')
+                
+                #Region
+                lat,lon = zip(*self.region)
+                lat = list(lat)
+                lon = list(lon)
+                lat.append(self.region[0][0])
+                lon.append(self.region[0][1])
+                ax.plot(lon, lat, linestyle='-.', color='green', label='Region of Interest')
+
                 #Solution
                 for solution in self.solution:
-                    ax.plot(solution[0], solution[1], label=solution[2])
+                    ax.plot(solution[1], solution[0], label=solution[2])
                 ax.set(xlabel='Latitude', ylabel='Longitude',
                     title='Solution Path')
+                #ax.set_xlim(self.x_bound[0]*1.1, self.x_bound[1]*1.1)
+                #ax.set_ylim(self.y_bound[0]*1.1, self.y_bound[1]*1.1)
                 ax.legend()
-                ax.grid()
+                #ax.grid()
+                #ax.autoscale()
                 plt.show()
             elif self.dimension == '3D':
                 pass
@@ -243,8 +267,8 @@ class PathPlanning():
                     x,y = zip(*polygon[0])
                     line, = ax.plot(x, y, 'r-')
                 def init():
-                    ax.set_xlim(-1, 1)
-                    ax.set_ylim(-1, 1)
+                    ax.set_xlim(self.x_bound[0]*1.1, self.x_bound[1]*1.1)
+                    ax.set_ylim(self.y_bound[0]*1.1, self.y_bound[1]*1.1)
                     return ln,
                 cont = 0
                 def update(frame):
@@ -262,7 +286,7 @@ class PathPlanning():
                     ax.set(xlabel='Latitude', ylabel='Longitude',
                     title='Solution Path')
                     ax.legend()
-                    ax.grid()
+                    #ax.grid()
                     plt.show()
                     input("Enter something")
             elif self.dimension == '3D':
@@ -333,13 +357,63 @@ class PathPlanning():
 
 
 
-    def OMPL_plan(self,runTime, plannerType, objectiveType, fname):
+    def OMPL_plan(self, runTime, plannerType, objectiveType):
         # Construct the robot state space in which we're planning. We're
         # planning in [0,1]x[0,1], a subset of R^2.
-        space = ob.RealVectorStateSpace(2)
 
-        # Set the bounds of space to be in [0,1].
-        space.setBounds(-1.0, 1.0)
+        if self.dimension == '2D':
+            space = ob.RealVectorStateSpace(2)
+            # Set the bounds of space to be in [0,1].
+            bounds = ob.RealVectorBounds(2)
+            x_bound = []
+            y_bound = []
+            for idx in range(len(self.region)):
+                x_bound.append(self.region[idx][0])
+                y_bound.append(self.region[idx][1])
+        
+            bounds.setLow(0,min(x_bound))
+            bounds.setHigh(0,max(x_bound))
+            bounds.setLow(1,min(y_bound))
+            bounds.setHigh(1,max(y_bound))
+            
+            self.x_bound = (min(x_bound),max(x_bound))
+            self.y_bound = (min(y_bound),max(y_bound))
+            #test = bounds.getDifference()
+            #test = bounds.check()
+
+            space.setBounds(bounds)
+            # Set our robot's starting state to be the bottom-left corner of
+            # the environment, or (0,0).
+            start = ob.State(space)
+            start[0] = self.start[0]
+            start[1] = self.start[1]
+            #start[2] = 0.0  
+
+            # Set our robot's goal state to be the top-right corner of the
+            # environment, or (1,1).
+            goal = ob.State(space)
+            goal[0] = self.goal[0]
+            goal[1] = self.goal[1]
+            #goal[2] = 1.0
+        elif self.dimension == '3D':
+            space = ob.RealVectorStateSpace(3)
+            # Set the bounds of space to be in [0,1].
+            space.setBounds(self.bounds[0],self.bounds[1],self.bounds[2])
+            # Set our robot's starting state to be the bottom-left corner of
+            # the environment, or (0,0).
+            start = ob.State(space)
+            start[0] = self.start[0]
+            start[1] = self.start[1]
+            start[2] = self.start[2]
+
+            # Set our robot's goal state to be the top-right corner of the
+            # environment, or (1,1).
+            goal = ob.State(space)
+            goal[0] = self.goal[0]
+            goal[1] = self.goal[1]
+            goal[2] = self.goal[2]
+        else:
+            pass
 
         # Construct a space information instance for this state space
         si = ob.SpaceInformation(space)
@@ -348,23 +422,23 @@ class PathPlanning():
         
         validityChecker = self.ValidityChecker(si)
         validityChecker.setInteractive()
-        validityChecker.obstacle(self.start,self.goal,self.obstacle,self.dimension)
+        validityChecker.obstacle(self.start, self.goal, self.region, self.obstacle, self.dimension)
         si.setStateValidityChecker(validityChecker)
 
         si.setup()
 
         # Set our robot's starting state to be the bottom-left corner of
         # the environment, or (0,0).
-        start = ob.State(space)
-        start[0] = self.start[0]
-        start[1] = self.start[1]
+        #start = ob.State(space)
+        #start[0] = self.start[0]
+        #start[1] = self.start[1]
         #start[2] = 0.0  
 
         # Set our robot's goal state to be the top-right corner of the
         # environment, or (1,1).
-        goal = ob.State(space)
-        goal[0] = self.goal[0]
-        goal[1] = self.goal[1]
+        #goal = ob.State(space)
+        #goal[0] = self.goal[0]
+        #goal[1] = self.goal[1]
         #goal[2] = 1.0
 
         # Create a problem instance
@@ -398,7 +472,7 @@ class PathPlanning():
                 optimizingPlanner.getName(), \
                 pdef.getSolutionPath().length(), \
                 pdef.getSolutionPath().cost(pdef.getOptimizationObjective()).value()))
-
+            
             # If a filename was specified, output the path as a matrix to
             # that file for visualization
             return self.decodeSolutionPath(pdef.getSolutionPath().printAsMatrix(),plannerType)
@@ -406,6 +480,7 @@ class PathPlanning():
             #if fname:
             #    with open(fname, 'w') as outFile:
             #        outFile.write(pdef.getSolutionPath().printAsMatrix())
+            
         else:
             print("No solution found.")
 
@@ -414,7 +489,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Optimal motion planning demo program.')
 
     # Add a filename argument
-    parser.add_argument('-t', '--runtime', type=float, default=10.0, help=\
+    parser.add_argument('-t', '--runtime', type=float, default=2.0, help=\
         '(Optional) Specify the runtime in seconds. Defaults to 1 and must be greater than 0.')
     parser.add_argument('-p', '--planner', default='InformedRRTstar', \
         choices=['BFMTstar', 'BITstar', 'FMTstar', 'InformedRRTstar', 'PRMstar', 'RRTstar', \
@@ -460,36 +535,46 @@ if __name__ == "__main__":
 
 
     # Solve the planning problem
-    polygon = [(-0.3, -0.2), (-0.3,0.5),
-        (-0.3, 0.5), (0.6,0.5),
-        (0.6, 0.5), (0.6,-0.2),
-        (0.6, -0.2), (-0.3,-0.2)]
+    polygon = [(-3, -2),
+                (-3, 5), 
+                (6, 5),
+                (6, -2)]
     base = 0.2
     topo = 0.6
     
-    polygon2 = [(0.8, 0.9), (0.8,0.6),
-        (0.8, 0.6), (0.6,0.6),
-        (0.6, 0.6), (0.6,0.9),
-        (0.6, 0.9), (0.8,0.9)]
+    polygon2 = [(8, 9),
+                (8, 6),
+                (6, 6),
+                (6, 9)]
 
 
     obstacle = [(polygon, base, topo),(polygon2, base, topo)]
+    obstacle = [([(-12.200000000000001, -47.5), (-12.1, -47.5), (-12.1, -47.599999999999994), (-12.200000000000001, -47.599999999999994)], 0.2, 0.6), ([(-12.3, -47.5), (-12.2, -47.5), (-12.2, -47.599999999999994), (-12.3, -47.599999999999994)], 0.2, 0.6), ([(-12.3, -47.400000000000006), (-12.2, -47.400000000000006), (-12.2, -47.5), (-12.3, -47.5)], 0.2, 0.6), ([(-12.3, -47.1), (-12.2, -47.1), (-12.2, -47.199999999999996), (-12.3, -47.199999999999996)], 0.2, 0.6), ([(-12.4, -47.6), (-12.299999999999999, -47.6), (-12.299999999999999, -47.699999999999996), (-12.4, -47.699999999999996)], 0.2, 0.6), ([(-12.4, -47.5), (-12.299999999999999, -47.5), (-12.299999999999999, -47.599999999999994), (-12.4, -47.599999999999994)], 0.2, 0.6), ([(-12.4, -47.400000000000006), (-12.299999999999999, -47.400000000000006), (-12.299999999999999, -47.5), (-12.4, -47.5)], 0.2, 0.6), ([(-12.5, -47.7), (-12.399999999999999, -47.7), (-12.399999999999999, -47.8), (-12.5, -47.8)], 0.2, 0.6), ([(-12.5, -47.6), (-12.399999999999999, -47.6), (-12.399999999999999, -47.699999999999996), (-12.5, -47.699999999999996)], 0.2, 0.6), ([(-12.5, -47.5), (-12.399999999999999, -47.5), (-12.399999999999999, -47.599999999999994), (-12.5, -47.599999999999994)], 0.2, 0.6), ([(-12.5, -47.400000000000006), (-12.399999999999999, -47.400000000000006), (-12.399999999999999, -47.5), (-12.5, -47.5)], 0.2, 0.6), ([(-12.5, -47.300000000000004), (-12.399999999999999, -47.300000000000004), (-12.399999999999999, -47.4), (-12.5, -47.4)], 0.2, 0.6), ([(-12.600000000000001, -47.5), (-12.5, -47.5), (-12.5, -47.599999999999994), (-12.600000000000001, -47.599999999999994)], 0.2, 0.6), ([(-12.600000000000001, -47.400000000000006), (-12.5, -47.400000000000006), (-12.5, -47.5), (-12.600000000000001, -47.5)], 0.2, 0.6), ([(-12.600000000000001, -47.300000000000004), (-12.5, -47.300000000000004), (-12.5, -47.4), (-12.600000000000001, -47.4)], 0.2, 0.6)]
 
-    start =(-1,-1) 
-    goal = (1,1)
-    region = [(1, 1), (-1,1),
-        (-1, 1), (-1,-1),
-        (-1, -1), (1,-1),
-        (1, -1), (1,1)]
-    
+    #start =(-10,-10) 
+    #goal = (10,10)
+    #region = [( 10, 10),
+    #          (30, -10),
+    #          (20, -20),
+    #          (-10,-20),
+    #          ( -30,0)]
+    start =(-12.62, -47.86) 
+    goal = (-12.21, -47.28)
+    region = [(-12.0, -47.98), 
+            (-12.0, -46.99), 
+            (-12.67, -46.99), 
+            (-12.67, -47.98)]
+
+
     dimension = '2D'
     planner = 'RRTstar'
 
     plan = PathPlanning(start, goal, region, obstacle, planner, dimension)
+    result = plan.plan(2, planner, 'PathLength')
 
-    for planner in ['BFMTstar', 'BITstar', 'FMTstar', 'InformedRRTstar', 'PRMstar', 'RRTstar', 'SORRTstar']:
-        result = plan.plan(args.runtime, planner, args.objective, args.file)
-
+    #for planner in ['BFMTstar', 'BITstar', 'FMTstar', 'InformedRRTstar', 'PRMstar', 'RRTstar', 'SORRTstar']:
+    #    result = plan.plan(2, planner, 'PathLength')
+    print(plan.solution)
     plan.plotSolutionPath(anima=False)
 
     

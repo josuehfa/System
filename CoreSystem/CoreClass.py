@@ -6,6 +6,7 @@ import os.path
 import sys
 import time
 import json
+import random
 import folium
 import webbrowser
 from multipledispatch import dispatch
@@ -46,16 +47,29 @@ class RedemetCore():
             if polygon_shp.contains(point_shp):
                 self.point_list.append(point)
     
-    def showPolygons(self, polygon=[], location=[-11,-50], zoom_start=5, filepath='/home/josuehfa/System/CoreSystem/map.html'):
+    def showPolygons(self, polygon=[],lines=[],points=[], location=[-11,-50], zoom_start=5, filepath='/home/josuehfa/System/CoreSystem/map.html'):
         '''Use Folium to plot an interative map with points and polygons'''
         #Create a Map instance
         m = folium.Map(location=location,zoom_start=zoom_start,control_scale=True)
+        list_colors = [ 'blue', 'purple', 'orange','lightred', 'cadetblue', 'darkpurple', 'pink', 'lightblue', 'lightgreen', 'lightgray' ]
+        if lines != []:
+            for idx, line in enumerate(lines):
+                lat_lon = []                
+                for idx in range(len(line[0])):
+                    lat_lon.append((line[0][idx],line[1][idx]))
+                folium.PolyLine(lat_lon, color=list_colors[idx%len(list_colors)]).add_to(m)
+
+        colors = ['red','blue']
+        if points != []:
+            for idx, point in enumerate(points):
+                folium.Marker(point, icon=folium.Icon(color=colors[idx])).add_to(m)
+
         for _pnt in self.point_list:
             folium.Circle(radius=100, location=[_pnt[0], _pnt[1]], color='crimson', fill=True).add_to(m)
         for _plg in self.polygon_list:
-            folium.PolyLine(_plg, weight=2, color="blue").add_to(m)
+            folium.vector_layers.Polygon(_plg, weight=2, fill_color="gray", color='black').add_to(m)
         if polygon != []:
-            folium.PolyLine(polygon, weight=2, color="blue").add_to(m)
+            folium.vector_layers.Polygon(polygon, weight=2, color="green").add_to(m)
         m.save(filepath)
         webbrowser.open('file://'+filepath)
 
@@ -64,10 +78,10 @@ class RedemetCore():
         for _pnt in self.point_list:
             x = _pnt[0]
             y = _pnt[1]
-            polygon = [(x-radius,y+radius),(x+radius,y+radius),
-                    (x+radius,y+radius),(x+radius,y-radius),
-                    (x+radius,y-radius),(x-radius,y-radius),
-                    (x-radius,y-radius),(x-radius,y+radius)]
+            polygon = [(x-radius,y+radius),
+                    (x+radius,y+radius),
+                    (x+radius,y-radius),
+                    (x-radius,y-radius)]
             self.polygon_list.append(polygon)
     
     @dispatch(str,str)

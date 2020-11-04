@@ -10,6 +10,7 @@ import subprocess
 import threading
 from BatchGSModule import *
 from CoreClass import *
+from PlanningClass import *
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from pyredemet.src.pyredemet import *
 
@@ -39,14 +40,56 @@ from pyredemet.src.pyredemet import *
 #(-12.576857, -47.773923)
 _type = 'stsc' 
 date = '2020092322'
-polygon = [(-12.0, -47.98), (-12.0, -46.99),
-            (-12.0, -46.99), (-12.67, -46.99),
-            (-12.67, -46.99), (-12.67, -47.98),
-            (-12.67, -47.98), (-12.0, -47.98)]
+polygon = [(-12.0, -47.98),
+            (-12.0, -46.99), 
+            (-12.67, -46.99), 
+            (-12.67, -47.98)]
 
 redemet = RedemetCore()
 polygon_list = redemet.getPolygons(_type, date, polygon)
-redemet.showPolygons(polygon)
+#redemet.showPolygons(polygon)
+
+
+#polygon = [(-3, -2),
+#            (-3, 5), 
+#            (6, 5),
+#            (6, -2)]
+base = 0.2
+topo = 0.6
+
+#polygon2 = [(8, 9),
+#            (8, 6),
+#            (6, 6),
+#            (6, 9)]
+obstacle = []
+for pol in polygon_list:
+    
+    obstacle.append((pol, base, topo))
+print(obstacle)
+
+start =(-12.625412, -47.867092) 
+goal = (-12.214918, -47.283527)
+region = [(-12.0, -47.98), 
+            (-12.0, -46.99), 
+            (-12.67, -46.99), 
+            (-12.67, -47.98)]
+#redemet.showPolygons(polygon=polygon,points=[start,goal])
+
+dimension = '2D'
+planner = 'RRTstar'
+
+plan = PathPlanning(start, goal, region, obstacle, planner, dimension)
+#result = plan.plan(10, planner, 'PathLength')
+
+
+for planner in ['BFMTstar', 'BITstar', 'FMTstar', 'InformedRRTstar', 'PRMstar', 'RRTstar', 'SORRTstar']:
+    result = plan.plan(10, planner, 'PathLength')
+
+#plan.plotSolutionPath(anima=False)
+redemet.showPolygons(polygon=polygon, lines=plan.solution,points=[start,goal])
+
+
+
 
 
 # Open a mavlink UDP port
