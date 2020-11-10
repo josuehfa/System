@@ -22,7 +22,11 @@ from math import sqrt
 import argparse
 from shapely.geometry import Point,LineString
 from shapely.geometry.polygon import Polygon
-
+from mpl_toolkits.mplot3d import Axes3D
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.animation as FuncAnimation
+from matplotlib.collections import PolyCollection
 
 class PathPlanning():
     def __init__(self, start, goal, region, obstacle, planner, dimension):
@@ -102,20 +106,25 @@ class PathPlanning():
                 else:
                         return False
 
-            elif dimension == '3D':
+            elif self.dimension == '3D':
+                valid = True
                 x = state[0]
                 y = state[1]
                 z = state[2]
-                for polygon in self.obstacle:
-                    polygon_shp = Polygon(polygon[0])
-                    point_shp =  Point((x,y))
-                    if polygon_shp.contains(point_shp):
-                        if z > polygon[1] or z < polygon[2]: 
-                            return False
-                        else:
-                            return True
-                    else:
+                if self.last_point != None and (x,y) != (self.start[0],self.start[1]) and (x,y) != (self.start[0],self.start[1]):
+                    for polygon in self.obstacle:
+                        polygon_shp = Polygon(polygon[0])
+                        line = LineString([self.last_point, (x,y)])
+                        if line.intersects(polygon_shp):
+                            if z > polygon[1] or z < polygon[2]: 
+                                valid = False
+                                return False
+                    if valid == True:
+                        self.last_point = (x,y)
                         return True
+                else:
+                    self.last_point = (x,y)
+                    return True
             else:
                 print('Wrong Dimension')
  
@@ -192,170 +201,6 @@ class PathPlanning():
         else:
             ou.OMPL_ERROR("Optimization-objective is not implemented in allocation function.")
 
-    def decodeSolutionPath(self, path, plannerType):
-        solution_lat = []
-        solution_lon = []
-        solution_alt = []
-        path = path.replace('\n','')
-        path = path.split(' ')
-        path = path[:len(path)-1]
-        if self.dimension == '2D':
-            for idx in range(int(len(path)/2)):
-                solution_lat.append(float(path[2*idx]))
-                solution_lon.append(float(path[2*idx+1]))
-            self.solution.append((solution_lat,solution_lon,plannerType))
-        elif self.dimension == '3D':
-            for idx in range(len(path)/3):
-                solution_lat.append(float(path[3*idx]))
-                solution_lon.append(float(path[3*idx+1]))
-                solution_alt.append(float(path[3*idx+2]))
-                self.solution.append((solution_lat,solution_lon, solution_alt,plannerType))
-        else:
-            print('Error inside SolutionPath')
-    
-        return self.solution
-
-
-    def plotSolutionPath(self,anima=False):
-        from mpl_toolkits.mplot3d import Axes3D
-        import numpy as np
-        import matplotlib.pyplot as plt
-        import matplotlib.animation as FuncAnimation
-
-        if anima == False:
-            if self.dimension == '2D':
-                fig, ax = plt.subplots()
-                #Obstacle
-                for polygon in self.obstacle:
-                    lat,lon = zip(*polygon[0])
-                    lat = list(lat)
-                    lon = list(lon)
-                    lat.append(polygon[0][0][0])
-                    lon.append(polygon[0][0][1])
-                #    ax.plot(lon, lat, linestyle='-', color='red')
-                    ax.fill(lon, lat, facecolor='gray', edgecolor='black')
-                
-                #Region
-                lat,lon = zip(*self.region)
-                lat = list(lat)
-                lon = list(lon)
-                lat.append(self.region[0][0])
-                lon.append(self.region[0][1])
-                ax.plot(lon, lat, linestyle='-.', color='green', label='Region of Interest')
-
-                #Solution
-                for solution in self.solution:
-                    ax.plot(solution[1], solution[0], label=solution[2])
-                ax.set(xlabel='Latitude', ylabel='Longitude',
-                    title='Solution Path')
-                #ax.set_xlim(self.x_bound[0]*1.1, self.x_bound[1]*1.1)
-                #ax.set_ylim(self.y_bound[0]*1.1, self.y_bound[1]*1.1)
-                ax.legend()
-                #ax.grid()
-                #ax.autoscale()
-                plt.show()
-            elif self.dimension == '3D':
-                pass
-            else:
-                print('Error inside plotSolutionPath')
-        else:
-            if self.dimension == '2D':
-                fig, ax = plt.subplots()
-                #fig, ax = plt.subplots()
-                #Obstacle
-                for polygon in self.obstacle:
-                    x,y = zip(*polygon[0])
-                    line, = ax.plot(x, y, 'r-')
-                def init():
-                    ax.set_xlim(self.x_bound[0]*1.1, self.x_bound[1]*1.1)
-                    ax.set_ylim(self.y_bound[0]*1.1, self.y_bound[1]*1.1)
-                    return ln,
-                cont = 0
-                def update(frame):
-                    xdata.append(frame(0)[cont])
-                    ydata.append(frame(1)[cont])
-                    ln.set_data(xdata, ydata)
-                    cont = cont + 1
-                    return ln,
-                #Solution
-                for solution in self.solution:
-                    xdata, ydata = [], []
-                    ln, = plt.plot([], [], label=solution[2])
-                    ani = FuncAnimation(fig, update, frames=(solution[0], solution[1]),
-                                    init_func=init, blit=True)
-                    ax.set(xlabel='Latitude', ylabel='Longitude',
-                    title='Solution Path')
-                    ax.legend()
-                    #ax.grid()
-                    plt.show()
-                    input("Enter something")
-            elif self.dimension == '3D':
-                pass
-            else:
-                print('Error inside plotSolutionPath')
-
-
-
-
-    def plotPlannerStates(self):
-        from mpl_toolkits.mplot3d import Axes3D
-        import numpy as np
-        import matplotlib.pyplot as plt
-        import matplotlib.animation as animation
-
-        if self.dimension == '2D':
-            fig, ax = plt.subplots()
-            #Obstacle
-            for polygon in self.obstacle:
-                x,y = zip(*polygon[0])
-                line, = ax.plot(x, y, 'r-')
-                
-            #Solution
-            for solution in self.PlannerStates:
-                ax.plot(solution[0], solution[1], label=solution[2])
-
-            ax.set(xlabel='Latitude', ylabel='Longitude',
-                title='Solution Path')
-            ax.legend()
-            #ax.grid()
-            plt.show()
-
-        elif self.dimension == '3D':
-            pass
-        else:
-            print('Error inside plotSolutionPath')
-    
-
-
-        #for polygon in self.obstacle:
-        #    _x = []
-        #    _y = []
-        #    for point in polygon[0]:
-        #        _x.append(point[0])
-        #        _y.append(point[1])
-            # setup the figure and axes
-            #fig = plt.figure(figsize=(8, 3))
-            #ax1 = fig.add_subplot(121, projection='3d')
-            #ax2 = fig.add_subplot(122, projection='3d')
-
-            # fake data
-            #_x = np.arange(4)
-            #_y = np.arange(5)
-            #_xx, _yy = np.meshgrid(_x, _y)
-            #x, y = _xx.ravel(), _yy.ravel()
-
-            #top = x + y
-            #bottom = np.zeros_like(top)
-        #    width = depth = 1
-
-            #ax.bar3d(_x, _y, polygon[1], width, depth, polygon[2], shade=True)
-            #ax1.set_title('Shaded')
-
-            #ax2.bar3d(x, y, bottom, width, depth, top, shade=False)
-            #ax2.set_title('Not Shaded')       
-        
-
-
 
     def OMPL_plan(self, runTime, plannerType, objectiveType):
         # Construct the robot state space in which we're planning. We're
@@ -397,8 +242,27 @@ class PathPlanning():
             #goal[2] = 1.0
         elif self.dimension == '3D':
             space = ob.RealVectorStateSpace(3)
+            bounds = ob.RealVectorBounds(3)
+            x_bound = []
+            y_bound = []
+            z_bound = [0,10]
+            for idx in range(len(self.region)):
+                x_bound.append(self.region[idx][0])
+                y_bound.append(self.region[idx][1])
+                #z_bound.append(self.region[idx][2])
+        
+            bounds.setLow(0,min(x_bound))
+            bounds.setHigh(0,max(x_bound))
+            bounds.setLow(1,min(y_bound))
+            bounds.setHigh(1,max(y_bound))
+            bounds.setLow(2,min(z_bound))
+            bounds.setHigh(2,max(z_bound))
+            
+            self.x_bound = (min(x_bound),max(x_bound))
+            self.y_bound = (min(y_bound),max(y_bound))
+            self.z_bound = (min(z_bound),max(z_bound))
             # Set the bounds of space to be in [0,1].
-            space.setBounds(self.bounds[0],self.bounds[1],self.bounds[2])
+            space.setBounds(bounds)
             # Set our robot's starting state to be the bottom-left corner of
             # the environment, or (0,0).
             start = ob.State(space)
@@ -464,7 +328,6 @@ class PathPlanning():
 
         self.PlannerStates.append((validityChecker.getInteractive(),plannerType))
 
-
         if solved:
             # Output the length of the path found
             print('{0} found solution of path length {1:.4f} with an optimization ' \
@@ -475,6 +338,13 @@ class PathPlanning():
             
             # If a filename was specified, output the path as a matrix to
             # that file for visualization
+            #path = og.PathGeometric(pdef.getSpaceInformation())
+            #test = path.printAsMatrix()
+            #simplifier = og.PathSimplifier(pdef.getSpaceInformation(),pdef.getGoal(),pdef.getOptimizationObjective())
+            #path_simp = simplifier.simplifyMax(path)
+            #test = path.printAsMatrix()
+            #test = pdef.getSolutionPath().printAsMatrix()
+
             return self.decodeSolutionPath(pdef.getSolutionPath().printAsMatrix(),plannerType)
             
             #if fname:
@@ -483,6 +353,199 @@ class PathPlanning():
             
         else:
             print("No solution found.")
+
+    def decodeSolutionPath(self, path, plannerType):
+        solution_lat = []
+        solution_lon = []
+        solution_alt = []
+        path = path.replace('\n','')
+        path = path.split(' ')
+        path = path[:len(path)-1]
+        if self.dimension == '2D':
+            for idx in range(int(len(path)/2)):
+                solution_lat.append(float(path[2*idx]))
+                solution_lon.append(float(path[2*idx+1]))
+            self.solution.append((solution_lat,solution_lon,plannerType))
+        elif self.dimension == '3D':
+            for idx in range(int(len(path)/3)):
+                solution_lat.append(float(path[3*idx]))
+                solution_lon.append(float(path[3*idx+1]))
+                solution_alt.append(float(path[3*idx+2]))
+            self.solution.append((solution_lat,solution_lon, solution_alt,plannerType))
+        else:
+            print('Error inside SolutionPath')
+    
+        return self.solution
+
+
+    def plotSolutionPath(self,anima=False):
+        if anima == False:
+            if self.dimension == '2D':
+                fig, ax = plt.subplots()
+                #Obstacle
+                for polygon in self.obstacle:
+                    lat,lon = zip(*polygon[0])
+                    lat = list(lat)
+                    lon = list(lon)
+                    lat.append(polygon[0][0][0])
+                    lon.append(polygon[0][0][1])
+                #    ax.plot(lon, lat, linestyle='-', color='red')
+                    ax.fill(lon, lat, facecolor='gray', edgecolor='black')
+                
+                #Region
+                lat,lon = zip(*self.region)
+                lat = list(lat)
+                lon = list(lon)
+                lat.append(self.region[0][0])
+                lon.append(self.region[0][1])
+                ax.plot(lon, lat, linestyle='-.', color='green', label='Region of Interest')
+
+                #Solution
+                for solution in self.solution:
+                    ax.plot(solution[1], solution[0], label=solution[2])
+                ax.set(xlabel='Latitude', ylabel='Longitude', title='Solution Path')
+                #ax.set_xlim(self.x_bound[0]*1.1, self.x_bound[1]*1.1)
+                #ax.set_ylim(self.y_bound[0]*1.1, self.y_bound[1]*1.1)
+                ax.legend()
+                #ax.grid()
+                #ax.autoscale()
+                plt.show()
+            elif self.dimension == '3D':
+                fig = plt.figure()
+                ax = fig.add_subplot(111, projection='3d')
+                ax1 = fig.add_subplot(121, projection='3d')
+                #Solution
+                for solution in self.solution:
+                    ax.plot(solution[1], solution[0], solution[2], label=solution[3])
+                #Obstacle
+                x_list = []
+                y_list = []
+                z_list = []
+                x_dist = []
+                y_dist = []
+                z_dist =[]
+                for polygon in self.obstacle:
+                    #_ = []
+                    #y_ = []
+                    #for point in polygon[0]:
+                    #    x_.append(point[0])
+                    #    y_.append(point[1])
+                    #xmin = min(x_)
+                    #xmax = max(x_)
+                    #ymin = min(y_)
+                    #ymax = max(y_)
+
+                    #z_z = [polygon[1],polygon[2]]
+                    #poly = PolyCollection([polygon[0],polygon[0]], facecolors=['r'], alpha=.5)
+                    #ax.add_collection3d(poly, zs=z_z, zdir='z')
+                    
+                    #z_y = [ymin,ymax]
+                    #poly_ = [(xmin,polygon[1]),(xmin,polygon[2]),
+                    #        (xmax,polygon[2]),(xmax,polygon[1])]
+                    #poly = PolyCollection([poly_,poly_], facecolors=['r'], alpha=.5)
+                    #ax.add_collection3d(poly, zs=z_y, zdir='y')
+
+                    #z_x = [xmin,xmax]
+                    #poly_ = [(ymin,polygon[1]),(ymin,polygon[2]),
+                    #        (ymax,polygon[2]),(ymax,polygon[1])]
+                    #poly = PolyCollection([poly_,poly_], facecolors=['r'], alpha=.5)
+                    #ax.add_collection3d(poly, zs=z_x, zdir='x')
+                    
+                    #z_x = [polygon[0][0][0],polygon[0][3][0]]
+                    #poly_ = [(polygon[0][0][1],polygon[1]),(polygon[0][1][1],polygon[1]),
+                    #        (polygon[0][2][1],polygon[2]),(polygon[0][3][1],polygon[2])]
+                    #poly = PolyCollection([poly_], facecolors=['r'], alpha=.6)
+                    #ax.add_collection3d(poly, zs=z_x, zdir='x')
+
+                    _x = []
+                    _y = []
+                    for point in polygon[0]:
+                        _x.append(point[0])
+                        _y.append(point[1])
+
+                    x_list.append(min(_x))
+                    y_list.append(min(_y))
+                    z_list.append(polygon[1])
+                    x_dist.append(max(_x)-min(_x))
+                    y_dist.append(max(_y)-min(_y))
+                    z_dist.append(polygon[2])
+                    
+                ax1.bar3d(x_list, y_list, z_list, x_dist, y_dist, z_dist, shade=True, color='red',alpha=0.4)
+
+                ax.set(xlabel='Latitude', ylabel='Longitude', title='Solution Path')
+                ax.legend()
+                #ax.grid()
+                #ax.autoscale()
+                plt.show()     
+            else:
+                print('Error inside plotSolutionPath')
+        else:
+            if self.dimension == '2D':
+                fig, ax = plt.subplots()
+                #fig, ax = plt.subplots()
+                #Obstacle
+                for polygon in self.obstacle:
+                    x,y = zip(*polygon[0])
+                    line, = ax.plot(x, y, 'r-')
+                def init():
+                    ax.set_xlim(self.x_bound[0]*1.1, self.x_bound[1]*1.1)
+                    ax.set_ylim(self.y_bound[0]*1.1, self.y_bound[1]*1.1)
+                    return ln,
+                cont = 0
+                def update(frame):
+                    xdata.append(frame(0)[cont])
+                    ydata.append(frame(1)[cont])
+                    ln.set_data(xdata, ydata)
+                    cont = cont + 1
+                    return ln,
+                #Solution
+                for solution in self.solution:
+                    xdata, ydata = [], []
+                    ln, = plt.plot([], [], label=solution[2])
+                    ani = FuncAnimation(fig, update, frames=(solution[0], solution[1]),
+                                    init_func=init, blit=True)
+                    ax.set(xlabel='Latitude', ylabel='Longitude',
+                    title='Solution Path')
+                    ax.legend()
+                    #ax.grid()
+                    plt.show()
+                    input("Enter something")
+            elif self.dimension == '3D':
+                pass
+            else:
+                print('Error inside plotSolutionPath')
+
+
+    def plotPlannerStates(self):
+        from mpl_toolkits.mplot3d import Axes3D
+        import numpy as np
+        import matplotlib.pyplot as plt
+        import matplotlib.animation as animation
+
+        if self.dimension == '2D':
+            fig, ax = plt.subplots()
+            #Obstacle
+            for polygon in self.obstacle:
+                x,y = zip(*polygon[0])
+                line, = ax.plot(x, y, 'r-')
+                
+            #Solution
+            for solution in self.PlannerStates:
+                ax.plot(solution[0], solution[1], label=solution[2])
+
+            ax.set(xlabel='Latitude', ylabel='Longitude',
+                title='Solution Path')
+            ax.legend()
+            #ax.grid()
+            plt.show()
+
+        elif self.dimension == '3D':
+            pass
+        else:
+            print('Error inside plotSolutionPath')
+    
+
+
 
 if __name__ == "__main__":
     # Create an argument parser
@@ -535,12 +598,12 @@ if __name__ == "__main__":
 
 
     # Solve the planning problem
-    polygon = [(-3, -2),
-                (-3, 5), 
-                (6, 5),
-                (6, -2)]
-    base = 0.2
-    topo = 0.6
+    polygon = [(-3,-2),
+               (-3, 5), 
+               ( 6, 5),
+               ( 6,-2)]
+    base = 2
+    topo = 6
     
     polygon2 = [(8, 9),
                 (8, 6),
@@ -549,24 +612,24 @@ if __name__ == "__main__":
 
 
     obstacle = [(polygon, base, topo),(polygon2, base, topo)]
-    obstacle = [([(-12.200000000000001, -47.5), (-12.1, -47.5), (-12.1, -47.599999999999994), (-12.200000000000001, -47.599999999999994)], 0.2, 0.6), ([(-12.3, -47.5), (-12.2, -47.5), (-12.2, -47.599999999999994), (-12.3, -47.599999999999994)], 0.2, 0.6), ([(-12.3, -47.400000000000006), (-12.2, -47.400000000000006), (-12.2, -47.5), (-12.3, -47.5)], 0.2, 0.6), ([(-12.3, -47.1), (-12.2, -47.1), (-12.2, -47.199999999999996), (-12.3, -47.199999999999996)], 0.2, 0.6), ([(-12.4, -47.6), (-12.299999999999999, -47.6), (-12.299999999999999, -47.699999999999996), (-12.4, -47.699999999999996)], 0.2, 0.6), ([(-12.4, -47.5), (-12.299999999999999, -47.5), (-12.299999999999999, -47.599999999999994), (-12.4, -47.599999999999994)], 0.2, 0.6), ([(-12.4, -47.400000000000006), (-12.299999999999999, -47.400000000000006), (-12.299999999999999, -47.5), (-12.4, -47.5)], 0.2, 0.6), ([(-12.5, -47.7), (-12.399999999999999, -47.7), (-12.399999999999999, -47.8), (-12.5, -47.8)], 0.2, 0.6), ([(-12.5, -47.6), (-12.399999999999999, -47.6), (-12.399999999999999, -47.699999999999996), (-12.5, -47.699999999999996)], 0.2, 0.6), ([(-12.5, -47.5), (-12.399999999999999, -47.5), (-12.399999999999999, -47.599999999999994), (-12.5, -47.599999999999994)], 0.2, 0.6), ([(-12.5, -47.400000000000006), (-12.399999999999999, -47.400000000000006), (-12.399999999999999, -47.5), (-12.5, -47.5)], 0.2, 0.6), ([(-12.5, -47.300000000000004), (-12.399999999999999, -47.300000000000004), (-12.399999999999999, -47.4), (-12.5, -47.4)], 0.2, 0.6), ([(-12.600000000000001, -47.5), (-12.5, -47.5), (-12.5, -47.599999999999994), (-12.600000000000001, -47.599999999999994)], 0.2, 0.6), ([(-12.600000000000001, -47.400000000000006), (-12.5, -47.400000000000006), (-12.5, -47.5), (-12.600000000000001, -47.5)], 0.2, 0.6), ([(-12.600000000000001, -47.300000000000004), (-12.5, -47.300000000000004), (-12.5, -47.4), (-12.600000000000001, -47.4)], 0.2, 0.6)]
+    #obstacle = [([(-12.200000000000001, -47.5), (-12.1, -47.5), (-12.1, -47.599999999999994), (-12.200000000000001, -47.599999999999994)], 0.2, 0.6), ([(-12.3, -47.5), (-12.2, -47.5), (-12.2, -47.599999999999994), (-12.3, -47.599999999999994)], 0.2, 0.6), ([(-12.3, -47.400000000000006), (-12.2, -47.400000000000006), (-12.2, -47.5), (-12.3, -47.5)], 0.2, 0.6), ([(-12.3, -47.1), (-12.2, -47.1), (-12.2, -47.199999999999996), (-12.3, -47.199999999999996)], 0.2, 0.6), ([(-12.4, -47.6), (-12.299999999999999, -47.6), (-12.299999999999999, -47.699999999999996), (-12.4, -47.699999999999996)], 0.2, 0.6), ([(-12.4, -47.5), (-12.299999999999999, -47.5), (-12.299999999999999, -47.599999999999994), (-12.4, -47.599999999999994)], 0.2, 0.6), ([(-12.4, -47.400000000000006), (-12.299999999999999, -47.400000000000006), (-12.299999999999999, -47.5), (-12.4, -47.5)], 0.2, 0.6), ([(-12.5, -47.7), (-12.399999999999999, -47.7), (-12.399999999999999, -47.8), (-12.5, -47.8)], 0.2, 0.6), ([(-12.5, -47.6), (-12.399999999999999, -47.6), (-12.399999999999999, -47.699999999999996), (-12.5, -47.699999999999996)], 0.2, 0.6), ([(-12.5, -47.5), (-12.399999999999999, -47.5), (-12.399999999999999, -47.599999999999994), (-12.5, -47.599999999999994)], 0.2, 0.6), ([(-12.5, -47.400000000000006), (-12.399999999999999, -47.400000000000006), (-12.399999999999999, -47.5), (-12.5, -47.5)], 0.2, 0.6), ([(-12.5, -47.300000000000004), (-12.399999999999999, -47.300000000000004), (-12.399999999999999, -47.4), (-12.5, -47.4)], 0.2, 0.6), ([(-12.600000000000001, -47.5), (-12.5, -47.5), (-12.5, -47.599999999999994), (-12.600000000000001, -47.599999999999994)], 0.2, 0.6), ([(-12.600000000000001, -47.400000000000006), (-12.5, -47.400000000000006), (-12.5, -47.5), (-12.600000000000001, -47.5)], 0.2, 0.6), ([(-12.600000000000001, -47.300000000000004), (-12.5, -47.300000000000004), (-12.5, -47.4), (-12.600000000000001, -47.4)], 0.2, 0.6)]
 
-    #start =(-10,-10) 
-    #goal = (10,10)
-    #region = [( 10, 10),
-    #          (30, -10),
-    #          (20, -20),
-    #          (-10,-20),
-    #          ( -30,0)]
-    start =(-12.62, -47.86) 
-    goal = (-12.21, -47.28)
-    region = [(-12.0, -47.98), 
-            (-12.0, -46.99), 
-            (-12.67, -46.99), 
-            (-12.67, -47.98)]
+    start =(-10,-10,1) 
+    goal = (10,10,8)
+    region = [( 10, 10),
+              ( 30,-10),
+              ( 20,-20),
+              (-10,-20),
+              (-30, 0)]
+    #start =(-12.62, -47.86, 0.2) 
+    #goal = (-12.21, -47.28, 0.7)
+    #region = [(-12.0, -47.98), 
+    #        (-12.0, -46.99), 
+    #        (-12.67, -46.99), 
+    #        (-12.67, -47.98)]
 
 
-    dimension = '2D'
+    dimension = '3D'
     planner = 'RRTstar'
 
     plan = PathPlanning(start, goal, region, obstacle, planner, dimension)

@@ -39,6 +39,7 @@ from pyredemet.src.pyredemet import *
 
 #(-12.576857, -47.773923)
 _type = 'stsc' 
+#date = '2020092322'
 date = '2020092322'
 polygon = [(-12.0, -47.98),
             (-12.0, -46.99), 
@@ -54,8 +55,8 @@ polygon_list = redemet.getPolygons(_type, date, polygon)
 #            (-3, 5), 
 #            (6, 5),
 #            (6, -2)]
-base = 0.2
-topo = 0.6
+base = 1
+topo = 10
 
 #polygon2 = [(8, 9),
 #            (8, 6),
@@ -65,17 +66,17 @@ obstacle = []
 for pol in polygon_list:
     
     obstacle.append((pol, base, topo))
-print(obstacle)
+#print(obstacle)
 
-start =(-12.625412, -47.867092) 
-goal = (-12.214918, -47.283527)
+start =(-12.625412, -47.867092, 1) 
+goal = (-12.214918, -47.283527, 8)
 region = [(-12.0, -47.98), 
             (-12.0, -46.99), 
             (-12.67, -46.99), 
             (-12.67, -47.98)]
 #redemet.showPolygons(polygon=polygon,points=[start,goal])
 
-dimension = '2D'
+dimension = '3D'
 planner = 'RRTstar'
 
 plan = PathPlanning(start, goal, region, obstacle, planner, dimension)
@@ -83,10 +84,10 @@ plan = PathPlanning(start, goal, region, obstacle, planner, dimension)
 
 
 for planner in ['BFMTstar', 'BITstar', 'FMTstar', 'InformedRRTstar', 'PRMstar', 'RRTstar', 'SORRTstar']:
-    result = plan.plan(10, planner, 'PathLength')
+    result = plan.plan(5, planner, 'PathLength')
 
-#plan.plotSolutionPath(anima=False)
-redemet.showPolygons(polygon=polygon, lines=plan.solution,points=[start,goal])
+plan.plotSolutionPath(anima=False)
+redemet.showPolygons(polygon=polygon, lines=plan.solution,points=[start[0:2],goal[0:2]])
 
 
 

@@ -47,17 +47,17 @@ class RedemetCore():
             if polygon_shp.contains(point_shp):
                 self.point_list.append(point)
     
-    def showPolygons(self, polygon=[],lines=[],points=[], location=[-11,-50], zoom_start=5, filepath='/home/josuehfa/System/CoreSystem/map.html'):
+    def showPolygons(self, polygon=[],lines=[],points=[], location=[-11,-50], zoom_start=8, filepath='/home/josuehfa/System/CoreSystem/map.html'):
         '''Use Folium to plot an interative map with points and polygons'''
         #Create a Map instance
         m = folium.Map(location=location,zoom_start=zoom_start,control_scale=True)
-        list_colors = [ 'blue', 'purple', 'orange','lightred', 'cadetblue', 'darkpurple', 'pink', 'lightblue', 'lightgreen', 'lightgray' ]
         if lines != []:
             for idx, line in enumerate(lines):
                 lat_lon = []                
                 for idx in range(len(line[0])):
                     lat_lon.append((line[0][idx],line[1][idx]))
-                folium.PolyLine(lat_lon, color=list_colors[idx%len(list_colors)]).add_to(m)
+                color = "#" +"%06x" % random.randint(0, 0xFFFFFF)
+                folium.PolyLine(lat_lon, color=color).add_to(m)
 
         colors = ['red','blue']
         if points != []:
