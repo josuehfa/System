@@ -17,16 +17,25 @@ import numpy as np
 
 # Import PySwarms
 import pyswarms as ps
-from pyswarms.utils.functions import single_obj as fx
+from pyswarms.utils.functions import single_obj as f
+
+import pandas as pd
 from math import sqrt
 import argparse
 from shapely.geometry import Point,LineString
 from shapely.geometry.polygon import Polygon
 from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
+import matplotlib as mpl
+mpl.use('tkAgg')
+#mpl.rcParams['agg.path.chunksize'] = 10000000
 import matplotlib.pyplot as plt
 import matplotlib.animation as FuncAnimation
 from matplotlib.collections import PolyCollection
+
+
+import plotly.graph_objects as go
+import plotly.express as px      
 
 class PathPlanning():
     def __init__(self, start, goal, region, obstacle, planner, dimension):
@@ -38,6 +47,8 @@ class PathPlanning():
         self.dimension = dimension
         self.solution = []
         self.PlannerStates = []
+        self.solutionDataFrame = pd.DataFrame({'latitude':[],'longitude':[],'altitude':[],'algorithm':[]})
+        
     
 
     def plan(self,runTime, plannerType, objectiveType):
@@ -330,12 +341,18 @@ class PathPlanning():
 
         if solved:
             # Output the length of the path found
-            print('{0} found solution of path length {1:.4f} with an optimization ' \
-                'objective value of {2:.4f}'.format( \
-                optimizingPlanner.getName(), \
-                pdef.getSolutionPath().length(), \
-                pdef.getSolutionPath().cost(pdef.getOptimizationObjective()).value()))
-            
+            try:
+                print('{0} found solution of path length {1:.4f} with an optimization ' \
+                    'objective value of {2:.4f}'.format( \
+                    optimizingPlanner.getName(), \
+                    pdef.getSolutionPath().length(), \
+                    pdef.getSolutionPath().cost(pdef.getOptimizationObjective()).value()))
+
+                return self.decodeSolutionPath(pdef.getSolutionPath().printAsMatrix(),plannerType)
+            except:
+                print("No solution found.")
+                pass
+                
             # If a filename was specified, output the path as a matrix to
             # that file for visualization
             #path = og.PathGeometric(pdef.getSpaceInformation())
@@ -345,7 +362,7 @@ class PathPlanning():
             #test = path.printAsMatrix()
             #test = pdef.getSolutionPath().printAsMatrix()
 
-            return self.decodeSolutionPath(pdef.getSolutionPath().printAsMatrix(),plannerType)
+            
             
             #if fname:
             #    with open(fname, 'w') as outFile:
@@ -358,6 +375,7 @@ class PathPlanning():
         solution_lat = []
         solution_lon = []
         solution_alt = []
+        solution_planner = []
         path = path.replace('\n','')
         path = path.split(' ')
         path = path[:len(path)-1]
@@ -371,7 +389,13 @@ class PathPlanning():
                 solution_lat.append(float(path[3*idx]))
                 solution_lon.append(float(path[3*idx+1]))
                 solution_alt.append(float(path[3*idx+2]))
+                solution_planner.append(plannerType)
+
+            df = pd.DataFrame({'latitude':solution_lat,'longitude':solution_lon,'altitude':solution_alt,'algorithm':solution_planner})
+            self.solutionDataFrame = pd.concat([self.solutionDataFrame,df],ignore_index=True)
+
             self.solution.append((solution_lat,solution_lon, solution_alt,plannerType))
+            
         else:
             print('Error inside SolutionPath')
     
@@ -404,81 +428,44 @@ class PathPlanning():
                 for solution in self.solution:
                     ax.plot(solution[1], solution[0], label=solution[2])
                 ax.set(xlabel='Latitude', ylabel='Longitude', title='Solution Path')
-                #ax.set_xlim(self.x_bound[0]*1.1, self.x_bound[1]*1.1)
-                #ax.set_ylim(self.y_bound[0]*1.1, self.y_bound[1]*1.1)
                 ax.legend()
                 #ax.grid()
                 #ax.autoscale()
                 plt.show()
+
             elif self.dimension == '3D':
-                fig = plt.figure()
-                ax = fig.add_subplot(111, projection='3d')
-                ax1 = fig.add_subplot(121, projection='3d')
-                #Solution
-                for solution in self.solution:
-                    ax.plot(solution[1], solution[0], solution[2], label=solution[3])
-                #Obstacle
-                x_list = []
-                y_list = []
-                z_list = []
-                x_dist = []
-                y_dist = []
-                z_dist =[]
+                fig = px.line_3d(self.solutionDataFrame, x="latitude", y="longitude", z="altitude",color='algorithm')
                 for polygon in self.obstacle:
-                    #_ = []
-                    #y_ = []
-                    #for point in polygon[0]:
-                    #    x_.append(point[0])
-                    #    y_.append(point[1])
-                    #xmin = min(x_)
-                    #xmax = max(x_)
-                    #ymin = min(y_)
-                    #ymax = max(y_)
-
-                    #z_z = [polygon[1],polygon[2]]
-                    #poly = PolyCollection([polygon[0],polygon[0]], facecolors=['r'], alpha=.5)
-                    #ax.add_collection3d(poly, zs=z_z, zdir='z')
-                    
-                    #z_y = [ymin,ymax]
-                    #poly_ = [(xmin,polygon[1]),(xmin,polygon[2]),
-                    #        (xmax,polygon[2]),(xmax,polygon[1])]
-                    #poly = PolyCollection([poly_,poly_], facecolors=['r'], alpha=.5)
-                    #ax.add_collection3d(poly, zs=z_y, zdir='y')
-
-                    #z_x = [xmin,xmax]
-                    #poly_ = [(ymin,polygon[1]),(ymin,polygon[2]),
-                    #        (ymax,polygon[2]),(ymax,polygon[1])]
-                    #poly = PolyCollection([poly_,poly_], facecolors=['r'], alpha=.5)
-                    #ax.add_collection3d(poly, zs=z_x, zdir='x')
-                    
-                    #z_x = [polygon[0][0][0],polygon[0][3][0]]
-                    #poly_ = [(polygon[0][0][1],polygon[1]),(polygon[0][1][1],polygon[1]),
-                    #        (polygon[0][2][1],polygon[2]),(polygon[0][3][1],polygon[2])]
-                    #poly = PolyCollection([poly_], facecolors=['r'], alpha=.6)
-                    #ax.add_collection3d(poly, zs=z_x, zdir='x')
-
-                    _x = []
-                    _y = []
+                    lat_pnt = []
+                    lon_pnt = []
+                    alt_pnt = []
                     for point in polygon[0]:
-                        _x.append(point[0])
-                        _y.append(point[1])
+                        lat_pnt.append(point[0])
+                        lon_pnt.append(point[1])
+                        alt_pnt.append(polygon[1])
+                    for point in polygon[0]:
+                        lat_pnt.append(point[0])
+                        lon_pnt.append(point[1])
+                        alt_pnt.append(polygon[2])
 
-                    x_list.append(min(_x))
-                    y_list.append(min(_y))
-                    z_list.append(polygon[1])
-                    x_dist.append(max(_x)-min(_x))
-                    y_dist.append(max(_y)-min(_y))
-                    z_dist.append(polygon[2])
-                    
-                ax1.bar3d(x_list, y_list, z_list, x_dist, y_dist, z_dist, shade=True, color='red',alpha=0.4)
-
-                ax.set(xlabel='Latitude', ylabel='Longitude', title='Solution Path')
-                ax.legend()
-                #ax.grid()
-                #ax.autoscale()
-                plt.show()     
+                
+                    fig.add_trace(go.Mesh3d(x=lat_pnt,
+                    y=lon_pnt,
+                    z=alt_pnt,
+                    color='rgba(108, 122, 137, 1)',
+                    colorbar_title='z',
+                    i = [7, 0, 0, 0, 4, 4, 6, 6, 4, 0, 3, 2],
+                    j = [3, 4, 1, 2, 5, 6, 5, 2, 0, 1, 6, 3],
+                    k = [0, 7, 2, 3, 6, 7, 1, 1, 5, 5, 7, 6],
+                    name='y',
+                    showscale=True
+                    ))
+                
+                fig.update_scenes(xaxis_autorange="reversed")
+                fig.show()
             else:
                 print('Error inside plotSolutionPath')
+            
         else:
             if self.dimension == '2D':
                 fig, ax = plt.subplots()
@@ -515,6 +502,41 @@ class PathPlanning():
             else:
                 print('Error inside plotSolutionPath')
 
+    def Plot_MPL():
+    
+            #Obstacle MatplotLib
+            fig = plt.figure()
+            ax = fig.add_subplot(111, projection='3d')
+            for solution in self.solution:
+                ax.plot(solution[1], solution[0], solution[2], label=solution[3]) 
+
+            lat_list = []
+            lon_list = []
+            alt_list = []
+            lat_dist = []
+            lon_dist = []
+            alt_dist = []
+
+            for polygon in self.obstacle:
+                _lat = []
+                _lon = []
+                for point in polygon[0]:
+                    _lat.append(point[0])
+                    _lon.append(point[1])
+                    
+                lat_list.append(min(_lat))
+                lon_list.append(min(_lon))
+                alt_list.append(polygon[1])
+                lat_dist.append(max(_lat)-min(_lat))
+                lon_dist.append(max(_lon)-min(_lon))
+                alt_dist.append(polygon[2])
+            
+            ax.bar3d(lon_list, lat_list, alt_list, lon_dist, lat_dist, alt_dist, shade=True, color='gray',alpha=1, zsort='max')
+            ax.set(xlabel='Latitude', ylabel='Longitude',zlabel='Altitude', title='Solution Path')
+            ax.legend()
+            ax.grid()
+            #ax.autoscale()
+            plt.show()
 
     def plotPlannerStates(self):
         from mpl_toolkits.mplot3d import Axes3D
@@ -597,6 +619,7 @@ if __name__ == "__main__":
     #obstacle = [(polygon, base, topo)]
 
 
+
     # Solve the planning problem
     polygon = [(-3,-2),
                (-3, 5), 
@@ -633,12 +656,46 @@ if __name__ == "__main__":
     planner = 'RRTstar'
 
     plan = PathPlanning(start, goal, region, obstacle, planner, dimension)
-    result = plan.plan(2, planner, 'PathLength')
+    #result = plan.plan(2, planner, 'PathLength')
 
-    #for planner in ['BFMTstar', 'BITstar', 'FMTstar', 'InformedRRTstar', 'PRMstar', 'RRTstar', 'SORRTstar']:
-    #    result = plan.plan(2, planner, 'PathLength')
+    for planner in ['BFMTstar', 'BITstar', 'FMTstar', 'InformedRRTstar', 'PRMstar', 'RRTstar', 'SORRTstar']:
+        result = plan.plan(2, planner, 'PathLength')
     print(plan.solution)
     plan.plotSolutionPath(anima=False)
 
     
- 
+
+
+
+
+                    #_ = []
+                    #y_ = []
+                    #for point in polygon[0]:
+                    #    x_.append(point[0])
+                    #    y_.append(point[1])
+                    #xmin = min(x_)
+                    #xmax = max(x_)
+                    #ymin = min(y_)
+                    #ymax = max(y_)
+
+                    #z_z = [polygon[1],polygon[2]]
+                    #poly = PolyCollection([polygon[0],polygon[0]], facecolors=['r'], alpha=.5)
+                    #ax.add_collection3d(poly, zs=z_z, zdir='z')
+                    
+                    #z_y = [ymin,ymax]
+                    #poly_ = [(xmin,polygon[1]),(xmin,polygon[2]),
+                    #        (xmax,polygon[2]),(xmax,polygon[1])]
+                    #poly = PolyCollection([poly_,poly_], facecolors=['r'], alpha=.5)
+                    #ax.add_collection3d(poly, zs=z_y, zdir='y')
+
+                    #z_x = [xmin,xmax]
+                    #poly_ = [(ymin,polygon[1]),(ymin,polygon[2]),
+                    #        (ymax,polygon[2]),(ymax,polygon[1])]
+                    #poly = PolyCollection([poly_,poly_], facecolors=['r'], alpha=.5)
+                    #ax.add_collection3d(poly, zs=z_x, zdir='x')
+                    
+                    #z_x = [polygon[0][0][0],polygon[0][3][0]]
+                    #poly_ = [(polygon[0][0][1],polygon[1]),(polygon[0][1][1],polygon[1]),
+                    #        (polygon[0][2][1],polygon[2]),(polygon[0][3][1],polygon[2])]
+                    #poly = PolyCollection([poly_], facecolors=['r'], alpha=.6)
+                    #ax.add_collection3d(poly, zs=z_x, zdir='x')

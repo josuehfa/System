@@ -1,3 +1,6 @@
 2020-11-01 22:19:58,443 - shapely.geos - INFO - Too few points in geometry component at or near point -1 -1
 2020-11-01 22:19:58,762 - shapely.geos - INFO - Too few points in geometry component at or near point -1 -1
 2020-11-01 22:19:59,510 - shapely.geos - INFO - Too few points in geometry component at or near point -1 -1
+2020-11-11 22:18:15,842 - pyface.base_toolkit - INFO - Could not load traitsui.toolkits plugin 'qt4' from 'traitsui.qt4'
+2020-11-11 22:18:15,905 - pyface.base_toolkit - INFO - Could not load traitsui.toolkits plugin 'wx' from 'traitsui.wx'
+2020-11-11 22:18:15,911 - pyface.base_toolkit - INFO - Could not load traitsui.toolkits plugin 'qt' from 'traitsui.qt4'
