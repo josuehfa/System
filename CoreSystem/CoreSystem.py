@@ -40,7 +40,7 @@ from pyredemet.src.pyredemet import *
 #(-12.576857, -47.773923)
 _type = 'stsc' 
 #date = '2020092322'
-date = '2020092323'
+date = '2020092322'
 polygon = [(-12.0, -47.98),
             (-12.0, -46.99), 
             (-12.67, -46.99), 
@@ -84,7 +84,7 @@ plan = PathPlanning(start, goal, region, obstacle, planner, dimension)
 
 
 for planner in ['BFMTstar', 'BITstar', 'FMTstar', 'InformedRRTstar', 'PRMstar', 'RRTstar', 'SORRTstar']:
-    result = plan.plan(10, planner, 'PathLength')
+    result = plan.plan(20, planner, 'PathLength')
 redemet.showPolygons(polygon=polygon, lines=plan.solution,points=[start[0:2],goal[0:2]])
 plan.plotSolutionPath(anima=False)
 

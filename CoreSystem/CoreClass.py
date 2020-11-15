@@ -50,7 +50,7 @@ class RedemetCore():
         else:
             print('Error DecoderSTSC!')
     
-    def showPolygons(self, polygon=[],lines=[],points=[], location=[-11,-50], zoom_start=8, filepath='/home/josuehfa/System/CoreSystem/map.html'):
+    def showPolygons(self, polygon=[],lines=[],points=[], location=[-12,-47], zoom_start=8, filepath='/home/josuehfa/System/CoreSystem/map.html'):
         '''Use Folium to plot an interative map with points and polygons'''
         #Create a Map instance
         m = folium.Map(location=location,zoom_start=zoom_start,control_scale=True)
