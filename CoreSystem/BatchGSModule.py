@@ -4,7 +4,7 @@ from pymavlink import mavutil, mavwp
 import pymavlink
 from multipledispatch import dispatch
 from pymavlink.dialects.v10 import icarous
-
+from pandas import DataFrame 
 import numpy as np
 import math
 from numpy import sin,cos
@@ -270,6 +270,29 @@ class BatchGSModule():
 
                 self.fenceList.append(Geofence)
 
+    @dispatch(DataFrame)
+    def loadWaypoint(self,waypoints):
+        '''load waypoints from a pathplanning wp list'''
+        self.wploader.target_system = self.target_system
+        self.wploader.target_component = self.target_component
+        try:
+            for wp in waypoints:
+                self.wploader.add_latlonalt(wp['latitude'], wp['longitude'], wp['altitude'], terrain_alt=False)
+        except Exception as msg:
+            print("Unable to load %s - %s" % (filename, msg))
+            return
+        print("Loaded %u waypoints from %s" % (self.wploader.count(), filename))
+        self.send_all_waypoints()
+        while self.loading_waypoints:
+            reqd_msgs = ['WAYPOINT_COUNT', 'MISSION_COUNT',
+                         'WAYPOINT', 'MISSION_ITEM',
+                         'WAYPOINT_REQUEST', 'MISSION_REQUEST'
+                         'MISSION_ACK']            
+            data = self.master.recv_msg()
+            if data is not None:
+                self.mavlink_packet_wp(data)
+
+    @dispatch(str)
     def loadWaypoint(self,filename):
         '''load waypoints from a file'''
         self.wploader.target_system = self.target_system

@@ -49,6 +49,7 @@ class PathPlanning():
         self.solution = []
         self.PlannerStates = []
         self.solutionDataFrame = pd.DataFrame({'latitude':[],'longitude':[],'altitude':[],'algorithm':[]})
+        self.solutionData = []
         
     
 
@@ -349,7 +350,7 @@ class PathPlanning():
                     pdef.getSolutionPath().length(), \
                     pdef.getSolutionPath().cost(pdef.getOptimizationObjective()).value()))
 
-                return self.decodeSolutionPath(pdef.getSolutionPath().printAsMatrix(),plannerType)
+                return self.decodeSolutionPath(pdef.getSolutionPath().printAsMatrix(),plannerType, pdef.getSolutionPath().cost(pdef.getOptimizationObjective()).value())
             except:
                 print("No solution found.")
                 pass
@@ -372,7 +373,7 @@ class PathPlanning():
         else:
             print("No solution found.")
 
-    def decodeSolutionPath(self, path, plannerType):
+    def decodeSolutionPath(self, path, plannerType, pathCost):
         solution_lat = []
         solution_lon = []
         solution_alt = []
@@ -395,7 +396,11 @@ class PathPlanning():
             df = pd.DataFrame({'latitude':solution_lat,'longitude':solution_lon,'altitude':solution_alt,'algorithm':solution_planner})
             self.solutionDataFrame = pd.concat([self.solutionDataFrame,df],ignore_index=True)
 
-            self.solution.append((solution_lat,solution_lon, solution_alt,plannerType))
+
+            self.solutionData.append((plannerType, df, pathCost))
+
+            self.solution.append((solution_lat,solution_lon, solution_alt, plannerType, pathCost))
+
             
         else:
             print('Error inside SolutionPath')
@@ -405,6 +410,7 @@ class PathPlanning():
 
     def plotSolutionPath(self,anima=False):
         if anima == False:
+            self.solutionData = sorted(self.solutionData, key=lambda x: x[2])
             if self.dimension == '2D':
                 fig, ax = plt.subplots()
                 #Obstacle
@@ -440,11 +446,15 @@ class PathPlanning():
                     rows=3, cols=2,
                     column_widths=[0.6, 0.4],
                     row_heights=[0.2, 0.2, 0.6],
+                    subplot_titles=("3D Path","Altitude vs Latitude", "Altitude vs Longitude ", "Paths vs Map"),
                     specs=[[{"type": "mesh3d", "rowspan": 3}, {"type": "scatter"}],
                            [        None     , {"type": "scatter"}],
                            [        None     , {"type": "scattermapbox"}]])
 
-                fig_aux = px.line_3d(self.solutionDataFrame, x="latitude", y="longitude", z="altitude",color='algorithm')
+                #fig_aux = px.line_3d(self.solutionDataFrame, x="latitude", y="longitude", z="altitude",color='algorithm')
+                
+                fig_aux = px.line_3d(self.solutionData[0][1], x="latitude", y="longitude", z="altitude",color='algorithm')
+                
                 fig.append_trace(fig_aux['data'][0],row=1,col=1)
                 for polygon in self.obstacle:
                     lat_pnt = []
@@ -467,7 +477,7 @@ class PathPlanning():
                         i = [7, 0, 0, 0, 4, 4, 6, 6, 4, 0, 3, 2],
                         j = [3, 4, 1, 2, 5, 6, 5, 2, 0, 1, 6, 3],
                         k = [0, 7, 2, 3, 6, 7, 1, 1, 5, 5, 7, 6],
-                        name='y',
+                        name=polygon[3],
                         showscale=True
                         ))
                 fig.update_scenes(xaxis_autorange="reversed")
@@ -487,10 +497,16 @@ class PathPlanning():
                     )))
                 
 
-                fig_aux_2 = px.line(self.solutionDataFrame, x="latitude", y="altitude", title='Latitude vs Altitude',color='algorithm')
+                #fig_aux_2 = px.line(self.solutionDataFrame, x="latitude", y="altitude", title='Latitude vs Altitude',color='algorithm')
+                #fig.append_trace(fig_aux_2['data'][0],row=1,col=2)
+
+                #fig_aux_3 = px.line(self.solutionDataFrame, x="longitude", y="altitude", title='Longitude vs Altitude',color='algorithm')
+                #fig.append_trace(fig_aux_3['data'][0],row=2,col=2)
+
+                fig_aux_2 = px.line(self.solutionData[0][1], x="latitude", y="altitude", title='Latitude vs Altitude',color='algorithm')
                 fig.append_trace(fig_aux_2['data'][0],row=1,col=2)
 
-                fig_aux_3 = px.line(self.solutionDataFrame, x="longitude", y="altitude", title='Longitude vs Altitude',color='algorithm')
+                fig_aux_3 = px.line(self.solutionData[0][1], x="longitude", y="altitude", title='Longitude vs Altitude',color='algorithm')
                 fig.append_trace(fig_aux_3['data'][0],row=2,col=2)
 
 
@@ -750,9 +766,9 @@ if __name__ == "__main__":
                 (8, 6),
                 (6, 6),
                 (6, 9)]
+    type_obstacle = 'CB'  
 
-
-    obstacle = [(polygon, base, topo),(polygon2, base, topo)]
+    obstacle = [(polygon, base, topo, type_obstacle),(polygon2, base, topo,type_obstacle)]
     #obstacle = [([(-12.200000000000001, -47.5), (-12.1, -47.5), (-12.1, -47.599999999999994), (-12.200000000000001, -47.599999999999994)], 0.2, 0.6), ([(-12.3, -47.5), (-12.2, -47.5), (-12.2, -47.599999999999994), (-12.3, -47.599999999999994)], 0.2, 0.6), ([(-12.3, -47.400000000000006), (-12.2, -47.400000000000006), (-12.2, -47.5), (-12.3, -47.5)], 0.2, 0.6), ([(-12.3, -47.1), (-12.2, -47.1), (-12.2, -47.199999999999996), (-12.3, -47.199999999999996)], 0.2, 0.6), ([(-12.4, -47.6), (-12.299999999999999, -47.6), (-12.299999999999999, -47.699999999999996), (-12.4, -47.699999999999996)], 0.2, 0.6), ([(-12.4, -47.5), (-12.299999999999999, -47.5), (-12.299999999999999, -47.599999999999994), (-12.4, -47.599999999999994)], 0.2, 0.6), ([(-12.4, -47.400000000000006), (-12.299999999999999, -47.400000000000006), (-12.299999999999999, -47.5), (-12.4, -47.5)], 0.2, 0.6), ([(-12.5, -47.7), (-12.399999999999999, -47.7), (-12.399999999999999, -47.8), (-12.5, -47.8)], 0.2, 0.6), ([(-12.5, -47.6), (-12.399999999999999, -47.6), (-12.399999999999999, -47.699999999999996), (-12.5, -47.699999999999996)], 0.2, 0.6), ([(-12.5, -47.5), (-12.399999999999999, -47.5), (-12.399999999999999, -47.599999999999994), (-12.5, -47.599999999999994)], 0.2, 0.6), ([(-12.5, -47.400000000000006), (-12.399999999999999, -47.400000000000006), (-12.399999999999999, -47.5), (-12.5, -47.5)], 0.2, 0.6), ([(-12.5, -47.300000000000004), (-12.399999999999999, -47.300000000000004), (-12.399999999999999, -47.4), (-12.5, -47.4)], 0.2, 0.6), ([(-12.600000000000001, -47.5), (-12.5, -47.5), (-12.5, -47.599999999999994), (-12.600000000000001, -47.599999999999994)], 0.2, 0.6), ([(-12.600000000000001, -47.400000000000006), (-12.5, -47.400000000000006), (-12.5, -47.5), (-12.600000000000001, -47.5)], 0.2, 0.6), ([(-12.600000000000001, -47.300000000000004), (-12.5, -47.300000000000004), (-12.5, -47.4), (-12.600000000000001, -47.4)], 0.2, 0.6)]
 
     start =(-10,-10,1) 

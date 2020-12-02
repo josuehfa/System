@@ -57,7 +57,7 @@ polygon_list = redemet.getPolygons(_type, date, polygon)
 #            (6, -2)]
 base = 1
 topo = 10
-
+_type = 'CB'
 #polygon2 = [(8, 9),
 #            (8, 6),
 #            (6, 6),
@@ -65,7 +65,7 @@ topo = 10
 obstacle = []
 for pol in polygon_list:
     
-    obstacle.append((pol, base, topo))
+    obstacle.append((pol, base, topo, _type))
 #print(obstacle)
 
 start =(-12.625412, -47.867092, 1) 
@@ -84,14 +84,11 @@ plan = PathPlanning(start, goal, region, obstacle, planner, dimension)
 
 
 for planner in ['BFMTstar', 'BITstar', 'FMTstar', 'InformedRRTstar', 'PRMstar', 'RRTstar', 'SORRTstar']:
-    result = plan.plan(20, planner, 'PathLength')
+    result = plan.plan(10, planner, 'PathLength')
 redemet.showPolygons(polygon=polygon, lines=plan.solution,points=[start[0:2],goal[0:2]])
 plan.plotSolutionPath(anima=False)
 
-input()
-
-
-
+input('Start MavLink Connection?')
 
 # Open a mavlink UDP port
 master = None
@@ -103,14 +100,17 @@ except Exception as msg:
 
 master.wait_heartbeat()
 GS = BatchGSModule(master,1,0)
-#GS.loadWaypoint("/home/josuehfa/System/icarous/Scripts/flightplan4.txt")
-GS.loadGeofence(polygon_list, 1)
-GS.loadGeofence([polygon], 0)
-print('Geofence Loaded - Start WEBGS')
-#GS.loadGeofence("/home/josuehfa/System/icarous/Scripts/geofence2.xml")
+input('Load In Geofence?')
+GS.loadGeofence([polygon], 1)
+input('Load Out Geofence?')
+GS.loadGeofence(polygon_list, 0)
+input('load WayPoints?')
+GS.loadWaypoint(plan.solutionData[0][1])
+print('Start Mission?')
+input()
 GS.StartMission()
 time.sleep(30)
-input()
+input('End?')
 
 
 
