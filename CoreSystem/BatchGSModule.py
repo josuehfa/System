@@ -276,12 +276,12 @@ class BatchGSModule():
         self.wploader.target_system = self.target_system
         self.wploader.target_component = self.target_component
         try:
-            for wp in waypoints:
-                self.wploader.add_latlonalt(wp['latitude'], wp['longitude'], wp['altitude'], terrain_alt=False)
+            for idx in range(len(waypoints)):
+                self.wploader.add_latlonalt(waypoints['latitude'][idx], waypoints['longitude'][idx], waypoints['altitude'][idx])
         except Exception as msg:
-            print("Unable to load %s - %s" % (filename, msg))
+            print("Unable to load - %s" % (msg))
             return
-        print("Loaded %u waypoints from %s" % (self.wploader.count(), filename))
+        print("Loaded %u waypoints" % (self.wploader.count()))
         self.send_all_waypoints()
         while self.loading_waypoints:
             reqd_msgs = ['WAYPOINT_COUNT', 'MISSION_COUNT',

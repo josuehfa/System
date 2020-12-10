@@ -40,7 +40,7 @@ from pyredemet.src.pyredemet import *
 #(-12.576857, -47.773923)
 _type = 'stsc' 
 #date = '2020092322'
-date = '2020092322'
+date = '2020092323'
 polygon = [(-12.0, -47.98),
             (-12.0, -46.99), 
             (-12.67, -46.99), 
@@ -84,9 +84,11 @@ plan = PathPlanning(start, goal, region, obstacle, planner, dimension)
 
 
 for planner in ['BFMTstar', 'BITstar', 'FMTstar', 'InformedRRTstar', 'PRMstar', 'RRTstar', 'SORRTstar']:
-    result = plan.plan(10, planner, 'PathLength')
+    result = plan.plan(15, planner, 'PathLength')
 redemet.showPolygons(polygon=polygon, lines=plan.solution,points=[start[0:2],goal[0:2]])
+plan.solutionData = sorted(plan.solutionData, key=lambda x: x[2])
 plan.plotSolutionPath(anima=False)
+
 
 input('Start MavLink Connection?')
 
@@ -94,6 +96,7 @@ input('Start MavLink Connection?')
 master = None
 try:
     master = mavutil.mavlink_connection("udp:127.0.0.1:14553", source_system=1)
+    #master = mavutil.mavlink_connection("udp:127.0.0.1:14553", source_system=255)
     #print (master)
 except Exception as msg:
     print ("Error opening mavlink connection " + str(msg))
@@ -103,13 +106,11 @@ GS = BatchGSModule(master,1,0)
 input('Load In Geofence?')
 GS.loadGeofence([polygon], 1)
 input('Load Out Geofence?')
-GS.loadGeofence(polygon_list, 0)
-input('load WayPoints?')
+GS.loadGeofence(polygon_list[:5], 0)
+input('Load WayPoints?')
 GS.loadWaypoint(plan.solutionData[0][1])
-print('Start Mission?')
-input()
+input('Start Mission?')
 GS.StartMission()
-time.sleep(30)
 input('End?')
 
 

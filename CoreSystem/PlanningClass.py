@@ -410,7 +410,6 @@ class PathPlanning():
 
     def plotSolutionPath(self,anima=False):
         if anima == False:
-            self.solutionData = sorted(self.solutionData, key=lambda x: x[2])
             if self.dimension == '2D':
                 fig, ax = plt.subplots()
                 #Obstacle
