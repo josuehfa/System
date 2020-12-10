@@ -163,8 +163,8 @@ class ClearanceObjective(ob.StateCostIntegralObjective):
 
 
         cost = 0
-        for idx in range(len(xx)):
-            cost = cost + z[xx[idx]][yy[idx]]
+        for idx in range(len(xx)-1):
+            cost = cost + z[xx[idx+1]][yy[idx+1]]
         return ob.Cost(cost)
 
 def getClearanceObjective(si):
@@ -371,7 +371,7 @@ if __name__ == "__main__":
     # Solve the planning problem
     solution = []
     #for planner in ['BFMTstar', 'BITstar', 'FMTstar', 'InformedRRTstar', 'PRMstar', 'RRTstar', 'SORRTstar']:
-    for planner in [ 'RRTstar']:
+    for planner in [ 'RRTstar', 'PRMstar']:
         solution.append(plan(1, planner, 'PathClearance', args.file))
 
     import random
@@ -400,7 +400,7 @@ if __name__ == "__main__":
     #    ax.imshow(z, cmap='RdBu', vmin=z_min, vmax=z_max,
     #      extent=[x.min(), x.max(), y.min(), y.max()],
     #      interpolation='nearest', origin='lower', aspect='auto')
-    ax.pcolormesh(x, y, z*0.04, cmap='RdBu', shading='nearest', vmin=z_min, vmax=z_max)
+    ax.pcolormesh(x, y, z*0.024, cmap='RdBu', shading='nearest', vmin=z_min, vmax=z_max)
     X, Y = np.meshgrid(x, y)
     ax.plot(X.flat, Y.flat, '.', color='m')
     for sol in solution:
@@ -442,7 +442,7 @@ if __name__ == "__main__":
             #    img[xx[i_], yy[i_]] = val[i_]*100
         #ax.pcolormesh(x_points, y_points, v_value, cmap='RdBu', shading='nearest', vmin=v_value, vmax=v_value)
         ax.plot(x_points,y_points,'.')
-        ax.plot(x_main,y_main,color='black')
+        ax.plot(x_main,y_main)
 
 
 
