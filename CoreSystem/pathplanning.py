@@ -34,13 +34,13 @@ obstacle = [(polygon, base, topo)]
 
 
 # make these smaller to increase the resolution
-dx, dy = 0.015, 0.005
+dx, dy = 0.005, 0.005
 
 # generate 2 2d grids for the x & y bounds
 y, x = np.mgrid[0:1+dy:dy, 0:1+dx:dx]
 
 rand = random.random()
-z = (rand + x/rand + x**5 + y**3) * np.exp(-x**2 + y**2)
+z = abs((rand - x/rand - x**5 + y**3) * np.exp(-x**2 - y**2))
 # x and y are bounds, so z should be the value *inside* those bounds.
 # Therefore, remove the last value from the z array.
 z = z[:-1, :-1]
@@ -75,13 +75,54 @@ z =[[10,10,10,10,10,10,10,10,10,10,10],\
     [10,20,50,50,50,50,50,50,50,20,10],\
     [10,20,20,20,20,20,20,20,20,20,10],\
     [10,10,10,10,10,10,10,10,10,10,10]]
+
+#z = np.asarray(z,dtype=np.double) 
+from skimage.draw import ellipse
+from skimage.draw import disk
+nrows = 100
+ncols = 100
+mult = 0.01
+x = np.arange(ncols+1)*mult
+y = np.arange(nrows+1)*mult
+z = np.zeros((nrows+1, ncols+1), dtype=np.uint8) + 1
+xx,yy = disk((nrows/2,nrows/2),nrows/2+1)
+z[xx,yy] = 1
+
+xx,yy = disk((nrows/2,nrows/2),nrows/4)
+z[xx,yy] = 20
+
+xx,yy = disk((nrows/2,nrows/2),nrows/8)
+z[xx,yy] = 100
+
+
+#xx, yy = ellipse(nrows/2, nrows/3, nrows/4, nrows/6, rotati    on=np.deg2rad(30))
+#z[xx,yy] = 1
+
+#xx, yy = ellipse(nrows/5, nrows/3, nrows/6, nrows/4, rotation=np.deg2rad(10))
+#z[xx,yy] = 1
+
+#xx, yy = ellipse(60, 60, nrows/10, nrows/4, rotation=np.deg2rad(10))
+#z[xx,yy] = 1
+
+
+xx, yy, val = line_aa(0, 0, nrows, nrows)
+z[xx,yy] = 1
+xx, yy, val = line_aa(0, 2, nrows, nrows-2)
+z[xx,yy] = 1
+xx, yy, val = line_aa(2, 0, nrows-2, nrows)
+z[xx,yy] = 1
 z = np.asarray(z,dtype=np.double) 
+
+print(z)
+
+
 
 class ValidityChecker(ob.StateValidityChecker):
     
     # Returns whether the given state's position overlaps the
     # circular obstacle
     def isValid(self, state):
+        #return True
         return self.clearance(state) > 0.0
 
     # Returns the distance from the given state's position to the
@@ -93,7 +134,7 @@ class ValidityChecker(ob.StateValidityChecker):
         #z = state[2]
         # Distance formula between two points, offset by the circle's
         # radius
-        return sqrt((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5)) - 0.3
+        return sqrt((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5)) - 0.05
 
     #Obstable structure: [(polygon,base,topo),(polygon,base,topo)]
     #def isValid(self,state):
@@ -164,7 +205,7 @@ class ClearanceObjective(ob.StateCostIntegralObjective):
 
         cost = 0
         for idx in range(len(xx)-1):
-            cost = cost + z[xx[idx+1]][yy[idx+1]]
+            cost = cost + z[xx[idx+1]][yy[idx+1]]*0.01
         return ob.Cost(cost)
 
 def getClearanceObjective(si):
@@ -173,11 +214,12 @@ def getClearanceObjective(si):
 
 def getBalancedObjective1(si):
     lengthObj = ob.PathLengthOptimizationObjective(si)
+    lengthObj.setCostThreshold(ob.Cost(1.5))
     clearObj = ClearanceObjective(si)
 
     opt = ob.MultiOptimizationObjective(si)
     opt.addObjective(lengthObj, 1.0)
-    opt.addObjective(clearObj, 7.0)
+    opt.addObjective(clearObj, 1.0)
 
     return opt
 
@@ -330,7 +372,7 @@ if __name__ == "__main__":
         'SORRTstar'], \
         help='(Optional) Specify the optimal planner to use, defaults to RRTstar if not given.')
     parser.add_argument('-o', '--objective', default='PathLength', \
-        choices=['PathClearance', 'PathLength', 'WeightedLengthAndClearanceCombo', \
+        choices=['PathClearance', 'PathLength', 'ThresholdPathLength', \
         'WeightedLengthAndClearanceCombo'], \
         help='(Optional) Specify the optimization objective, defaults to PathLength if not given.')
     parser.add_argument('-f', '--file', default='path.txt', \
@@ -371,9 +413,9 @@ if __name__ == "__main__":
     # Solve the planning problem
     solution = []
     #for planner in ['BFMTstar', 'BITstar', 'FMTstar', 'InformedRRTstar', 'PRMstar', 'RRTstar', 'SORRTstar']:
-    for planner in [ 'RRTstar', 'PRMstar']:
-        solution.append(plan(1, planner, 'PathClearance', args.file))
-
+    for planner in [ 'RRTstar','InformedRRTstar','BITstar','PRMstar']:
+        solution.append(plan(5, planner, 'WeightedLengthAndClearanceCombo', args.file))
+    #PathClearance  WeightedLengthAndClearanceCombo
     import random
     import matplotlib.animation as animation
     from mpl_toolkits.mplot3d import Axes3D
@@ -384,7 +426,7 @@ if __name__ == "__main__":
  
     #data = np.loadtxt('path.txt')
     #fig, ax = plt.subplots()
-    #ax = fig.gca(projection='3d')
+    #ax = fig.gca(projection='3d')mult
     fig = plt.figure()
     ax = fig.add_subplot(1, 1, 1)
 
@@ -400,11 +442,14 @@ if __name__ == "__main__":
     #    ax.imshow(z, cmap='RdBu', vmin=z_min, vmax=z_max,
     #      extent=[x.min(), x.max(), y.min(), y.max()],
     #      interpolation='nearest', origin='lower', aspect='auto')
-    ax.pcolormesh(x, y, z*0.024, cmap='RdBu', shading='nearest', vmin=z_min, vmax=z_max)
+    ax.pcolormesh(x, y, z*0.02, cmap='RdBu', shading='nearest', vmin=z_min, vmax=z_max)
     X, Y = np.meshgrid(x, y)
-    ax.plot(X.flat, Y.flat, '.', color='m')
-    for sol in solution:
-        ax.plot(sol[0],sol[1],label=sol[2])
+    #ax.plot(X.flat, Y.flat, '.', color='m')
+    try:
+        for sol in solution:
+            ax.plot(sol[0],sol[1],label=sol[2])
+    except:
+        pass
     ax.set_title('image (nearest, aspect="auto")')
     #fig.colorbar(im, ax=ax)
     ax.set(xlabel='Latitude', ylabel='Longitude',
@@ -423,21 +468,24 @@ if __name__ == "__main__":
         y_points = []
         v_value = []
         img = np.zeros((z.shape[0], z.shape[1]), dtype=np.uint8)
-        for idx in range(len(sol[0])-1):
-            x1 = round(sol[0][idx]*(z.shape[0]-1))
-            y1 = round(sol[1][idx]*(z.shape[1]-1))
-            x2 = round(sol[0][idx+1]*(z.shape[0]-1))
-            y2 = round(sol[1][idx+1]*(z.shape[1]-1))
-            x_main.append(x1*0.1)
-            y_main.append(y1*0.1)
-            x_main.append(x2*0.1)
-            y_main.append(y2*0.1)
-            xx, yy, val = line_aa(x1, y1, x2, y2)
-            for i_ in range(len(xx)):
-                x_points.append(xx[i_]*0.1)
-                y_points.append(yy[i_]*0.1)
-                v_value.append(val[i_]*0.1)
-            img[xx,yy] = val
+        try:
+            for idx in range(len(sol[0])-1):
+                x1 = round(sol[0][idx]*(z.shape[0]-1))
+                y1 = round(sol[1][idx]*(z.shape[1]-1))
+                x2 = round(sol[0][idx+1]*(z.shape[0]-1))
+                y2 = round(sol[1][idx+1]*(z.shape[1]-1))
+                x_main.append(x1*mult)
+                y_main.append(y1*mult)
+                x_main.append(x2*mult)
+                y_main.append(y2*mult)
+                xx, yy, val = line_aa(x1, y1, x2, y2)
+                for i_ in range(len(xx)):
+                    x_points.append(xx[i_]*mult)
+                    y_points.append(yy[i_]*mult)
+                    v_value.append(val[i_]*mult)
+                img[xx,yy] = val
+        except:
+            pass
             #for i_ in range(len(xx)):
             #    img[xx[i_], yy[i_]] = val[i_]*100
         #ax.pcolormesh(x_points, y_points, v_value, cmap='RdBu', shading='nearest', vmin=v_value, vmax=v_value)
