@@ -24,7 +24,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import random
 from skimage.draw import line_aa
-
+from euclid import *
 
 class OptimalPlanning():
     def __init__(self, start, goal, region, obstacle, planner, dimension):
@@ -629,7 +629,7 @@ class OptimalPlanning():
             ax.plot(x_points,y_points,'.')
             ax.plot(x_main,y_main)
 
-        plt.show()
+        #plt.show()
     
 
 if __name__ == "__main__":
@@ -718,10 +718,10 @@ if __name__ == "__main__":
     planner = 'RRTstar'
 
 
-    polygon = [(0.3, 0.2), (0.3,0.5),
-           (0.3, 0.5), (0.6,0.5),
-           (0.6, 0.5), (0.6,0.2),
-           (0.6, 0.2), (0.3,0.2)]
+    polygon = [(0.45, 0.45), 
+               (0.45, 0.55),
+               (0.55, 0.55), 
+               (0.55, 0.45)]
     base = 0.2
     topo = 0.6
     obstacle = [(polygon, base, topo)]
@@ -776,6 +776,7 @@ if __name__ == "__main__":
     from skimage.draw import disk
     nrows = 10
     ncols = 10
+    delta_d = 1/nrows
     x = np.arange(ncols+1)*0.1
     y = np.arange(nrows+1)*0.1
     z = np.zeros((nrows+1, ncols+1), dtype=np.uint8) + 1
@@ -798,14 +799,74 @@ if __name__ == "__main__":
     z = np.asarray(z,dtype=np.double) 
     print(z)
 
+    run = True
+    path_x = []
+    path_y = []
+    plans = []
+    while (run == True):
+        try:
+            if len(plans) == 0:
+                plans.append(OptimalPlanning(start, goal, region, obstacle, planner, dimension))
+                result = plans[0].plan(2, 'RRTstar', 'WeightedLengthAndClearanceCombo')
+                plans[0].plotOptimal(delta_d)
+            else:
+                #Linear algegra to return the next point in a line
+                p1 = Vector2(plans[-1].solutionSampled[0][1][0], plans[-1].solutionSampled[0][0][0])
+                p2 = Vector2(plans[-1].solutionSampled[0][1][1], plans[-1].solutionSampled[0][0][1])
+                vector = p2-p1
+                vector = vector.normalize()
+                next_point = p1 + vector*delta_d
 
-    plan = OptimalPlanning(start, goal, region, obstacle, planner, dimension)
-    result = plan.plan(2, 'RRTstar', 'WeightedLengthAndClearanceCombo')
-    plan.plotOptimal(0.1)
+                plans.append(OptimalPlanning((next_point.x,next_point.y), goal, region, obstacle, planner, dimension))
+                result = plans[-1].plan(2, 'RRTstar', 'WeightedLengthAndClearanceCombo')
+                plans[-1].plotOptimal(delta_d)
+                if (plans[-1].solutionSampled[0][1][0], plans[-1].solutionSampled[0][0][0]) == (goal[0],goal[1]):
+                    run = False
+            path_x.append(plans[-1].solutionSampled[0][1][0])
+            path_y.append(plans[-1].solutionSampled[0][0][0])
+        except:
+            plans.pop()
 
-    plan1 = OptimalPlanning((plan.solutionSampled[0][1][1], plan.solutionSampled[0][0][1]), goal, region, obstacle, planner, dimension)
-    result = plan1.plan(2, 'RRTstar', 'WeightedLengthAndClearanceCombo')
-    plan1.plotOptimal(0.1)
+    from matplotlib import pyplot as plt 
+    import numpy as np 
+    from matplotlib.animation import FuncAnimation  
+    
+    # initializing a figure in  
+    # which the graph will be plottpath_ed 
+    fig = plt.figure()  
+    
+    # marking the x-axis and y-axis 
+    axis = plt.axes(xlim =(0, 1),  
+                    ylim =(0, 1))  
+    
+    # initializing a line variable 
+    line, = axis.plot([], [],'.', lw = 3)  
+    axis.pcolormesh(x, y, z*0.02, cmap='RdBu', shading='nearest', vmin=z_min, vmax=z_max)
+    # data which the line will  
+    # contain (x, y) 
+    def init():  
+        line.set_data([], []) 
+        return line, 
+
+    #x = np.linspace(0, 4, 1000)
+    #y = np.sin(2 * np.pi * (x - 0.01))
+    def animate(i): 
+    
+        # plots a sine graph 
+         
+        line.set_data(path_y[:i], path_x[:i]) 
+        
+        return line, 
+    
+    anim = FuncAnimation(fig, animate, init_func = init, 
+                        frames = 20, interval = 200, blit = True) 
+    
+    plt.show()
+
+
+    #plan1 = OptimalPlanning((plan.solutionSampled[0][1][1], plan.solutionSampled[0][0][1]), goal, region, obstacle, planner, dimension)
+    #result = plan1.plan(2, 'RRTstar', 'WeightedLengthAndClearanceCombo')
+    #plan1.plotOptimal(0.1)
     
 
     #for planner in ['BFMTstar', 'BITstar', 'FMTstar', 'InformedRRTstar', 'PRMstar', 'RRTstar', 'SORRTstar']:
@@ -813,7 +874,7 @@ if __name__ == "__main__":
     #    result = plan.plan(2, planner, 'WeightedLengthAndClearanceCombo')
     #print(plan.solution)WeightedLengthAndClearanceCombo   PathClearance  PathLength
     #plan.plotSolutionPath(anima=False)
-    plan.plotOptimal(0.1)
+    #plan.plotOptimal(0.1)
 
     
 

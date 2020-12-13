@@ -800,9 +800,6 @@ if __name__ == "__main__":
     
 
 
-
-
-                    #_ = []
                     #y_ = []
                     #for point in polygon[0]:
                     #    x_.append(point[0])
