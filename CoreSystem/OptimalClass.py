@@ -38,10 +38,29 @@ class OptimalPlanning():
         self.solutionSampled = []
         self.PlannerStates = []
 
-    def plan(self,runTime, plannerType, objectiveType):
+    def plan(self,runTime, plannerType, objectiveType,mult):
         if self.planner in ['BFMTstar', 'BITstar', 'FMTstar', 'InformedRRTstar', 'PRMstar', 'RRTstar', \
         'SORRTstar']:
             result = self.OMPL_plan(runTime, plannerType, objectiveType)
+            for sol in self.solution:
+                x_main=[]
+                y_main=[]
+                try:
+                    for idx in range(len(sol[0])-1):
+                        x1 = round(sol[1][idx]*(z.shape[0]-1))
+                        y1 = round(sol[0][idx]*(z.shape[1]-1))
+                        x2 = round(sol[1][idx+1]*(z.shape[0]-1))
+                        y2 = round(sol[0][idx+1]*(z.shape[1]-1))
+                        x_main.append(x1*mult)
+                        y_main.append(y1*mult)
+                        x_main.append(x2*mult)
+                        y_main.append(y2*mult)
+                except:
+                    pass
+                    #for i_ in range(len(xx)):
+                    #    img[xx[i_], yy[i_]] = val[i_]*100
+                #ax.pcolormesh(x_points, y_points, v_value, cmap='RdBu', shading='nearest', vmin=v_value, vmax=v_value)
+                self.solutionSampled.append((x_main,y_main))
             return result
         else:
             return False
@@ -114,7 +133,8 @@ class OptimalPlanning():
             xx, yy, val = line_aa(x1, y1, x2, y2)
             cost = 0
             for idx in range(len(xx)-1):
-                cost = cost + z[xx[idx+1]][yy[idx+1]]*0.01
+                cost = cost + z[xx[idx+1]][yy[idx+1]]*0.1
+            #cost = (cost/(len(xx)))
             return ob.Cost(cost)
 
 
@@ -293,7 +313,7 @@ class OptimalPlanning():
         #    self.solution.append((solution_lat,solution_lon, solution_alt, plannerType, pathCost))
         #else:
         #    print('Error inside SolutionPath')
-        self.solution.append((solution_lat,solution_lon,plannerType))
+        self.solution.append((solution_lat,solution_lon,plannerType,pathCost))
         return (solution_lat,solution_lon,plannerType)
 
     def plotSolutionPath(self,anima=False):
@@ -777,23 +797,23 @@ if __name__ == "__main__":
     nrows = 10
     ncols = 10
     delta_d = 1/nrows
-    x = np.arange(ncols+1)*0.1
-    y = np.arange(nrows+1)*0.1
+    x = np.arange(ncols+1)*delta_d
+    y = np.arange(nrows+1)*delta_d
     z = np.zeros((nrows+1, ncols+1), dtype=np.uint8) + 1
-    xx,yy = disk((5,5),5)
+    xx,yy = disk((0.5*nrows,0.5*nrows),0.5*nrows)
     z[xx,yy] = 10
 
-    xx,yy = disk((5,5),2.50)
+    xx,yy = disk((0.5*nrows,0.5*nrows),0.25*nrows)
     z[xx,yy] = 20
 
-    xx,yy = disk((5,5),1.25)
+    xx,yy = disk((0.5*nrows,0.5*nrows),0.125*nrows)
     z[xx,yy] = 50
 
 
-    xx, yy = ellipse(5, 6, 1, 2, rotation=np.deg2rad(30))
+    xx, yy = ellipse(0.5*nrows, 0.6*nrows, 0.1*nrows, 0.2*nrows, rotation=np.deg2rad(30))
     z[xx,yy] = 100
 
-    xx, yy = ellipse(2, 4, 0.50, 2.50, rotation=np.deg2rad(10))
+    xx, yy = ellipse(0.2*nrows, 0.4*nrows, 0.05*nrows, 0.25*nrows, rotation=np.deg2rad(10))
     z[xx,yy] = 100
 
     z = np.asarray(z,dtype=np.double) 
@@ -803,29 +823,65 @@ if __name__ == "__main__":
     path_x = []
     path_y = []
     plans = []
+    time = 0
     while (run == True):
         try:
+            plan_aux = []
+            cost_aut = []
             if len(plans) == 0:
-                plans.append(OptimalPlanning(start, goal, region, obstacle, planner, dimension))
-                result = plans[0].plan(2, 'RRTstar', 'WeightedLengthAndClearanceCombo')
-                plans[0].plotOptimal(delta_d)
+                for idx, alg in enumerate([ 'RRTstar','RRTstar']):
+                    plan_aux.append(OptimalPlanning(start, goal, region, obstacle, planner, dimension))
+                    result = plan_aux[idx].plan(2, alg, 'WeightedLengthAndClearanceCombo',delta_d)
+                    #plan_aux[idx].plotOptimal(delta_d)
+                    if plan_aux[idx].solution != []:
+                        cost_aut.append(plan_aux[idx].solution[0][3])
+                    else:
+                        cost_aut.append(9999999)
+                lower_cost = cost_aut.index(min(cost_aut))
+                plans.append(plan_aux[lower_cost])
             else:
                 #Linear algegra to return the next point in a line
                 p1 = Vector2(plans[-1].solutionSampled[0][1][0], plans[-1].solutionSampled[0][0][0])
                 p2 = Vector2(plans[-1].solutionSampled[0][1][1], plans[-1].solutionSampled[0][0][1])
+                #p1 = Vector2(plans[-1].solution[0][1][0], plans[-1].solution[0][0][0])
+                #p2 = Vector2(plans[-1].solution[0][1][1], plans[-1].solution[0][0][1])
                 vector = p2-p1
                 vector = vector.normalize()
                 next_point = p1 + vector*delta_d
 
-                plans.append(OptimalPlanning((next_point.x,next_point.y), goal, region, obstacle, planner, dimension))
-                result = plans[-1].plan(2, 'RRTstar', 'WeightedLengthAndClearanceCombo')
-                plans[-1].plotOptimal(delta_d)
+                for idx, alg in enumerate([ 'RRTstar','RRTstar']):
+                    plan_aux.append(OptimalPlanning((next_point.x,next_point.y), goal, region, obstacle, planner, dimension))
+                    result = plan_aux[idx].plan(2, alg, 'WeightedLengthAndClearanceCombo',delta_d)
+                    #plan_aux[idx].plotOptimal(delta_d)
+                    if plan_aux[idx].solution != []:
+                        cost_aut.append(plan_aux[idx].solution[0][3])
+                    else:
+                        cost_aut.append(9999999)
+                lower_cost = cost_aut.index(min(cost_aut))
+                plans.append(plan_aux[lower_cost])
+                path_x.append(plans[-1].solutionSampled[0][1][0])
+                path_y.append(plans[-1].solutionSampled[0][0][0])
+                #if (plans[-1].solutionSampled[0][1][0], plans[-1].solutionSampled[0][0][0]) == (plans[-2].solutionSampled[0][1][0], plans[-2].solutionSampled[0][0][0]):
+                #    print('Pop Solution')
+                #    plans.pop()
+
+                #if (plans[-1].solution[0][3] > plans[-2].solution[0][3]):
+                #    print('Pop Solution')
+                #    plans.pop()
+                #else:
+                    
+                #    plans[-1]planspend(plans[-1].solutionSampled[0][0][0])
+                    #path_x.append(plans[-1].solution[0][1][0])
+                    #path_y.append(plans[-1].solution[0][0][0])
+
                 if (plans[-1].solutionSampled[0][1][0], plans[-1].solutionSampled[0][0][0]) == (goal[0],goal[1]):
+                #if (plans[-1].solution[0][1][0], plans[-1].solution[0][0][0]) == (goal[0],goal[1]):
                     run = False
-            path_x.append(plans[-1].solutionSampled[0][1][0])
-            path_y.append(plans[-1].solutionSampled[0][0][0])
+            time = time + 1
+
         except:
-            plans.pop()
+            pass
+            #plans.pop()
 
     from matplotlib import pyplot as plt 
     import numpy as np 
@@ -840,8 +896,9 @@ if __name__ == "__main__":
                     ylim =(0, 1))  
     
     # initializing a line variable 
-    line, = axis.plot([], [],'.', lw = 3)  
     axis.pcolormesh(x, y, z*0.02, cmap='RdBu', shading='nearest', vmin=z_min, vmax=z_max)
+    line, = axis.plot([], [],'.', lw = 3) 
+
     # data which the line will  
     # contain (x, y) 
     def init():  
@@ -854,12 +911,12 @@ if __name__ == "__main__":
     
         # plots a sine graph 
          
-        line.set_data(path_y[:i], path_x[:i]) 
+        line.set_data(path_y[:i], path_x[:i]) add
         
         return line, 
     
     anim = FuncAnimation(fig, animate, init_func = init, 
-                        frames = 20, interval = 200, blit = True) 
+                        frames =len(path_y) , interval = 200, blit = True) 
     
     plt.show()
 

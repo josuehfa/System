@@ -114,7 +114,7 @@ wp load /home/josuehfa/System/icarous/Scripts/flightplan4.txt
 #### load geofence
 geofence load /home/josuehfa/System/icarous/Scripts/geofence2.xml
 #### load traffic
-traffic load 50 100 5 0 100 0
+traffic load 46 107 5 0 100 0
 
 #### start mission from the home position
 long MISSION_START
