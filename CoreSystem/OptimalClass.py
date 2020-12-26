@@ -25,15 +25,17 @@ import numpy as np
 import random
 from skimage.draw import line_aa
 from euclid import *
+from MapGenClass import *
 
 class OptimalPlanning():
-    def __init__(self, start, goal, region, obstacle, planner, dimension):
+    def __init__(self, start, goal, region, obstacle, planner, dimension, map_):
         self.start = start
         self.goal = goal
         self.region = region
         self.obstacle = obstacle
         self.planner = planner
         self.dimension = dimension
+        self.map = map_
         self.solution = []
         self.solutionSampled = []
         self.PlannerStates = []
@@ -121,19 +123,20 @@ class OptimalPlanning():
 
     class ClearanceObjective(ob.StateCostIntegralObjective):
 
-        def __init__(self, si):
+        def __init__(self, si, map_):
             super().__init__(si, True)
             self.si_ = si
+            self.map = map_
 
         def motionCost(self,s1,s2):
-            x1 = round(s1[1]*(z.shape[0]-1))
-            y1 = round(s1[0]*(z.shape[1]-1))
-            x2 = round(s2[1]*(z.shape[0]-1))
-            y2 = round(s2[0]*(z.shape[1]-1))
+            x1 = round(s1[1]*(self.map.shape[0]-1))
+            y1 = round(s1[0]*(self.map.shape[1]-1))
+            x2 = round(s2[1]*(self.map.shape[0]-1))
+            y2 = round(s2[0]*(self.map.shape[1]-1))
             xx, yy, val = line_aa(x1, y1, x2, y2)
             cost = 0
             for idx in range(len(xx)-1):
-                cost = cost + z[xx[idx+1]][yy[idx+1]]*0.1
+                cost = cost + self.map[xx[idx+1]][yy[idx+1]]*0.1
             #cost = (cost/(len(xx)))
             return ob.Cost(cost)
 
@@ -183,7 +186,7 @@ class OptimalPlanning():
 
     def getBalancedObjective1(self, si):
         lengthObj = ob.PathLengthOptimizationObjective(si)
-        clearObj = self.ClearanceObjective(si)
+        clearObj = self.ClearanceObjective(si,self.map)
         opt = ob.MultiOptimizationObjective(si)
         opt.addObjective(lengthObj, 1.0)
         opt.addObjective(clearObj, 1.0)
@@ -548,7 +551,7 @@ class OptimalPlanning():
             #ax.autoscale()
             plt.show()
 
-    def plotOptimal(self, mult):
+    def plotOptimal(self, mult, axis):
         import random
         import matplotlib.animation as animation
         from mpl_toolkits.mplot3d import Axes3D
@@ -560,7 +563,7 @@ class OptimalPlanning():
         #ax = fig.gca(projection='3d')
         fig = plt.figure()
         ax = fig.add_subplot(1, 1, 1)
-
+        aux = []
         #Obstacle
         for polygon in self.obstacle:
             lat,lon = zip(*polygon[0])
@@ -569,7 +572,8 @@ class OptimalPlanning():
             lat.append(polygon[0][0][0])
             lon.append(polygon[0][0][1])
         #    ax.plot(lon, lat, linestyle='-', color='red')
-            ax.fill(lon, lat, facecolor='gray', edgecolor='black')
+            aux.append(axis.fill(lon, lat, facecolor='gray', edgecolor='black'))
+            aux[-1]=aux[-1][0]
         
         #Region
         lat,lon = zip(*self.region)
@@ -577,16 +581,18 @@ class OptimalPlanning():
         lon = list(lon)
         lat.append(self.region[0][0])
         lon.append(self.region[0][1])
-        ax.plot(lon, lat, linestyle='-.', color='green', label='Region of Interest')
-
+        aux.append(axis.plot(lon, lat, linestyle='-.', color='green', label='Region of Interest'))
+        aux[-1]=aux[-1][0]
         #Solution
         for sol in self.solution:
-            ax.plot(sol[1], sol[0], label=sol[2])
-        ax.set(xlabel='Latitude', ylabel='Longitude', title='Solution Path')
-        ax.legend()
+            aux.append(axis.plot(sol[1], sol[0], label=sol[2]))
+            aux[-1]=aux[-1][0]
+        axis.set(xlabel='Latitude', ylabel='Longitude', title='Solution Path')
+        axis.legend()
         #ax.grid()
         #ax.autoscale()
         #plt.show()
+        return aux
 
 
 
@@ -823,16 +829,32 @@ if __name__ == "__main__":
     path_x = []
     path_y = []
     plans = []
-    time = 0
+
+    ims = []
+
+    time = 5
+    nrows = 10
+    ncols = 10
+    delta_d = 1/nrows
+    fig = plt.figure()
+    axis = plt.axes(xlim =(0, 1.2),  
+                    ylim =(0, 1.2))
+
+    mapgen = MapGen(nrows, ncols,time)
+    mapgen.create()
+    
+    t = 0
+
     while (run == True):
         try:
             plan_aux = []
             cost_aut = []
+            test =[]
             if len(plans) == 0:
-                for idx, alg in enumerate([ 'RRTstar','RRTstar']):
-                    plan_aux.append(OptimalPlanning(start, goal, region, obstacle, planner, dimension))
-                    result = plan_aux[idx].plan(2, alg, 'WeightedLengthAndClearanceCombo',delta_d)
-                    #plan_aux[idx].plotOptimal(delta_d)
+                for idx, alg in enumerate(['RRTstar']):
+                    plan_aux.append(OptimalPlanning(start, goal, region, mapgen.obs_time[round(t)], planner, dimension, mapgen.z_time[round(t)]))
+                    result = plan_aux[idx].plan(3, alg, 'WeightedLengthAndClearanceCombo',delta_d)
+                    test.append(plan_aux[idx].plotOptimal(delta_d))
                     if plan_aux[idx].solution != []:
                         cost_aut.append(plan_aux[idx].solution[0][3])
                     else:
@@ -849,10 +871,10 @@ if __name__ == "__main__":
                 vector = vector.normalize()
                 next_point = p1 + vector*delta_d
 
-                for idx, alg in enumerate([ 'RRTstar','RRTstar']):
-                    plan_aux.append(OptimalPlanning((next_point.x,next_point.y), goal, region, obstacle, planner, dimension))
-                    result = plan_aux[idx].plan(2, alg, 'WeightedLengthAndClearanceCombo',delta_d)
-                    #plan_aux[idx].plotOptimal(delta_d)
+                for idx, alg in enumerate(['RRTstar'])
+                    plan_aux.append(OptimalPlanning((next_point.x,next_point.y), goal, region, mapgen.obs_time[round(t)], planner, dimension, mapgen.z_time[round(t)]))
+                    result = plan_aux[idx].plan(3, alg, 'WeightedLengthAndClearanceCombo',delta_d)
+                    test.append(plan_aux[idx].plotOptimal(delta_d))
                     if plan_aux[idx].solution != []:
                         cost_aut.append(plan_aux[idx].solution[0][3])
                     else:
@@ -861,6 +883,16 @@ if __name__ == "__main__":
                 plans.append(plan_aux[lower_cost])
                 path_x.append(plans[-1].solutionSampled[0][1][0])
                 path_y.append(plans[-1].solutionSampled[0][0][0])
+
+                aux = mapgen.plot_map(round(t),axis) + test
+                aux.append(axis.plot(path_x,path_y,'.',lw=3,color='black'))
+                aux[-1] = aux[-1][0]
+                aux = tuple(aux)
+                ims.append(aux)
+
+                im_ani = animation.ArtistAnimation(fig, ims, interval=10000/time, blit=True)
+                plt.show()
+
                 #if (plans[-1].solutionSampled[0][1][0], plans[-1].solutionSampled[0][0][0]) == (plans[-2].solutionSampled[0][1][0], plans[-2].solutionSampled[0][0][0]):
                 #    print('Pop Solution')
                 #    plans.pop()
@@ -877,23 +909,37 @@ if __name__ == "__main__":
                 if (plans[-1].solutionSampled[0][1][0], plans[-1].solutionSampled[0][0][0]) == (goal[0],goal[1]):
                 #if (plans[-1].solution[0][1][0], plans[-1].solution[0][0][0]) == (goal[0],goal[1]):
                     run = False
-            time = time + 1
-
+            
+            t = t + 0.25
+            if t >= time:
+                t = time
+            
         except:
             pass
             #plans.pop()
 
     from matplotlib import pyplot as plt 
     import numpy as np 
-    from matplotlib.animation import FuncAnimation  
+    from matplotlib.animation import FuncAnimation 
+    import numpy as np
+    import matplotlib.pyplot as plt
+    import matplotlib.animation as animation
+    from matplotlib import pyplot
     
+    im_ani = animation.ArtistAnimation(fig, ims, interval=10000/time, blit=True)
+    #anim = FuncAnimation(fig, animate, init_func = init, 
+    #                    frames =len(path_y) , interval = 200, blit = True) 
+    
+    plt.show()
+
+
     # initializing a figure in  
     # which the graph will be plottpath_ed 
     fig = plt.figure()  
     
     # marking the x-axis and y-axis 
-    axis = plt.axes(xlim =(0, 1),  
-                    ylim =(0, 1))  
+    axis = plt.axes(xlim =(0, 1.2),  
+                    ylim =(0, 1.2))  
     
     # initializing a line variable 
     axis.pcolormesh(x, y, z*0.02, cmap='RdBu', shading='nearest', vmin=z_min, vmax=z_max)
@@ -911,7 +957,7 @@ if __name__ == "__main__":
     
         # plots a sine graph 
          
-        line.set_data(path_y[:i], path_x[:i]) add
+        line.set_data(path_y[:i], path_x[:i])
         
         return line, 
     
