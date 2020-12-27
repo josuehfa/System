@@ -19,7 +19,7 @@ from shapely.geometry import Point
 from shapely.geometry.polygon import Polygon
 from matplotlib.patches import Ellipse
 import matplotlib as mpl
-mpl.use('tkAgg')
+#mpl.use('tkAgg')
 import matplotlib.pyplot as plt
 import numpy as np
 import random
@@ -794,8 +794,8 @@ if __name__ == "__main__":
     #z = np.asarray(z,dtype=np.double) 
     from skimage.draw import ellipse
     from skimage.draw import disk
-    nrows = 10
-    ncols = 10
+    nrows = 25
+    ncols = 25
     delta_d = 1/nrows
     x = np.arange(ncols+1)*delta_d
     y = np.arange(nrows+1)*delta_d
@@ -829,7 +829,7 @@ if __name__ == "__main__":
             plan_aux = []
             cost_aut = []
             if len(plans) == 0:
-                for idx, alg in enumerate([ 'RRTstar','RRTstar']):
+                for idx, alg in enumerate([ 'RRTstar']):
                     plan_aux.append(OptimalPlanning(start, goal, region, obstacle, planner, dimension))
                     result = plan_aux[idx].plan(2, alg, 'WeightedLengthAndClearanceCombo',delta_d)
                     #plan_aux[idx].plotOptimal(delta_d)
@@ -849,7 +849,7 @@ if __name__ == "__main__":
                 vector = vector.normalize()
                 next_point = p1 + vector*delta_d
 
-                for idx, alg in enumerate([ 'RRTstar','RRTstar']):
+                for idx, alg in enumerate([ 'RRTstar']):
                     plan_aux.append(OptimalPlanning((next_point.x,next_point.y), goal, region, obstacle, planner, dimension))
                     result = plan_aux[idx].plan(2, alg, 'WeightedLengthAndClearanceCombo',delta_d)
                     #plan_aux[idx].plotOptimal(delta_d)
@@ -911,7 +911,7 @@ if __name__ == "__main__":
     
         # plots a sine graph 
          
-        line.set_data(path_y[:i], path_x[:i]) add
+        line.set_data(path_y[:i], path_x[:i])
         
         return line, 
     
