@@ -26,15 +26,15 @@ class MapGen():
         y = np.arange(nrows+1)*delta_d
         
         for t in range(self.time):
-            z = np.zeros((nrows+1, ncols+1), dtype=np.uint8) + 1
+            z = np.zeros((nrows+1, ncols+1), dtype=np.uint8) + 50
             xx,yy = disk((0.5*nrows,0.5*nrows),0.5*nrows)
-            z[xx,yy] = 10
+            z[xx,yy] = 50
 
             xx,yy = disk((0.5*nrows,0.5*nrows),0.25*nrows)
             z[xx,yy] = 20
 
             xx,yy = disk((0.5*nrows,0.5*nrows),0.125*nrows)
-            z[xx,yy] = 50
+            z[xx,yy] = 10
 
             #Region Clearece
             xx, yy = ellipse(0.5*nrows+t*(0.5*nrows/self.time), 0.5*ncols-t*(0.5*ncols/self.time), 0.15*nrows, 0.25*ncols, rotation=np.deg2rad(10))
@@ -42,7 +42,7 @@ class MapGen():
             y_del = np.argwhere( (yy <= 0) | (yy >= ncols) )
             xx = np.delete(xx, np.concatenate((x_del, y_del), axis=0))
             yy = np.delete(yy, np.concatenate((x_del, y_del), axis=0))
-            z[xx,yy] = 100
+            z[xx,yy] = 10
 
              #Region Clearece
             xx, yy = ellipse(0.5*nrows-t*(0.5*nrows/self.time), 0.5*ncols+t*(0.5*ncols/self.time), 0.15*nrows, 0.25*ncols, rotation=np.deg2rad(10))
@@ -50,7 +50,7 @@ class MapGen():
             y_del = np.argwhere( (yy <= 0) | (yy >= ncols) )
             xx = np.delete(xx, np.concatenate((x_del, y_del), axis=0))
             yy = np.delete(yy, np.concatenate((x_del, y_del), axis=0))
-            z[xx,yy] = 100
+            z[xx,yy] = 10
 
             z = np.asarray(z,dtype=np.double) 
             self.z_time.append(z)
@@ -103,20 +103,21 @@ class MapGen():
         self.x = x
         
 
-    def plot_map(self, axix):
-        # initializing a figure in  
-        # which the graph will be plottpath_ed 
+    def plot_map(self, t, axis):
+        #Obstacle
+        aux_im = []
+        aux_im.append(axis.pcolormesh(self.x, self.y, self.z_time[t]*0.01, cmap='RdBu', shading='nearest', vmin=-5, vmax=5))
+        for idx, polygon in enumerate(self.obs_time[t]):
+            lat,lon = zip(*polygon[0])
+            lat = list(lat)
+            lon = list(lon)
+            lat = np.asarray(lat,dtype=np.double)
+            lon = np.asarray(lon,dtype=np.double)
+            #aux_im.append(axis.plot(lon, lat, linestyle='-', color='red'))
+            #aux_im.append(axis.fill(lon, lat, facecolor='gray', edgecolor='black'))
+            #aux_im[idx+1] = aux_im[idx+1][0]
         
-        #fig = plt.figure()  
-
-        # marking the x-axis and y-axis 
-        #axis = plt.axes(xlim =(0, 1),  
-         #               ylim =(0, 1))  
-
-        # initializing a line variable 
-        axis.pcolormesh(self.x, self.y, self.z*0.02, cmap='RdBu', shading='nearest', vmin=-5, vmax=5)
-        #line, = axis.plot([], [],'.', lw = 3) 
-        #plt.show()
+        return aux_im
 
 if __name__ == "__main__":
     import numpy as np

@@ -22,7 +22,7 @@ class PlotlyResult():
         xM = np.max(x) + 1.5
         ym = np.min(y) - 1.5
         yM = np.max(y) + 1.5
-        N = 50
+        N = 200
         s = np.linspace(-1, 1, N)
         xx = s + s ** 2
         yy = s - s ** 2
@@ -39,10 +39,10 @@ class PlotlyResult():
         lat_aux = [reg[0] for reg in region]
         lon_aux = [reg[1] for reg in region]
         fig = go.Figure(
-            data=[go.Scatter(x=x, y=y,
+            data=[go.Scattermapbox(lon=x, lat=y,
                             mode="lines",
                             line=dict(width=2, color="blue")),
-                go.Scatter(x=x, y=y,
+                go.Scattermapbox(lon=x, lat=y,
                             mode="lines",
                             line=dict(width=2, color="blue"))],
             layout=go.Layout(
@@ -54,14 +54,20 @@ class PlotlyResult():
                                                 method="animate",
                                                 args=[None])])]),
             frames=[go.Frame(
-                data=[go.Scatter(
-                    x=[xx[k]],
-                    y=[yy[k]],
+                data=[go.Scattermapbox(
+                    lon=[xx[k]],
+                    lat=[yy[k]],
                     mode="markers",
                     marker=dict(color="red", size=10))])
 
                 for k in range(N)]
         )
+        fig.update_layout(
+            mapbox = {
+                'style': "stamen-terrain",
+                'center': {'lon': -73, 'lat': 46 },
+                'zoom': 5},
+            showlegend = False)
 
         
         
@@ -93,14 +99,14 @@ class PlotlyResult():
         
         token = 'pk.eyJ1Ijoiam9zdWVoZmEiLCJhIjoiY2tldnNnODB3MDBtdDJzbXUxMXowMTY5MyJ9.Vwj9BTqB1z9RLKlyh70RHw'
         
-        fig.update_layout(
-            mapbox = {
-                'style': "outdoors",
-                'center': {'lon': -47.5, 'lat': -12.3 },
-                'accesstoken': token,
-                'zoom': 7
-            },
-            showlegend = False)
+        #fig.update_layout(
+        #    mapbox = {
+        #        'style': "outdoors",
+        #        'center': {'lon': -47.5, 'lat': -12.3 },
+        #        'accesstoken': token,
+        #        'zoom': 7
+        #    },
+        #    showlegend = False)
 
         fig.update_geos(
             projection_type="orthographic",

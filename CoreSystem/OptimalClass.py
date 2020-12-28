@@ -19,48 +19,38 @@ from shapely.geometry import Point
 from shapely.geometry.polygon import Polygon
 from matplotlib.patches import Ellipse
 import matplotlib as mpl
-#mpl.use('tkAgg')
-import matplotlib.pyplot as plt
-import numpy as np
+mpl.use('tkAgg')
 import random
-from skimage.draw import line_aa
 from euclid import *
+from MapGenClass import *
+from matplotlib import pyplot as plt 
+import numpy as np 
+from matplotlib.animation import FuncAnimation 
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.animation as animation
+from matplotlib import pyplot
+from skimage.draw import *
 
+    
 class OptimalPlanning():
-    def __init__(self, start, goal, region, obstacle, planner, dimension):
+    def __init__(self, start, goal, region, obstacle, planner, dimension, costmap):
         self.start = start
         self.goal = goal
         self.region = region
         self.obstacle = obstacle
         self.planner = planner
         self.dimension = dimension
+        self.costmap = costmap
         self.solution = []
+        self.solution_dict = {}
         self.solutionSampled = []
         self.PlannerStates = []
 
     def plan(self,runTime, plannerType, objectiveType,mult):
         if self.planner in ['BFMTstar', 'BITstar', 'FMTstar', 'InformedRRTstar', 'PRMstar', 'RRTstar', \
         'SORRTstar']:
-            result = self.OMPL_plan(runTime, plannerType, objectiveType)
-            for sol in self.solution:
-                x_main=[]
-                y_main=[]
-                try:
-                    for idx in range(len(sol[0])-1):
-                        x1 = round(sol[1][idx]*(z.shape[0]-1))
-                        y1 = round(sol[0][idx]*(z.shape[1]-1))
-                        x2 = round(sol[1][idx+1]*(z.shape[0]-1))
-                        y2 = round(sol[0][idx+1]*(z.shape[1]-1))
-                        x_main.append(x1*mult)
-                        y_main.append(y1*mult)
-                        x_main.append(x2*mult)
-                        y_main.append(y2*mult)
-                except:
-                    pass
-                    #for i_ in range(len(xx)):
-                    #    img[xx[i_], yy[i_]] = val[i_]*100
-                #ax.pcolormesh(x_points, y_points, v_value, cmap='RdBu', shading='nearest', vmin=v_value, vmax=v_value)
-                self.solutionSampled.append((x_main,y_main))
+            result = self.OMPL_plan(runTime, plannerType, objectiveType,mult)
             return result
         else:
             return False
@@ -121,19 +111,20 @@ class OptimalPlanning():
 
     class ClearanceObjective(ob.StateCostIntegralObjective):
 
-        def __init__(self, si):
+        def __init__(self, si, costmap):
             super().__init__(si, True)
             self.si_ = si
+            self.costmap = costmap
 
         def motionCost(self,s1,s2):
-            x1 = round(s1[1]*(z.shape[0]-1))
-            y1 = round(s1[0]*(z.shape[1]-1))
-            x2 = round(s2[1]*(z.shape[0]-1))
-            y2 = round(s2[0]*(z.shape[1]-1))
+            x1 = round(s1[1]*(self.costmap.shape[0]-1))
+            y1 = round(s1[0]*(self.costmap.shape[1]-1))
+            x2 = round(s2[1]*(self.costmap.shape[0]-1))
+            y2 = round(s2[0]*(self.costmap.shape[1]-1))
             xx, yy, val = line_aa(x1, y1, x2, y2)
             cost = 0
             for idx in range(len(xx)-1):
-                cost = cost + z[xx[idx+1]][yy[idx+1]]*0.1
+                cost = cost + self.costmap[xx[idx+1]][yy[idx+1]]*0.1
             #cost = (cost/(len(xx)))
             return ob.Cost(cost)
 
@@ -167,6 +158,8 @@ class OptimalPlanning():
             return og.RRTstar(si)
         elif plannerType.lower() == "sorrtstar":
             return og.SORRTstar(si)
+        elif plannerType.lower() == "cforest":
+            return og.CForest(si)
         else:
             ou.OMPL_ERROR("Planner-type is not implemented in allocation function.")
 
@@ -183,7 +176,7 @@ class OptimalPlanning():
 
     def getBalancedObjective1(self, si):
         lengthObj = ob.PathLengthOptimizationObjective(si)
-        clearObj = self.ClearanceObjective(si)
+        clearObj = self.ClearanceObjective(si,self.costmap)
         opt = ob.MultiOptimizationObjective(si)
         opt.addObjective(lengthObj, 1.0)
         opt.addObjective(clearObj, 1.0)
@@ -194,7 +187,7 @@ class OptimalPlanning():
         obj.setCostToGoHeuristic(ob.CostToGoHeuristic(ob.goalRegionCostToGo))
         return obj
     
-    def OMPL_plan(self, runTime, plannerType, objectiveType):
+    def OMPL_plan(self, runTime, plannerType, objectiveType,mult):
         # Construct the robot state space in which we're planning. We're
         # planning in [0,1]x[0,1], a subset of R^2.
         if self.dimension == '2D':
@@ -278,7 +271,7 @@ class OptimalPlanning():
                     pdef.getSolutionPath().length(), \
                     pdef.getSolutionPath().cost(pdef.getOptimizationObjective()).value()))
 
-                return self.decodeSolutionPath(pdef.getSolutionPath().printAsMatrix(),plannerType, pdef.getSolutionPath().cost(pdef.getOptimizationObjective()).value())
+                return self.decodeSolutionPath(pdef.getSolutionPath().printAsMatrix(),plannerType, pdef.getSolutionPath().cost(pdef.getOptimizationObjective()).value(),mult)
             except:
                 print("No solution found.")
                 pass
@@ -286,8 +279,10 @@ class OptimalPlanning():
         else:
             print("No solution found.")
     
-    def decodeSolutionPath(self, path, plannerType, pathCost):
+    def decodeSolutionPath(self, path, plannerType, pathCost,mult):
         solution = []
+        sampled_lat = []
+        sampled_lon = []
         solution_lat = []
         solution_lon = []
         solution_planner = []
@@ -297,23 +292,19 @@ class OptimalPlanning():
         for idx in range(int(len(path)/2)):
             solution_lat.append(float(path[2*idx]))
             solution_lon.append(float(path[2*idx+1]))
-        #elif self.dimension == '3D':
-        #    for idx in range(int(len(path)/3)):
-        #        solution_lat.append(float(path[3*idx]))
-        #        solution_lon.append(float(path[3*idx+1]))
-        #        solution_alt.append(float(path[3*idx+2]))
-        #        solution_planner.append(plannerType)
-
-        #    df = pd.DataFrame({'latitude':solution_lat,'longitude':solution_lon,'altitude':solution_alt,'algorithm':solution_planner})
-        #    self.solutionDataFrame = pd.concat([self.solutionDataFrame,df],ignore_index=True)
-
-
-        #    self.solutionData.append((plannerType, df, pathCost))
-
-        #    self.solution.append((solution_lat,solution_lon, solution_alt, plannerType, pathCost))
-        #else:
-        #    print('Error inside SolutionPath')
         self.solution.append((solution_lat,solution_lon,plannerType,pathCost))
+
+        for idx in range(len(solution_lat)):
+            sampled_lat.append(round(solution_lat[idx]*(self.costmap.shape[0]-1))*mult)
+            sampled_lon.append(round(solution_lon[idx]*(self.costmap.shape[1]-1))*mult)
+        self.solutionSampled.append((sampled_lat,sampled_lon))
+
+        dict_1 = {"solution":{"lat":solution_lat,"lon":solution_lon,"type":plannerType, "pathCost":pathCost}}
+        dict_2 = {"solutionSampled":{"lat":sampled_lat,"lon":sampled_lon,"type":plannerType, "pathCost":pathCost}}
+        
+        self.solution_dict.update(dict_1)
+        self.solution_dict.update(dict_2)
+            
         return (solution_lat,solution_lon,plannerType)
 
     def plotSolutionPath(self,anima=False):
@@ -347,132 +338,6 @@ class OptimalPlanning():
                 #ax.autoscale()
                 plt.show()
 
-            elif self.dimension == '3D':
-                
-                fig = make_subplots(
-                    rows=3, cols=2,
-                    column_widths=[0.6, 0.4],
-                    row_heights=[0.2, 0.2, 0.6],
-                    subplot_titles=("3D Path","Altitude vs Latitude", "Altitude vs Longitude ", "Paths vs Map"),
-                    specs=[[{"type": "mesh3d", "rowspan": 3}, {"type": "scatter"}],
-                           [        None     , {"type": "scatter"}],
-                           [        None     , {"type": "scattermapbox"}]])
-
-                #fig_aux = px.line_3d(self.solutionDataFrame, x="latitude", y="longitude", z="altitude",color='algorithm')
-                
-                fig_aux = px.line_3d(self.solutionData[0][1], x="latitude", y="longitude", z="altitude",color='algorithm')
-                
-                fig.append_trace(fig_aux['data'][0],row=1,col=1)
-                for polygon in self.obstacle:
-                    lat_pnt = []
-                    lon_pnt = []
-                    alt_pnt = []
-                    for point in polygon[0]:
-                        lat_pnt.append(point[0])
-                        lon_pnt.append(point[1])
-                        alt_pnt.append(polygon[1])
-                    for point in polygon[0]:
-                        lat_pnt.append(point[0])
-                        lon_pnt.append(point[1])
-                        alt_pnt.append(polygon[2])
-                
-                    fig.add_trace(go.Mesh3d(x=lat_pnt,
-                        y=lon_pnt,
-                        z=alt_pnt,
-                        color='rgba(108, 122, 137, 1)',
-                        colorbar_title='z',
-                        i = [7, 0, 0, 0, 4, 4, 6, 6, 4, 0, 3, 2],
-                        j = [3, 4, 1, 2, 5, 6, 5, 2, 0, 1, 6, 3],
-                        k = [0, 7, 2, 3, 6, 7, 1, 1, 5, 5, 7, 6],
-                        name=polygon[3],
-                        showscale=True
-                        ))
-                fig.update_scenes(xaxis_autorange="reversed")
-                
-                fig.add_trace(go.Scatter3d(
-                    x=[self.start[0],self.goal[0]],
-                    y=[self.start[1],self.goal[1]],
-                    z=[self.start[2],self.goal[2]],
-                    mode='markers+text',
-                    name=' ',
-                    text=['Start','Goal'],
-                    textposition = "bottom center",
-                    marker=dict(
-                        size=5,
-                        color="rgba(30, 130, 76, 1)",
-                        opacity=0.8
-                    )))
-                
-
-                #fig_aux_2 = px.line(self.solutionDataFrame, x="latitude", y="altitude", title='Latitude vs Altitude',color='algorithm')
-                #fig.append_trace(fig_aux_2['data'][0],row=1,col=2)
-
-                #fig_aux_3 = px.line(self.solutionDataFrame, x="longitude", y="altitude", title='Longitude vs Altitude',color='algorithm')
-                #fig.append_trace(fig_aux_3['data'][0],row=2,col=2)
-
-                fig_aux_2 = px.line(self.solutionData[0][1], x="latitude", y="altitude", title='Latitude vs Altitude',color='algorithm')
-                fig.append_trace(fig_aux_2['data'][0],row=1,col=2)
-
-                fig_aux_3 = px.line(self.solutionData[0][1], x="longitude", y="altitude", title='Longitude vs Altitude',color='algorithm')
-                fig.append_trace(fig_aux_3['data'][0],row=2,col=2)
-
-
-                lat_aux = [reg[0] for reg in self.region]
-                lon_aux = [reg[1] for reg in self.region]
-                fig.add_trace(go.Scattermapbox(
-                    fill = "toself",
-                    lon = lon_aux, 
-                    lat = lat_aux,
-                    name='Area of Flight',
-                    marker = { 'size': 5, 'color': "rgba(123, 239, 178, 1)" }),row=3,col=2)
-                
-                for obstacle in self.obstacle:
-                    lat_aux_1 = [obs_[0] for obs_ in obstacle[0]]
-                    lon_aux_1 = [obs_[1] for obs_ in obstacle[0]]
-                    fig.add_trace(go.Scattermapbox(
-                        fill = "toself",
-                        lon = lon_aux_1,
-                        lat = lat_aux_1,
-                        name='Obstacle(CB)',
-                        marker = {'size': 2, 'color': "rgba(108, 122, 137, 1)"}))
-                
-                for path in self.solution:
-                    fig.add_trace(go.Scattermapbox(
-                        mode = "markers+lines",
-                        lon = path[1],
-                        lat = path[0],
-                        marker = {'size': 5},
-                        name=path[3]))
-
-                fig.add_trace(go.Scattermapbox(
-                        mode = "markers+text",
-                        lon = [self.start[1],self.goal[1]],
-                        lat = [self.start[0],self.goal[0]],
-                        marker = {'size':15,'symbol':["marker","marker"]},
-                        name=' ',
-                        text = ["Start", "Goal"],textposition = "bottom center"))
-                
-                token = 'pk.eyJ1Ijoiam9zdWVoZmEiLCJhIjoiY2tldnNnODB3MDBtdDJzbXUxMXowMTY5MyJ9.Vwj9BTqB1z9RLKlyh70RHw'
-                
-                fig.update_layout(
-                    mapbox = {
-                        'style': "outdoors",
-                        'center': {'lon': -47.5, 'lat': -12.3 },
-                        'accesstoken': token,
-                        'zoom': 7
-                    },
-                    showlegend = False)
-
-                fig.update_geos(
-                    projection_type="orthographic",
-                    landcolor="white",
-                    oceancolor="MidnightBlue",
-                    showocean=True,
-                    lakecolor="LightBlue"
-                )
-
-                fig.show()
- 
             else:
                 print('Error inside plotSolutionPath')
             
@@ -512,43 +377,8 @@ class OptimalPlanning():
             else:
                 print('Error inside plotSolutionPath')
 
-    def Plot_MPL(self):
-    
-            #Obstacle MatplotLib
-            fig = plt.figure()
-            ax = fig.add_subplot(111, projection='3d')
-            for solution in self.solution:
-                ax.plot(solution[1], solution[0], solution[2], label=solution[3]) 
 
-            lat_list = []
-            lon_list = []
-            alt_list = []
-            lat_dist = []
-            lon_dist = []
-            alt_dist = []
-
-            for polygon in self.obstacle:
-                _lat = []
-                _lon = []
-                for point in polygon[0]:
-                    _lat.append(point[0])
-                    _lon.append(point[1])
-                    
-                lat_list.append(min(_lat))
-                lon_list.append(min(_lon))
-                alt_list.append(polygon[1])
-                lat_dist.append(max(_lat)-min(_lat))
-                lon_dist.append(max(_lon)-min(_lon))
-                alt_dist.append(polygon[2])
-            
-            ax.bar3d(lon_list, lat_list, alt_list, lon_dist, lat_dist, alt_dist, shade=True, color='gray',alpha=1, zsort='max')
-            ax.set(xlabel='Latitude', ylabel='Longitude',zlabel='Altitude', title='Solution Path')
-            ax.legend()
-            ax.grid()
-            #ax.autoscale()
-            plt.show()
-
-    def plotOptimal(self, mult):
+    def plotOptimal(self, mult, axis):
         import random
         import matplotlib.animation as animation
         from mpl_toolkits.mplot3d import Axes3D
@@ -558,9 +388,9 @@ class OptimalPlanning():
         #data = np.loadtxt('path.txt')
         #fig, ax = plt.subplots()
         #ax = fig.gca(projection='3d')
-        fig = plt.figure()
-        ax = fig.add_subplot(1, 1, 1)
-
+        #fig = plt.figure()
+        #ax = fig.add_subplot(1, 1, 1)
+        aux = []
         #Obstacle
         for polygon in self.obstacle:
             lat,lon = zip(*polygon[0])
@@ -569,7 +399,8 @@ class OptimalPlanning():
             lat.append(polygon[0][0][0])
             lon.append(polygon[0][0][1])
         #    ax.plot(lon, lat, linestyle='-', color='red')
-            ax.fill(lon, lat, facecolor='gray', edgecolor='black')
+            aux.append(axis.fill(lon, lat, facecolor='gray', edgecolor='black'))
+            aux[-1]=aux[-1][0]
         
         #Region
         lat,lon = zip(*self.region)
@@ -577,16 +408,20 @@ class OptimalPlanning():
         lon = list(lon)
         lat.append(self.region[0][0])
         lon.append(self.region[0][1])
-        ax.plot(lon, lat, linestyle='-.', color='green', label='Region of Interest')
-
+        aux.append(axis.plot(lon, lat, linestyle='-.', color='green', label='Region of Interest'))
+        aux[-1]=aux[-1][0]
         #Solution
         for sol in self.solution:
-            ax.plot(sol[1], sol[0], label=sol[2])
-        ax.set(xlabel='Latitude', ylabel='Longitude', title='Solution Path')
-        ax.legend()
+            aux.append(axis.plot(sol[0], sol[1], label=sol[2]))
+            aux[-1]=aux[-1][0]
+        aux.append(axis.plot(self.solutionSampled[0][0], self.solutionSampled[0][1], label='SolutionSampled'))
+        aux[-1]=aux[-1][0]   
+        axis.set(xlabel='Latitude', ylabel='Longitude', title='Solution Path')
+        axis.legend()
         #ax.grid()
         #ax.autoscale()
         #plt.show()
+        return aux
 
 
 
@@ -653,45 +488,6 @@ class OptimalPlanning():
     
 
 if __name__ == "__main__":
-    # Create an argument parser
-    parser = argparse.ArgumentParser(description='Optimal motion planning demo program.')
-
-    # Add a filename argument
-    parser.add_argument('-t', '--runtime', type=float, default=2.0, help=\
-        '(Optional) Specify the runtime in seconds. Defaults to 1 and must be greater than 0.')
-    parser.add_argument('-p', '--planner', default='InformedRRTstar', \
-        choices=['BFMTstar', 'BITstar', 'FMTstar', 'InformedRRTstar', 'PRMstar', 'RRTstar', \
-        'SORRTstar'], \
-        help='(Optional) Specify the optimal planner to use, defaults to RRTstar if not given.')
-    parser.add_argument('-o', '--objective', default='PathLength', \
-        choices=['PathClearance', 'PathLength', 'ThresholdPathLength', \
-        'WeightedLengthAndClearanceCombo'], \
-        help='(Optional) Specify the optimization objective, defaults to PathLength if not given.')
-    parser.add_argument('-f', '--file', default='path.txt', \
-        help='(Optional) Specify an output path for the found solution path.')
-    parser.add_argument('-i', '--info', type=int, default=0, choices=[0, 1, 2], \
-        help='(Optional) Set the OMPL log level. 0 for WARN, 1 for INFO, 2 for DEBUG.' \
-        ' Defaults to WARN.')
-
-    # Parse the arguments
-    args = parser.parse_args()
-
-    # Check that time is positive
-    if args.runtime <= 0:
-        raise argparse.ArgumentTypeError(
-            "argument -t/--runtime: invalid choice: %r (choose a positive number greater than 0)" \
-            % (args.runtime,))
-
-    # Set the log level
-    if args.info == 0:
-        ou.setLogLevel(ou.LOG_WARN)
-    elif args.info == 1:
-        ou.setLogLevel(ou.LOG_INFO)
-    elif args.info == 2:
-        ou.setLogLevel(ou.LOG_DEBUG)
-    else:
-        ou.OMPL_ERROR("Invalid log-level integer.")
-
 
     #polygon = [(-12.0, -47.98), (-12.0, -46.99),
     #           (-12.0, -46.99), (-12.6, -46.99),
@@ -720,8 +516,10 @@ if __name__ == "__main__":
     obstacle = [(polygon, base, topo, type_obstacle),(polygon2, base, topo,type_obstacle)]
     #obstacle = [([(-12.200000000000001, -47.5), (-12.1, -47.5), (-12.1, -47.599999999999994), (-12.200000000000001, -47.599999999999994)], 0.2, 0.6), ([(-12.3, -47.5), (-12.2, -47.5), (-12.2, -47.599999999999994), (-12.3, -47.599999999999994)], 0.2, 0.6), ([(-12.3, -47.400000000000006), (-12.2, -47.400000000000006), (-12.2, -47.5), (-12.3, -47.5)], 0.2, 0.6), ([(-12.3, -47.1), (-12.2, -47.1), (-12.2, -47.199999999999996), (-12.3, -47.199999999999996)], 0.2, 0.6), ([(-12.4, -47.6), (-12.299999999999999, -47.6), (-12.299999999999999, -47.699999999999996), (-12.4, -47.699999999999996)], 0.2, 0.6), ([(-12.4, -47.5), (-12.299999999999999, -47.5), (-12.299999999999999, -47.599999999999994), (-12.4, -47.599999999999994)], 0.2, 0.6), ([(-12.4, -47.400000000000006), (-12.299999999999999, -47.400000000000006), (-12.299999999999999, -47.5), (-12.4, -47.5)], 0.2, 0.6), ([(-12.5, -47.7), (-12.399999999999999, -47.7), (-12.399999999999999, -47.8), (-12.5, -47.8)], 0.2, 0.6), ([(-12.5, -47.6), (-12.399999999999999, -47.6), (-12.399999999999999, -47.699999999999996), (-12.5, -47.699999999999996)], 0.2, 0.6), ([(-12.5, -47.5), (-12.399999999999999, -47.5), (-12.399999999999999, -47.599999999999994), (-12.5, -47.599999999999994)], 0.2, 0.6), ([(-12.5, -47.400000000000006), (-12.399999999999999, -47.400000000000006), (-12.399999999999999, -47.5), (-12.5, -47.5)], 0.2, 0.6), ([(-12.5, -47.300000000000004), (-12.399999999999999, -47.300000000000004), (-12.399999999999999, -47.4), (-12.5, -47.4)], 0.2, 0.6), ([(-12.600000000000001, -47.5), (-12.5, -47.5), (-12.5, -47.599999999999994), (-12.600000000000001, -47.599999999999994)], 0.2, 0.6), ([(-12.600000000000001, -47.400000000000006), (-12.5, -47.400000000000006), (-12.5, -47.5), (-12.600000000000001, -47.5)], 0.2, 0.6), ([(-12.600000000000001, -47.300000000000004), (-12.5, -47.300000000000004), (-12.5, -47.4), (-12.600000000000001, -47.4)], 0.2, 0.6)]
 
-    start =(0.1,0.1,1) 
-    goal = (0.9,0.9,8)
+    #start =(0.1,0.1,1) 
+    #goal = (0.9,0.9,8)
+    start =(0.1,0.9,1) 
+    goal = (0.9,0.1,1)
     region = [( 0, 0),
               ( 1, 0),
               ( 1, 1),
@@ -747,156 +545,217 @@ if __name__ == "__main__":
     obstacle = [(polygon, base, topo)]
 
 
-
-    # make these smaller to increase the resolution
-    dx, dy = 0.015, 0.005
-
-    # generate 2 2d grids for the x & y bounds
-    y, x = np.mgrid[0:1+dy:dy, 0:1+dx:dx]
-
-    rand = random.random()
-    z = (rand + x/rand + x**5 + y**3) * np.exp(-x**2 + y**2)
-    # x and y are bounds, so z should be the value *inside* those bounds.
-    # Therefore, remove the last value from the z array.
-    z = z[:-1, :-1]
-    z_min, z_max = -abs(z).max(), abs(z).max()
-
-
-    nrows = 10
-    ncols = 10
-    x = np.arange(ncols+1)*0.1
-    y = np.arange(nrows+1)*0.1
-
-    z =[[1,1,1,1,1,0,0,0,0,0,0],\
-        [1,1,1,1,1,0,0,0,0,0,0],\
-        [1,1,1,1,1,0,0,0,0,0,0],\
-        [1,1,1,1,1,0,0,0,0,0,0],\
-        [1,1,1,1,1,0,0,0,0,0,0],\
-        [0,0,0,0,0,0,0,0,0,0,0],\
-        [0,0,0,0,0,0,0,0,0,0,0],\
-        [0,0,0,0,0,0,1,1,1,1,1],\
-        [0,0,0,0,0,0,1,1,1,1,1],\
-        [0,0,0,0,0,0,1,1,1,1,1],\
-        [0,0,0,0,0,0,1,1,1,1,1]]
-
-    z =[[10,10,10,10,10,10,10,10,10,10,10],\
-        [10,20,20,20,20,20,20,20,20,20,10],\
-        [10,20,50,50,50,50,50,50,50,20,10],\
-        [10,20,50,100,100,100,100,100,50,20,10],\
-        [10,20,50,100,200,200,200,100,50,20,10],\
-        [10,20,50,100,200,300,200,100,50,20,10],\
-        [10,20,50,100,200,200,200,100,50,20,10],\
-        [10,20,50,100,100,100,100,100,50,20,10],\
-        [10,20,50,50,50,50,50,50,50,20,10],\
-        [10,20,20,20,20,20,20,20,20,20,10],\
-        [10,10,10,10,10,10,10,10,10,10,10]]
-
-    #z = np.asarray(z,dtype=np.double) 
-    from skimage.draw import ellipse
-    from skimage.draw import disk
-    nrows = 25
-    ncols = 25
-    delta_d = 1/nrows
-    x = np.arange(ncols+1)*delta_d
-    y = np.arange(nrows+1)*delta_d
-    z = np.zeros((nrows+1, ncols+1), dtype=np.uint8) + 1
-    xx,yy = disk((0.5*nrows,0.5*nrows),0.5*nrows)
-    z[xx,yy] = 10
-
-    xx,yy = disk((0.5*nrows,0.5*nrows),0.25*nrows)
-    z[xx,yy] = 20
-
-    xx,yy = disk((0.5*nrows,0.5*nrows),0.125*nrows)
-    z[xx,yy] = 50
-
-
-    xx, yy = ellipse(0.5*nrows, 0.6*nrows, 0.1*nrows, 0.2*nrows, rotation=np.deg2rad(30))
-    z[xx,yy] = 100
-
-    xx, yy = ellipse(0.2*nrows, 0.4*nrows, 0.05*nrows, 0.25*nrows, rotation=np.deg2rad(10))
-    z[xx,yy] = 100
-
-    z = np.asarray(z,dtype=np.double) 
-    print(z)
-
-    run = True
+    ims = []
+    plans = []
     path_x = []
     path_y = []
-    plans = []
-    time = 0
+    run = True
+    time = 20
+    nrows = 200
+    ncols = 200
+    delta_d = 1/nrows
+    fig = plt.figure()
+    axis = plt.axes(xlim =(-0.2, 1.2),ylim =(-0.2, 1.2))
+    mapgen = MapGen(nrows, ncols,time)
+    mapgen.create()
+    
+    t = 0
+    last_t = 0
+    tried = 0
+    max_try = 4
+    pnt = 0
     while (run == True):
-        try:
-            plan_aux = []
-            cost_aut = []
-            if len(plans) == 0:
-                for idx, alg in enumerate([ 'RRTstar']):
-                    plan_aux.append(OptimalPlanning(start, goal, region, obstacle, planner, dimension))
-                    result = plan_aux[idx].plan(2, alg, 'WeightedLengthAndClearanceCombo',delta_d)
-                    #plan_aux[idx].plotOptimal(delta_d)
-                    if plan_aux[idx].solution != []:
-                        cost_aut.append(plan_aux[idx].solution[0][3])
-                    else:
-                        cost_aut.append(9999999)
-                lower_cost = cost_aut.index(min(cost_aut))
-                plans.append(plan_aux[lower_cost])
-            else:
+        #ims = []
+        #fig = plt.figure()
+        #axis = plt.axes(xlim =(-0.2, 1.2),ylim =(-0.2, 1.2))
+        #try:
+        plan_aux = []
+        cost_aut = []
+        test =[]
+        if len(plans) == 0:
+            for idx, alg in enumerate(['RRTstar']):
+                plan_aux.append(OptimalPlanning(start, goal, region, [], planner, dimension, mapgen.z_time[round(t)]))
+                result = plan_aux[idx].plan(10, alg, 'WeightedLengthAndClearanceCombo',delta_d)
+                test.append(plan_aux[idx].plotOptimal(delta_d,axis))
+                if plan_aux[idx].solution != []:
+                    cost_aut.append(plan_aux[idx].solution[0][3])
+                else:
+                    cost_aut.append(np.inf)
+            lower_cost = cost_aut.index(min(cost_aut))
+            plans.append(plan_aux[lower_cost])
+
+            print('Add, Start Solution: ' +  str(last_t) + " : " + str(round(t)) + " : " + str(t))
+            
+            path_x.append(plans[-1].solution[0][0][0])
+            path_y.append(plans[-1].solution[0][1][0])
+            aux = mapgen.plot_map(round(t),axis) + test[0]
+            aux.append(axis.plot(path_x,path_y,'.',lw=3,color='black'))
+            aux[-1] = aux[-1][0]
+            aux = tuple(aux)
+            ims.append(aux)
+
+            last_t = round(t)
+            t = t + 0.1
+            if t >= time-1:
+                t = time-1
+        
+
+        else:
+            if tried <= max_try:
+
                 #Linear algegra to return the next point in a line
-                p1 = Vector2(plans[-1].solutionSampled[0][1][0], plans[-1].solutionSampled[0][0][0])
-                p2 = Vector2(plans[-1].solutionSampled[0][1][1], plans[-1].solutionSampled[0][0][1])
+                p1 = Vector2(plans[-1].solutionSampled[0][0][0], plans[-1].solutionSampled[0][1][0])
+                p2 = Vector2(plans[-1].solutionSampled[0][0][1], plans[-1].solutionSampled[0][1][1])
                 #p1 = Vector2(plans[-1].solution[0][1][0], plans[-1].solution[0][0][0])
                 #p2 = Vector2(plans[-1].solution[0][1][1], plans[-1].solution[0][0][1])
                 vector = p2-p1
                 vector = vector.normalize()
                 next_point = p1 + vector*delta_d
+            else:
+                p1 = Vector2(plans[-1].solutionSampled[0][0][1], plans[-1].solutionSampled[0][1][1])
+                p2 = Vector2(plans[-1].solutionSampled[0][0][2], plans[-1].solutionSampled[0][1][2])
+                vector = p2-p1
+                vector = vector.normalize()
+                next_point = p1 + vector*delta_d
+                #next_point = (plans[-1].solutionSampled[0][0][1], plans[-1].solutionSampled[0][1][1])
+                
 
-                for idx, alg in enumerate([ 'RRTstar']):
-                    plan_aux.append(OptimalPlanning((next_point.x,next_point.y), goal, region, obstacle, planner, dimension))
-                    result = plan_aux[idx].plan(2, alg, 'WeightedLengthAndClearanceCombo',delta_d)
-                    #plan_aux[idx].plotOptimal(delta_d)
-                    if plan_aux[idx].solution != []:
-                        cost_aut.append(plan_aux[idx].solution[0][3])
+            for idx, alg in enumerate(['RRTstar']):
+                plan_aux.append(OptimalPlanning((next_point[0],next_point[1]), goal, region, [], planner, dimension, mapgen.z_time[round(t)]))
+                result = plan_aux[idx].plan(5, alg, 'WeightedLengthAndClearanceCombo',delta_d)
+                if plan_aux[idx].solution != []:
+                    cost_aut.append(plan_aux[idx].solution[0][3])
+                else:
+                    cost_aut.append(np.inf)
+            lower_cost = cost_aut.index(min(cost_aut))
+            #Se existir solução
+            if plan_aux[lower_cost].solution != []:
+                #Se o ultimo costmap é do mesmo periodo que o atual
+                if round(t) == last_t:
+                    #Tentar encontrar um valor melhor que o ultimo
+                    if plan_aux[lower_cost].solution[0][3] < plans[-1].solution[0][3] * 1.10 :
+                        print('Add, Better Solution: ' +  str(last_t) + " : " + str(round(t)) + " : " + str(t) + " Pnt: " + str(next_point[0])+','+str(next_point[1]))
+                        test.append(plan_aux[lower_cost].plotOptimal(delta_d,axis))
+                        plans.append(plan_aux[lower_cost])
+                        path_x.append(plans[-1].solution[0][0][0])
+                        path_y.append(plans[-1].solution[0][1][0])
+
+                        aux = mapgen.plot_map(round(t),axis) + test[0]
+                        aux.append(axis.plot(path_x,path_y,'.',lw=3,color='black'))
+                        aux[-1] = aux[-1][0]
+                        aux = tuple(aux)
+                        ims.append(aux)
+                        
+                        last_t = round(t)
+                        t = t + 0.1
+                        if t >= time-1:
+                            t = time-1
+                        
+                        tried = 0
+                        pnt = 1
+
+                    elif tried >= max_try: 
+                        print('Add, tried Solution: ' +  str(last_t) + " : " + str(round(t)) + " : " + str(t) + " Pnt: " + str(next_point[0])+','+str(next_point[1]))
+                        test.append(plan_aux[lower_cost].plotOptimal(delta_d,axis))
+                        plans.append(plan_aux[lower_cost])
+                        path_x.append(plans[-1].solution[0][0][0])
+                        path_y.append(plans[-1].solution[0][1][0])
+
+                        aux = mapgen.plot_map(round(t),axis) + test[0]
+                        aux.append(axis.plot(path_x,path_y,'.',lw=3,color='black'))
+                        aux[-1] = aux[-1][0]
+                        aux = tuple(aux)
+                        ims.append(aux)
+                        
+                        last_t = round(t)
+                        t = t + 0.1
+                        if t >= time-1:
+                            t = time-1
+                        
+                        tried = 0
+                        pnt = 1
                     else:
-                        cost_aut.append(9999999)
-                lower_cost = cost_aut.index(min(cost_aut))
-                plans.append(plan_aux[lower_cost])
-                path_x.append(plans[-1].solutionSampled[0][1][0])
-                path_y.append(plans[-1].solutionSampled[0][0][0])
-                #if (plans[-1].solutionSampled[0][1][0], plans[-1].solutionSampled[0][0][0]) == (plans[-2].solutionSampled[0][1][0], plans[-2].solutionSampled[0][0][0]):
-                #    print('Pop Solution')
-                #    plans.pop()
+                        print('Tried: '+ str(tried) + " - (" + str(next_point[0])+','+str(next_point[1])+")" )
+                        if tried >= max_try :
+                            pnt = pnt +1    
+                        tried = tried + 1
 
-                #if (plans[-1].solution[0][3] > plans[-2].solution[0][3]):
-                #    print('Pop Solution')
-                #    plans.pop()
-                #else:
+                else:
+                    print('Add, Other time: ' +  str(last_t) + " : " + str(round(t)) + " : " + str(t)+ " Pnt: " + str(next_point[0])+','+str(next_point[1]))
+                    test.append(plan_aux[lower_cost].plotOptimal(delta_d,axis))
+                    plans.append(plan_aux[lower_cost])
+                    path_x.append(plans[-1].solution[0][0][0])
+                    path_y.append(plans[-1].solution[0][1][0])
+
+                    aux = mapgen.plot_map(round(t),axis) + test[0]
+                    aux.append(axis.plot(path_x,path_y,'.',lw=3,color='black'))
+                    aux[-1] = aux[-1][0]
+                    aux = tuple(aux)
+                    ims.append(aux)
                     
-                #    plans[-1]planspend(plans[-1].solutionSampled[0][0][0])
-                    #path_x.append(plans[-1].solution[0][1][0])
-                    #path_y.append(plans[-1].solution[0][0][0])
+                    last_t = round(t)
+                    t = t + 0.1
+                    if t >= time-1:
+                        t = time-1
+            
+                
+            else:
+                print('Pop Solution - Time: ' +  str(round(t)) + " : " + str(t))
+                continue
+            
+        
 
-                if (plans[-1].solutionSampled[0][1][0], plans[-1].solutionSampled[0][0][0]) == (goal[0],goal[1]):
-                #if (plans[-1].solution[0][1][0], plans[-1].solution[0][0][0]) == (goal[0],goal[1]):
-                    run = False
-            time = time + 1
+        #if (plans[-1].solutionSampled[0][1][0], plans[-1].solutionSampled[0][0][0]) == (plans[-2].solutionSampled[0][1][0], plans[-2].solutionSampled[0][0][0]):
+        #    print('Pop Solution')
+        #    plans.pop()
 
-        except:
-            pass
+        
+            
+           # plans[-1]planspend(plans[-1].solutionSampled[0][0][0])
+            #path_x.append(plans[-1].solution[0][1][0])
+            #path_y.append(plans[-1].solution[0][0][0])
+
+        if (plans[-1].solution[0][0][0], plans[-1].solution[0][1][0]) == (goal[0],goal[1]):
+        #if (plans[-1].solution[0][1][0], plans[-1].solution[0][0][0]) == (goal[0],goal[1]):
+            run = False
+            im_ani = animation.ArtistAnimation(fig, ims, interval=3000/time)
+            plt.show()
+        else:
+            im_ani = animation.ArtistAnimation(fig, ims, interval=3000/time)
+            #plt.show()
+        
+        
+        
+        #except Ex:
+        #    print(Ex)
+        #    pass
             #plans.pop()
 
     from matplotlib import pyplot as plt 
     import numpy as np 
-    from matplotlib.animation import FuncAnimation  
+    from matplotlib.animation import FuncAnimation 
+    import numpy as np
+    import matplotlib.pyplot as plt
+    import matplotlib.animation as animation
+    from matplotlib import pyplot
     
+    im_ani = animation.ArtistAnimation(fig, ims, interval=10000/time, blit=True)
+    #anim = FuncAnimation(fig, animate, init_func = init, 
+    #                    frames =len(path_y) , interval = 200, blit = True) 
+    
+    plt.show()
+
+
     # initializing a figure in  
     # which the graph will be plottpath_ed 
     fig = plt.figure()  
     
     # marking the x-axis and y-axis 
-    axis = plt.axes(xlim =(0, 1),  
-                    ylim =(0, 1))  
+    axis = plt.axes(xlim =(-0.2, 1.2),  
+                    ylim =(-0.2, 1.2))  
     
     # initializing a line variable 
-    axis.pcolormesh(x, y, z*0.02, cmap='RdBu', shading='nearest', vmin=z_min, vmax=z_max)
+    #axis.pcolormesh(x, y, z*0.02, cmap='RdBu', shading='nearest', vmin=z_min, vmax=z_max)
     line, = axis.plot([], [],'.', lw = 3) 
 
     # data which the line will  
@@ -911,7 +770,7 @@ if __name__ == "__main__":
     
         # plots a sine graph 
          
-        line.set_data(path_y[:i], path_x[:i])
+        line.set_data(path_x[:i], path_y[:i])
         
         return line, 
     
