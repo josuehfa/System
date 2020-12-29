@@ -518,8 +518,8 @@ if __name__ == "__main__":
 
     #start =(0.1,0.1,1) 
     #goal = (0.9,0.9,8)
-    start =(0.1,0.9,1) 
-    goal = (0.9,0.1,1)
+    start =(0.9,0.1,1) 
+    goal = (0.1,0.9,1)
     region = [( 0, 0),
               ( 1, 0),
               ( 1, 1),
@@ -550,9 +550,9 @@ if __name__ == "__main__":
     path_x = []
     path_y = []
     run = True
-    time = 20
-    nrows = 200
-    ncols = 200
+    time = 8
+    nrows = 80
+    ncols = 80
     delta_d = 1/nrows
     fig = plt.figure()
     axis = plt.axes(xlim =(-0.2, 1.2),ylim =(-0.2, 1.2))
@@ -575,7 +575,7 @@ if __name__ == "__main__":
         if len(plans) == 0:
             for idx, alg in enumerate(['RRTstar']):
                 plan_aux.append(OptimalPlanning(start, goal, region, [], planner, dimension, mapgen.z_time[round(t)]))
-                result = plan_aux[idx].plan(10, alg, 'WeightedLengthAndClearanceCombo',delta_d)
+                result = plan_aux[idx].plan(15, alg, 'WeightedLengthAndClearanceCombo',delta_d)
                 test.append(plan_aux[idx].plotOptimal(delta_d,axis))
                 if plan_aux[idx].solution != []:
                     cost_aut.append(plan_aux[idx].solution[0][3])
@@ -622,7 +622,7 @@ if __name__ == "__main__":
 
             for idx, alg in enumerate(['RRTstar']):
                 plan_aux.append(OptimalPlanning((next_point[0],next_point[1]), goal, region, [], planner, dimension, mapgen.z_time[round(t)]))
-                result = plan_aux[idx].plan(5, alg, 'WeightedLengthAndClearanceCombo',delta_d)
+                result = plan_aux[idx].plan(3, alg, 'WeightedLengthAndClearanceCombo',delta_d)
                 if plan_aux[idx].solution != []:
                     cost_aut.append(plan_aux[idx].solution[0][3])
                 else:
