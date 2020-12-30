@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
@@ -57,7 +58,7 @@ class PlotlyResult():
             column_widths=[0.5,0.5],
             row_heights=[1],
             subplot_titles=("Solution Path in a Real Map","2D CostMap"),
-            specs=[[{"type": "scatter"},{"type": "contour"}]])
+            specs=[[{"type": "Scattermapbox"},{"type": "contour"}]])
         
         #fig.append_trace(go.Scattermapbox(
         #    mode = "markers+text",
@@ -155,7 +156,21 @@ class PlotlyResult():
                     [1, '#193f6e']]
 
         y=np.arange(100) 
-        fig.append_trace(go.Scatter(y=y[:10], mode='lines', name='Testing Points'),row=1,col=1)
+        #fig.append_trace(go.Scatter(x=[1,2,3,4,5,1,2,3,4,5,1,2,3,4,5], y=[1,1,1,1,1,2,2,2,2,2,3,3,3,3,3], marker_size = 100,mode='markers',marker_symbol='square', marker=dict(
+        #            color=z,
+        #            line_width=1)),row=1,col=1)
+
+        #filename = "https://github.com/CSSEGISandData/COVID-19/blob/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv"
+        #df = pd.read_csv(filename, encoding='utf-8')
+        #df = df.head(100)
+        lat=np.arange(100)
+        lon=np.arange(100)
+        fig.append_trace(go.Scattermapbox(
+               lat=lat,
+               lon=lon,
+               mode='markers+lines',
+               marker=dict(size=10, color='red')
+            ),row=1,col=1)
 
         fig.append_trace(go.Contour(x=X, y=Y, z=z_t[0], ids=z_t,
                                     name='testcolormap',
@@ -184,17 +199,17 @@ class PlotlyResult():
                                     showactive= False,
                                     buttons=[dict(label="Play",
                                             method="animate",
-                                            args=[None, dict(frame= { "duration": 2,"redraw":True},
+                                            args=[None, dict(frame= { "duration": 50},
                                                                 fromcurrent= True,
-                                                                mode='afterall', 
-                                                                transition= {"duration": 0})]),
+                                                                mode='immediate', 
+                                                                transition= {"duration": 50, "easing": "linear"})]),
                                             dict(label='Pause',
                                                 method='animate',
                                                 args= [ [None],
-                                                        dict(mode='afterall',
-                                                            transition= { 'duration': 0 },
-                                                            frame= dict( redraw=True, duration=0 )
-                                                            )
+                                                        dict(frame= { "duration": 0},
+                                                                fromcurrent= True,
+                                                                mode='immediate', 
+                                                                transition= {"duration": 0, "easing": "linear"})
                                        ]
                                 )])],
                 sliders=get_sliders(n_frames=100)
@@ -218,9 +233,10 @@ class PlotlyResult():
         frames = []
         for i in range(1, 100):
             frames.append(go.Frame(data=[go.Contour(x=X, y=Y, z=z_t[move], line_smoothing=0, colorscale=colorscale)],traces=[1]))
-            frames.append(go.Frame(data=[go.Scatter(y=y[:i])],traces=[0]))
-            frames.append(go.Frame(data=[go.Contour(x=X, y=Y, z=z_t[move], line_smoothing=0, colorscale=colorscale)],traces=[1]))
-            if i%10 == 0 :
+            frames.append(go.Frame(data=[go.Scattermapbox(
+                                       lat=lat[:i], 
+                                       lon=lon[:i],mode='markers+lines')],traces=[0]))
+            if i%10 == 0 and i < 100:
                 move = move + 1
                 
         #frames= [go.Frame(data=[go.Scatter(y=y[:i],name='Testing Points'),go.Contour(z=z, line_smoothing=0, colorscale='dense',name='testcolormap')]) for i in range(1, 100)]

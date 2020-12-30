@@ -551,8 +551,8 @@ if __name__ == "__main__":
     path_y = []
     run = True
     time = 8
-    nrows = 80
-    ncols = 80
+    nrows = 100
+    ncols = 100
     delta_d = 1/nrows
     fig = plt.figure()
     axis = plt.axes(xlim =(-0.2, 1.2),ylim =(-0.2, 1.2))
