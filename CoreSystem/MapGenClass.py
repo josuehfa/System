@@ -26,15 +26,15 @@ class MapGen():
         y = np.arange(nrows+1)*delta_d
         
         for t in range(self.time):
-            z = np.zeros((nrows+1, ncols+1), dtype=np.uint8) + 50
+            z = np.zeros((nrows+1, ncols+1), dtype=np.uint8) + 1
             xx,yy = disk((0.5*nrows,0.5*nrows),0.5*nrows)
-            z[xx,yy] = 50
+            z[xx,yy] = 10
 
             xx,yy = disk((0.5*nrows,0.5*nrows),0.25*nrows)
             z[xx,yy] = 20
 
             xx,yy = disk((0.5*nrows,0.5*nrows),0.125*nrows)
-            z[xx,yy] = 10
+            z[xx,yy] = 50
 
             #Region Clearece
             xx, yy = ellipse(0.5*nrows+t*(0.5*nrows/self.time), 0.5*ncols-t*(0.5*ncols/self.time), 0.15*nrows, 0.25*ncols, rotation=np.deg2rad(10))
@@ -42,7 +42,7 @@ class MapGen():
             y_del = np.argwhere( (yy <= 0) | (yy >= ncols) )
             xx = np.delete(xx, np.concatenate((x_del, y_del), axis=0))
             yy = np.delete(yy, np.concatenate((x_del, y_del), axis=0))
-            z[xx,yy] = 10
+            z[xx,yy] = 50
 
              #Region Clearece
             xx, yy = ellipse(0.5*nrows-t*(0.5*nrows/self.time), 0.5*ncols+t*(0.5*ncols/self.time), 0.15*nrows, 0.25*ncols, rotation=np.deg2rad(10))
@@ -50,7 +50,7 @@ class MapGen():
             y_del = np.argwhere( (yy <= 0) | (yy >= ncols) )
             xx = np.delete(xx, np.concatenate((x_del, y_del), axis=0))
             yy = np.delete(yy, np.concatenate((x_del, y_del), axis=0))
-            z[xx,yy] = 10
+            z[xx,yy] = 50
 
             z = np.asarray(z,dtype=np.double) 
             self.z_time.append(z)

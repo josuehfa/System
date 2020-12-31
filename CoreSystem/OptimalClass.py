@@ -23,6 +23,7 @@ mpl.use('tkAgg')
 import random
 from euclid import *
 from MapGenClass import *
+from PlotlyClass import *
 from matplotlib import pyplot as plt 
 import numpy as np 
 from matplotlib.animation import FuncAnimation 
@@ -549,10 +550,11 @@ if __name__ == "__main__":
     plans = []
     path_x = []
     path_y = []
+    time_res =[]
     run = True
-    time = 8
-    nrows = 100
-    ncols = 100
+    time = 4
+    nrows = 10
+    ncols = 10
     delta_d = 1/nrows
     fig = plt.figure()
     axis = plt.axes(xlim =(-0.2, 1.2),ylim =(-0.2, 1.2))
@@ -588,6 +590,7 @@ if __name__ == "__main__":
             
             path_x.append(plans[-1].solution[0][0][0])
             path_y.append(plans[-1].solution[0][1][0])
+            time_res.append(round(t))
             aux = mapgen.plot_map(round(t),axis) + test[0]
             aux.append(axis.plot(path_x,path_y,'.',lw=3,color='black'))
             aux[-1] = aux[-1][0]
@@ -639,6 +642,7 @@ if __name__ == "__main__":
                         plans.append(plan_aux[lower_cost])
                         path_x.append(plans[-1].solution[0][0][0])
                         path_y.append(plans[-1].solution[0][1][0])
+                        time_res.append(round(t))
 
                         aux = mapgen.plot_map(round(t),axis) + test[0]
                         aux.append(axis.plot(path_x,path_y,'.',lw=3,color='black'))
@@ -660,6 +664,7 @@ if __name__ == "__main__":
                         plans.append(plan_aux[lower_cost])
                         path_x.append(plans[-1].solution[0][0][0])
                         path_y.append(plans[-1].solution[0][1][0])
+                        time_res.append(round(t))
 
                         aux = mapgen.plot_map(round(t),axis) + test[0]
                         aux.append(axis.plot(path_x,path_y,'.',lw=3,color='black'))
@@ -686,6 +691,7 @@ if __name__ == "__main__":
                     plans.append(plan_aux[lower_cost])
                     path_x.append(plans[-1].solution[0][0][0])
                     path_y.append(plans[-1].solution[0][1][0])
+                    time_res.append(round(t))
 
                     aux = mapgen.plot_map(round(t),axis) + test[0]
                     aux.append(axis.plot(path_x,path_y,'.',lw=3,color='black'))
@@ -730,6 +736,10 @@ if __name__ == "__main__":
         #    print(Ex)
         #    pass
             #plans.pop()
+    
+    plotSol = PlotlyResult('','','')
+    final_solution = {"lat":path_x,"lon":path_y}
+    plotSol.animedPlot(final_solution, time_res, mapgen, start, goal, region)
 
     from matplotlib import pyplot as plt 
     import numpy as np 

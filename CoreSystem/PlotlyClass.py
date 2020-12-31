@@ -1,12 +1,13 @@
 import numpy as np
 import pandas as pd
+import plotly
 import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from skimage.draw import ellipse 
 from skimage.draw import ellipse_perimeter
 from skimage.draw import disk
-
+from MapGenClass import *
 class PlotlyResult():
 #Class to create plots using Plotly Library
 
@@ -55,39 +56,12 @@ class PlotlyResult():
         #Create a Plot Structure
         fig = make_subplots(
             rows=1, cols=2,
-            column_widths=[0.5,0.5],
+            column_widths=[0.45,0.45],
             row_heights=[1],
             subplot_titles=("Solution Path in a Real Map","2D CostMap"),
             specs=[[{"type": "Scattermapbox"},{"type": "contour"}]])
         
-        #fig.append_trace(go.Scattermapbox(
-        #    mode = "markers+text",
-        #    lon = [start[1],goal[1]],
-        #    lat = [start[0],goal[0]],
-        #    marker = {'size':15,'symbol':["marker","marker"]},
-        #    name=' ',
-        #    text = ["Start", "Goal"],textposition = "bottom center"),row=1,col=1)
-
-        #for obs in obstacle:
-        #    lat_aux_1 = [obs_[0] for obs_ in obs[0]]
-        #    lon_aux_1 = [obs_[1] for obs_ in obs[0]]
-        #    fig.add_trace(go.Scattermapbox(
-        #        fill = "toself",
-        #        lon = lon_aux_1,
-        #        lat = lat_aux_1,
-        #        name='Obstacle(CB)',
-        #        marker = {'size': 2, 'color': "rgba(108, 122, 137, 1)"}))
-
-        #lat_aux = [reg[0] for reg in region]
-        #lon_aux = [reg[1] for reg in region]
-        #fig.add_trace(go.Scattermapbox(
-        #    lon = lon_aux, 
-        #    lat = lat_aux,
-        #    fill = "toself",
-        #    name='Area of Flight',
-        #    marker = { 'size': 5, 'color': "rgba(123, 239, 178, 1)" }))
-        
-        
+            
     
         #data_fig.append(go.Scattermapbox(
         #    mode = "markers+lines",
@@ -154,6 +128,11 @@ class PlotlyResult():
                     [0.5, '#72a5d3'],
                     [0.75, '#3b6ba5'],
                     [1, '#193f6e']]
+        colorscale=[[0, '#ffffff'],
+                    [0.25, '#a0ff7d'],
+                    [0.5, '#c5c400'],
+                    [0.75, '#dc8000'],
+                    [1, '#e10000']]
 
         y=np.arange(100) 
         #fig.append_trace(go.Scatter(x=[1,2,3,4,5,1,2,3,4,5,1,2,3,4,5], y=[1,1,1,1,1,2,2,2,2,2,3,3,3,3,3], marker_size = 100,mode='markers',marker_symbol='square', marker=dict(
@@ -163,56 +142,99 @@ class PlotlyResult():
         #filename = "https://github.com/CSSEGISandData/COVID-19/blob/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv"
         #df = pd.read_csv(filename, encoding='utf-8')
         #df = df.head(100)
-        lat=np.arange(100)
-        lon=np.arange(100)
+        lat=np.arange(50)
+        lon=np.arange(50)
         fig.append_trace(go.Scattermapbox(
                lat=lat,
                lon=lon,
                mode='markers+lines',
-               marker=dict(size=10, color='red')
+               marker=dict(size=5, color='red')
             ),row=1,col=1)
 
+        lat_aux = [reg[0] for reg in region]
+        lon_aux = [reg[1] for reg in region]
+        fig.append_trace(go.Scattermapbox(
+            lon = lon_aux, 
+            lat = lat_aux,
+            fill = "toself",
+            name='Area of Flight',
+            marker = { 'size': 5, 'color': "rgba(123, 239, 178, 1)" }),row=1,col=1)
+
+        fig.append_trace(go.Scattermapbox(
+            mode = "markers",
+            lon = [start[1]],
+            lat = [start[0]],
+            marker = {'size':5,'color':"black"},
+            name='Start'
+            ),row=1,col=1)
+
+        fig.append_trace(go.Scattermapbox(
+            mode = "markers",
+            lon = [goal[1]],
+            lat = [goal[0]],
+            marker = {'size':5,'color':"black"},
+            name='Goal'
+            ),row=1,col=1)
+
+        fig.append_trace(go.Scatter(
+            x = [], 
+            y = [],
+            ids=X,
+            mode='markers+lines',
+            marker=dict(size=5, color='black')
+            ),row=1,col=2)
         fig.append_trace(go.Contour(x=X, y=Y, z=z_t[0], ids=z_t,
                                     name='testcolormap',
                                     line_smoothing=0, 
                                     colorscale=colorscale,
                                     contours=dict(
-                                        start=np.min(z), 
-                                        end=np.max(z), 
-                                        size=0.5, 
+                                        start=0, 
+                                        end=50, 
+                                        size=1, 
                                         showlines=False)
                                     ), row=1, col=2)
 
 
+        fig.update_xaxes(range=[-1,1],showgrid=False,constrain="domain")
+        fig.update_yaxes(range=[-1,1],showgrid=False,constrain="domain")
         fig.update_layout(
                 mapbox = {
                     'style': "stamen-terrain",
-                    'center': {'lon': -73, 'lat': 46 },
+                    'center': {'lon': 0, 'lat': 0 },
                     'zoom': 5},
                 title_text="Generation of a Path for a UAS", hovermode="closest",
-                updatemenus=[dict(  x=0,
-                                    y=0,
-                                    yanchor='top',
-                                    xanchor= 'right',
-                                    pad= dict(r= 10, t=40 ),
+                legend=dict(
+                    orientation="h",
+                    yanchor="top",
+                    #y=1.02,
+                    xanchor="right",
+                    x=1
+                ),
+                updatemenus=[dict(  #x=0,
+                                    #y=0,
+                                    #yanchor='top',
+                                    #xanchor= 'right',
+                                    #pad= dict(r= 10, t=40 ),
                                     type="buttons",
                                     showactive= False,
                                     buttons=[dict(label="Play",
                                             method="animate",
-                                            args=[None, dict(frame= { "duration": 50},
+                                            args=[[None], dict(frame= { "duration": 50},
                                                                 fromcurrent= True,
-                                                                mode='immediate', 
-                                                                transition= {"duration": 50, "easing": "linear"})]),
+                                                                mode='immediate'#, 
+                                                                #transition= {"duration":10, "easing": "linear"}
+                                                                )]),
                                             dict(label='Pause',
                                                 method='animate',
                                                 args= [ [None],
                                                         dict(frame= { "duration": 0},
                                                                 fromcurrent= True,
-                                                                mode='immediate', 
-                                                                transition= {"duration": 0, "easing": "linear"})
-                                       ]
-                                )])],
-                sliders=get_sliders(n_frames=100)
+                                                                mode='immediate'#, 
+                                                                #transition= {"duration": 0, "easing": "linear"}
+                                                                )
+                                      ]
+                                )])]#,
+                #sliders=get_sliders(n_frames=100)
                             )
 
         #frames = [go.Frame(
@@ -231,11 +253,23 @@ class PlotlyResult():
 
         move = 0
         frames = []
-        for i in range(1, 100):
-            frames.append(go.Frame(data=[go.Contour(x=X, y=Y, z=z_t[move], line_smoothing=0, colorscale=colorscale)],traces=[1]))
+        
+        for i in range(1, 50):
             frames.append(go.Frame(data=[go.Scattermapbox(
                                        lat=lat[:i], 
                                        lon=lon[:i],mode='markers+lines')],traces=[0]))
+             
+            frames.append(go.Frame(data=[go.Scatter(
+                                       x=X[:i], 
+                                       y=Y[:i],mode='markers+lines')],traces=[4]))
+            frames.append(go.Frame(data=[go.Contour(x=X, y=Y, z=z_t[move], line_smoothing=0, 
+                                    colorscale=colorscale,
+                                    contours=dict(
+                                        start=0, 
+                                        end=50, 
+                                        size=1, 
+                                        showlines=False))],traces=[5]))
+            
             if i%10 == 0 and i < 100:
                 move = move + 1
                 
@@ -245,134 +279,150 @@ class PlotlyResult():
 
         fig.update(frames=frames)
         
-        fig.show()
+        plotly.offline.plot(fig, filename='path.html')
+        #fig.show()
         print()
 
-    def animedPlot(self, solution, obstacle, costmap):
-        #Generate a animed plot with plotly
+    def animedPlot(self, solution, time_res, costmap, start, goal, region):
+        #colorscale to be used in the contour plot
+        colorscale=[[0, '#ffffff'],
+                    [0.25, '#a0ff7d'],
+                    [0.5, '#c5c400'],
+                    [0.75, '#dc8000'],
+                    [1, '#e10000']]
+        
+        #Create the plot Structure
         fig = make_subplots(
-            rows=3, cols=2,
-            column_widths=[0.6, 0.4],
-            row_heights=[0.2, 0.2, 0.6],
-            subplot_titles=("3D Path","Altitude vs Latitude", "Altitude vs Longitude ", "Paths vs Map"),
-            specs=[[{"type": "mesh3d", "rowspan": 3}, {"type": "scatter"}],
-                    [        None     , {"type": "scatter"}],
-                    [        None     , {"type": "scattermapbox"}]])
-
-        #fig_aux = px.line_3d(self.solutionDataFrame, x="latitude", y="longitude", z="altitude",color='algorithm')
+            rows=1, cols=2,
+            column_widths=[0.45,0.45],
+            row_heights=[1],
+            subplot_titles=("Solution Path in a Real Map","2D CostMap"),
+            specs=[[{"type": "Scattermapbox"},{"type": "contour"}]])
         
-        fig_aux = px.line_3d(self.solutionData[0][1], x="latitude", y="longitude", z="altitude",color='algorithm')
-        
-        fig.append_trace(fig_aux['data'][0],row=1,col=1)
-        for polygon in self.obstacle:
-            lat_pnt = []
-            lon_pnt = []
-            alt_pnt = []
-            for point in polygon[0]:
-                lat_pnt.append(point[0])
-                lon_pnt.append(point[1])
-                alt_pnt.append(polygon[1])
-            for point in polygon[0]:
-                lat_pnt.append(point[0])
-                lon_pnt.append(point[1])
-                alt_pnt.append(polygon[2])
-        
-            fig.add_trace(go.Mesh3d(x=lat_pnt,
-                y=lon_pnt,
-                z=alt_pnt,
-                color='rgba(108, 122, 137, 1)',
-                colorbar_title='z',
-                i = [7, 0, 0, 0, 4, 4, 6, 6, 4, 0, 3, 2],
-                j = [3, 4, 1, 2, 5, 6, 5, 2, 0, 1, 6, 3],
-                k = [0, 7, 2, 3, 6, 7, 1, 1, 5, 5, 7, 6],
-                name=polygon[3],
-                showscale=True
-                ))
-        fig.update_scenes(xaxis_autorange="reversed")
-        
-        fig.add_trace(go.Scatter3d(
-            x=[self.start[0],self.goal[0]],
-            y=[self.start[1],self.goal[1]],
-            z=[self.start[2],self.goal[2]],
-            mode='markers+text',
-            name=' ',
-            text=['Start','Goal'],
-            textposition = "bottom center",
-            marker=dict(
-                size=5,
-                color="rgba(30, 130, 76, 1)",
-                opacity=0.8
-            )))
-        
+        #Trace for solution
+        fig.append_trace(go.Scattermapbox(
+            lat=[],
+            lon=[],
+            name='Solution Path',
+            mode='markers+lines',
+            marker=dict(size=5, color='red')
+            ),row=1,col=1)
 
-        #fig_aux_2 = px.line(self.solutionDataFrame, x="latitude", y="altitude", title='Latitude vs Altitude',color='algorithm')
-        #fig.append_trace(fig_aux_2['data'][0],row=1,col=2)
-
-        #fig_aux_3 = px.line(self.solutionDataFrame, x="longitude", y="altitude", title='Longitude vs Altitude',color='algorithm')
-        #fig.append_trace(fig_aux_3['data'][0],row=2,col=2)
-
-        fig_aux_2 = px.line(self.solutionData[0][1], x="latitude", y="altitude", title='Latitude vs Altitude',color='algorithm')
-        fig.append_trace(fig_aux_2['data'][0],row=1,col=2)
-
-        fig_aux_3 = px.line(self.solutionData[0][1], x="longitude", y="altitude", title='Longitude vs Altitude',color='algorithm')
-        fig.append_trace(fig_aux_3['data'][0],row=2,col=2)
-
-
-        lat_aux = [reg[0] for reg in self.region]
-        lon_aux = [reg[1] for reg in self.region]
-        fig.add_trace(go.Scattermapbox(
-            fill = "toself",
+        #Trace for area of flight
+        lat_aux = [reg[0] for reg in region]
+        lon_aux = [reg[1] for reg in region]
+        fig.append_trace(go.Scattermapbox(
             lon = lon_aux, 
             lat = lat_aux,
+            fill = "toself",
             name='Area of Flight',
-            marker = { 'size': 5, 'color': "rgba(123, 239, 178, 1)" }),row=3,col=2)
-        
-        for obstacle in self.obstacle:
-            lat_aux_1 = [obs_[0] for obs_ in obstacle[0]]
-            lon_aux_1 = [obs_[1] for obs_ in obstacle[0]]
-            fig.add_trace(go.Scattermapbox(
-                fill = "toself",
-                lon = lon_aux_1,
-                lat = lat_aux_1,
-                name='Obstacle(CB)',
-                marker = {'size': 2, 'color': "rgba(108, 122, 137, 1)"}))
-        
-        for path in self.solution:
-            fig.add_trace(go.Scattermapbox(
-                mode = "markers+lines",
-                lon = path[1],
-                lat = path[0],
-                marker = {'size': 5},
-                name=path[3]))
+            marker = { 'size': 5, 'color': "rgba(123, 239, 178, 1)" }),row=1,col=1)
 
-        fig.add_trace(go.Scattermapbox(
-                mode = "markers+text",
-                lon = [self.start[1],self.goal[1]],
-                lat = [self.start[0],self.goal[0]],
-                marker = {'size':15,'symbol':["marker","marker"]},
-                name=' ',
-                text = ["Start", "Goal"],textposition = "bottom center"))
-        
-        token = 'pk.eyJ1Ijoiam9zdWVoZmEiLCJhIjoiY2tldnNnODB3MDBtdDJzbXUxMXowMTY5MyJ9.Vwj9BTqB1z9RLKlyh70RHw'
-        
+        #Start position
+        fig.append_trace(go.Scattermapbox(
+            mode = "markers",
+            lon = [start[1]],
+            lat = [start[0]],
+            marker = {'size':5,'color':"black"},
+            name='Start'
+            ),row=1,col=1)
+
+        #goal position
+        fig.append_trace(go.Scattermapbox(
+            mode = "markers",
+            lon = [goal[1]],
+            lat = [goal[0]],
+            marker = {'size':5,'color':"black"},
+            name='Goal'
+            ),row=1,col=1)
+
+        #Solution trace for contour
+        fig.append_trace(go.Scatter(
+            x = [], 
+            y = [],
+            mode='markers+lines',
+            name='Solution Path',
+            marker=dict(size=5, color='black')
+            ),row=1,col=2)
+
+        #Contour plot
+        lat,lon = zip(*region)
+        lat = list(lat)
+        lon = list(lon)
+        costmap_x = np.linspace(lat[0],lat[1], len(costmap.x))
+        costmap_y = np.linspace(lon[0],lon[1], len(costmap.y))
+        fig.append_trace(go.Contour(
+            x=costmap_x, 
+            y=costmap_y, 
+            z=costmap.z_time[0], 
+            ids=costmap.z_time,
+            name='Cost',
+            line_smoothing=0,
+            colorscale=colorscale,
+            contours=dict(
+            start=costmap.z_time[0].min(), 
+            end=costmap.z_time[0].max(), 
+            size=1, 
+            showlines=False)
+            ), row=1, col=2)
+        #Fixa o eixo dos plots
+        fig.update_xaxes(range=[lat[0],lat[1]],showgrid=False,constrain="domain")
+        fig.update_yaxes(range=[lon[0],lon[1]],showgrid=False,constrain="domain")
+        #Atualiza o layout
         fig.update_layout(
             mapbox = {
-                'style': "outdoors",
-                'center': {'lon': -47.5, 'lat': -12.3 },
-                'accesstoken': token,
-                'zoom': 7
-            },
-            showlegend = False)
+                'style': "stamen-terrain",
+                'center': {'lon': 0, 'lat': 0 },
+                'zoom': 5},
+            title_text="Generation of a Path for a UAS", hovermode="closest",
+            legend=dict(
+                orientation="h",
+                yanchor="top",
+                #y=1.02,
+                xanchor="right",
+                x=1
+            ),
+            updatemenus=[dict( type="buttons",
+                showactive= False,
+                buttons=[
+                    dict(label="Play",
+                        method="animate",
+                        args=[[None], 
+                            dict(frame= { "duration": 50},
+                                fromcurrent= True,
+                                mode='immediate'#, 
+                                #transition= {"duration":10, "easing": "linear"}
+                                )]),
+                    dict(label='Pause',
+                        method='animate',
+                        args= [ [None],
+                            dict(frame= { "duration": 0},
+                                fromcurrent= True,
+                                mode='immediate'#, 
+                                #transition= {"duration": 0, "easing": "linear"}
+                                        )]
+                    )]
+                )])
 
-        fig.update_geos(
-            projection_type="orthographic",
-            landcolor="white",
-            oceancolor="MidnightBlue",
-            showocean=True,
-            lakecolor="LightBlue"
-        )
+        frames = []
+        for idx, t in enumerate(time_res):
+            frames.append(go.Frame(data=[go.Scattermapbox(
+                                       lat=solution['lat'][:idx], 
+                                       lon=solution['lon'][:idx],mode='markers+lines')],traces=[0]))
+             
+            #frames.append(go.Frame(data=[go.Scatter(
+            #                           x=solution['lat'][:idx], 
+            #                           y=solution['lon'][:idx],mode='markers+lines')],traces=[4]))
+            frames.append(go.Frame(data=[go.Contour(x=costmap_x, y=costmap_y, z=costmap.z_time[t], line_smoothing=0, 
+                                    colorscale=colorscale,
+                                    contours=dict(
+                                        start=costmap.z_time[t].min(), 
+                                        end=costmap.z_time[t].max(), 
+                                        size=1, 
+                                        showlines=False))],traces=[5]))
+        fig.update(frames=frames)
+        plotly.offline.plot(fig, filename='path.html')
 
-        fig.show()
 
 
 if __name__ == "__main__":
@@ -402,6 +452,14 @@ if __name__ == "__main__":
                [10,11,12,13,14,15,16,17,18,19],'RRTstar'],[[30,31,32,33,34,35,36,37,38,39],
                [10,11,12,13,14,15,16,17,18,19],'RRTstar'],[[40,41,42,43,44,45,46,47,48,49],
                [10,11,12,13,14,15,16,17,18,19],'RRTstar']]
-    final_solution = [[10,20,30,40],[10,11,12,13]]
+    final_solution = {"lat":[10,20,30,40],"lon":[10,11,12,13]}
     plotSol = PlotlyResult('','','')
-    plotSol.simplePlot(solution, final_solution,obstacle,'costmap',start,goal,region)
+    #plotSol.simplePlot(solution, final_solution,obstacle,'costmap',start,goal,region)
+
+    time = 4
+    nrows = 100
+    ncols = 100
+    mapgen = MapGen(nrows, ncols,time)
+    mapgen.create()
+    time_res = [0,1,2,3]
+    plotSol.animedPlot(final_solution, time_res, mapgen, start, goal, region)
