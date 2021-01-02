@@ -1,4 +1,5 @@
 import sys
+import gc
 try:
     from ompl import util as ou
     from ompl import base as ob
@@ -519,8 +520,8 @@ if __name__ == "__main__":
 
     #start =(0.1,0.1,1) 
     #goal = (0.9,0.9,8)
-    start =(0.9,0.1,1) 
-    goal = (0.1,0.9,1)
+    start =(0.48,0.8,1) 
+    goal = (0.68,0.12,1)
     region = [( 0, 0),
               ( 1, 0),
               ( 1, 1),
@@ -552,15 +553,16 @@ if __name__ == "__main__":
     path_y = []
     time_res =[]
     run = True
-    time = 4
-    nrows = 10
-    ncols = 10
+    time = 1
+    nrows = 100
+    ncols = 100
     delta_d = 1/nrows
     fig = plt.figure()
     axis = plt.axes(xlim =(-0.2, 1.2),ylim =(-0.2, 1.2))
     mapgen = MapGen(nrows, ncols,time)
-    mapgen.create()
-    
+    #mapgen.create()
+    mapgen.createFromMap()
+
     t = 0
     last_t = 0
     tried = 0
@@ -625,7 +627,7 @@ if __name__ == "__main__":
 
             for idx, alg in enumerate(['RRTstar']):
                 plan_aux.append(OptimalPlanning((next_point[0],next_point[1]), goal, region, [], planner, dimension, mapgen.z_time[round(t)]))
-                result = plan_aux[idx].plan(3, alg, 'WeightedLengthAndClearanceCombo',delta_d)
+                result = plan_aux[idx].plan(5, alg, 'WeightedLengthAndClearanceCombo',delta_d)
                 if plan_aux[idx].solution != []:
                     cost_aut.append(plan_aux[idx].solution[0][3])
                 else:
@@ -723,9 +725,11 @@ if __name__ == "__main__":
 
         if (plans[-1].solution[0][0][0], plans[-1].solution[0][1][0]) == (goal[0],goal[1]):
         #if (plans[-1].solution[0][1][0], plans[-1].solution[0][0][0]) == (goal[0],goal[1]):
+            path_x.append(plans[-1].solution[0][0][0])
+            path_y.append(plans[-1].solution[0][1][0])
             run = False
             im_ani = animation.ArtistAnimation(fig, ims, interval=3000/time)
-            plt.show()
+            #plt.show()
         else:
             im_ani = animation.ArtistAnimation(fig, ims, interval=3000/time)
             #plt.show()
@@ -737,8 +741,10 @@ if __name__ == "__main__":
         #    pass
             #plans.pop()
     
+    fig.clf()
+    gc.collect()
     plotSol = PlotlyResult('','','')
-    final_solution = {"lat":path_x,"lon":path_y}
+    final_solution = {"lon":path_x,"lat":path_y}
     plotSol.animedPlot(final_solution, time_res, mapgen, start, goal, region)
 
     from matplotlib import pyplot as plt 

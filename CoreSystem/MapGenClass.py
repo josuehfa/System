@@ -101,22 +101,61 @@ class MapGen():
         self.z = self.z_time[0]
         self.y = y
         self.x = x
+    
+    def createFromMap(self):
+        from skimage.transform import rotate
+        from skimage.transform import resize
+        from skimage.color import rgb2hsv
+        from skimage.util import invert
+        from skimage import io
+
+        nrows = self.nrows
+        ncols = self.ncols
+        delta_d = 1/nrows
+        x = np.arange(ncols+1)*delta_d
+        y = np.arange(nrows+1)*delta_d
+
+        #original = data.astronaut()
+        original = io.imread('/home/josuehfa/System/CoreSystem/TestMap2.png')[:,:,:3]
+        image_resized = resize(original, (nrows+1,ncols+1),anti_aliasing=True)
         
+        hsv_img = rgb2hsv(image_resized)
+        sat_img = hsv_img[:, :, 1]*100
+        image_rotate = rotate(sat_img,180)
+        final_image = image_rotate[:,::-1]
+        final_image = invert(final_image, True)+100
+
+        for t in range(self.time):
+            self.z_time.append(final_image)
+
+        self.obs_time = []
+        self.z = self.z_time[0]
+        self.y = y
+        self.x = x
+        
+        #import matplotlib.pyplot as plt
+        #fig,ax0 = plt.subplots(ncols=1, figsize=(8, 2))
+        #ax0.imshow(final_image)
+        #ax0.set_title("RGB image")
+        #ax0.axis('off')
+        #fig.tight_layout()
+        #plt.show()
 
     def plot_map(self, t, axis):
         #Obstacle
         aux_im = []
         aux_im.append(axis.pcolormesh(self.x, self.y, self.z_time[t]*0.01, cmap='RdBu', shading='nearest', vmin=-5, vmax=5))
-        for idx, polygon in enumerate(self.obs_time[t]):
-            lat,lon = zip(*polygon[0])
-            lat = list(lat)
-            lon = list(lon)
-            lat = np.asarray(lat,dtype=np.double)
-            lon = np.asarray(lon,dtype=np.double)
-            #aux_im.append(axis.plot(lon, lat, linestyle='-', color='red'))
-            #aux_im.append(axis.fill(lon, lat, facecolor='gray', edgecolor='black'))
-            #aux_im[idx+1] = aux_im[idx+1][0]
-        
+        if self.obs_time != [] :
+            for idx, polygon in enumerate(self.obs_time[t]):
+                lat,lon = zip(*polygon[0])
+                lat = list(lat)
+                lon = list(lon)
+                lat = np.asarray(lat,dtype=np.double)
+                lon = np.asarray(lon,dtype=np.double)
+                #aux_im.append(axis.plot(lon, lat, linestyle='-', color='red'))
+                #aux_im.append(axis.fill(lon, lat, facecolor='gray', edgecolor='black'))
+                #aux_im[idx+1] = aux_im[idx+1][0]
+            
         return aux_im
 
 if __name__ == "__main__":
@@ -125,7 +164,7 @@ if __name__ == "__main__":
     import matplotlib.animation as animation
     from matplotlib import pyplot
     ims = []
-    time = 10
+    time = 1
     nrows = 100
     ncols = 100
     delta_d = 1/nrows
@@ -133,7 +172,8 @@ if __name__ == "__main__":
     axis = plt.axes(xlim =(0, 1),  
                     ylim =(0, 1))
     mapgen = MapGen(nrows, ncols,time)
-    mapgen.create()
+    #mapgen.create()
+    mapgen.createFromMap()
     #mapgen.plot_map(axis)
     
     
@@ -141,17 +181,18 @@ if __name__ == "__main__":
         #Obstacle
         aux_im = []
         aux_im.append(axis.pcolormesh(mapgen.x, mapgen.y, mapgen.z_time[t]*delta_d, cmap='RdBu', shading='nearest', vmin=-5, vmax=5))
-        for idx, polygon in enumerate(mapgen.obs_time[t]):
-            lat,lon = zip(*polygon[0])
-            lat = list(lat)
-            lon = list(lon)
-            #lat.append(polygon[0][0][0])
-            #lon.append(polygon[0][0][1])
-            lat = np.asarray(lat,dtype=np.double)
-            lon = np.asarray(lon,dtype=np.double)
-            aux_im.append(axis.plot(lon, lat, linestyle='-', color='red'))
-            #aux_im.append(axis.fill(lon, lat, facecolor='gray', edgecolor='black'))
-            aux_im[idx+1] = aux_im[idx+1][0]
+        if mapgen.obs_time != [] :
+            for idx, polygon in enumerate(mapgen.obs_time[t]):
+                lat,lon = zip(*polygon[0])
+                lat = list(lat)
+                lon = list(lon)
+                #lat.append(polygon[0][0][0])
+                #lon.append(polygon[0][0][1])
+                lat = np.asarray(lat,dtype=np.double)
+                lon = np.asarray(lon,dtype=np.double)
+                aux_im.append(axis.plot(lon, lat, linestyle='-', color='red'))
+                #aux_im.append(axis.fill(lon, lat, facecolor='gray', edgecolor='black'))
+                aux_im[idx+1] = aux_im[idx+1][0]
         
         test = tuple(aux_im)
         ims.append(test)

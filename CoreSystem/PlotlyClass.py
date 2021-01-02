@@ -202,7 +202,7 @@ class PlotlyResult():
                     'style': "stamen-terrain",
                     'center': {'lon': 0, 'lat': 0 },
                     'zoom': 5},
-                title_text="Generation of a Path for a UAS", hovermode="closest",
+                title_text="UAS Path Generation", hovermode="closest",
                 legend=dict(
                     orientation="h",
                     yanchor="top",
@@ -290,7 +290,7 @@ class PlotlyResult():
                     [0.5, '#c5c400'],
                     [0.75, '#dc8000'],
                     [1, '#e10000']]
-        
+        colorscale = 'dense'
         #Create the plot Structure
         fig = make_subplots(
             rows=1, cols=2,
@@ -299,7 +299,8 @@ class PlotlyResult():
             subplot_titles=("Solution Path in a Real Map","2D CostMap"),
             specs=[[{"type": "Scattermapbox"},{"type": "contour"}]])
         
-        #Trace for solution
+        #0
+        #Trace for solution  
         fig.append_trace(go.Scattermapbox(
             lat=[],
             lon=[],
@@ -308,6 +309,7 @@ class PlotlyResult():
             marker=dict(size=5, color='red')
             ),row=1,col=1)
 
+        #1
         #Trace for area of flight
         lat_aux = [reg[0] for reg in region]
         lon_aux = [reg[1] for reg in region]
@@ -318,6 +320,7 @@ class PlotlyResult():
             name='Area of Flight',
             marker = { 'size': 5, 'color': "rgba(123, 239, 178, 1)" }),row=1,col=1)
 
+        #2
         #Start position
         fig.append_trace(go.Scattermapbox(
             mode = "markers",
@@ -327,6 +330,7 @@ class PlotlyResult():
             name='Start'
             ),row=1,col=1)
 
+        #3
         #goal position
         fig.append_trace(go.Scattermapbox(
             mode = "markers",
@@ -336,6 +340,7 @@ class PlotlyResult():
             name='Goal'
             ),row=1,col=1)
 
+        #4
         #Solution trace for contour
         fig.append_trace(go.Scatter(
             x = [], 
@@ -345,36 +350,40 @@ class PlotlyResult():
             marker=dict(size=5, color='black')
             ),row=1,col=2)
 
+        #5
         #Contour plot
         lat,lon = zip(*region)
         lat = list(lat)
         lon = list(lon)
         costmap_x = np.linspace(lat[0],lat[1], len(costmap.x))
-        costmap_y = np.linspace(lon[0],lon[1], len(costmap.y))
+        costmap_y = np.linspace(lon[0],lon[2], len(costmap.y))
         fig.append_trace(go.Contour(
             x=costmap_x, 
             y=costmap_y, 
             z=costmap.z_time[0], 
             ids=costmap.z_time,
-            name='Cost',
+            name='Cost Time: 0',
             line_smoothing=0,
             colorscale=colorscale,
             contours=dict(
-            start=costmap.z_time[0].min(), 
-            end=costmap.z_time[0].max(), 
-            size=1, 
-            showlines=False)
+                start=costmap.z_time[0].min(), 
+                end=costmap.z_time[0].max(), 
+                size=1, 
+                showlines=False)
             ), row=1, col=2)
         #Fixa o eixo dos plots
         fig.update_xaxes(range=[lat[0],lat[1]],showgrid=False,constrain="domain")
-        fig.update_yaxes(range=[lon[0],lon[1]],showgrid=False,constrain="domain")
+        fig.update_yaxes(range=[lon[0],lon[2]],showgrid=False,constrain="domain")
         #Atualiza o layout
+        token = 'pk.eyJ1Ijoiam9zdWVoZmEiLCJhIjoiY2tldnNnODB3MDBtdDJzbXUxMXowMTY5MyJ9.Vwj9BTqB1z9RLKlyh70RHw'  
         fig.update_layout(
             mapbox = {
+                #'style': "outdoors",
                 'style': "stamen-terrain",
-                'center': {'lon': 0, 'lat': 0 },
-                'zoom': 5},
-            title_text="Generation of a Path for a UAS", hovermode="closest",
+                'center': {'lon': -43.9520, 'lat': -19.8997 },
+                #'accesstoken': token,
+                'zoom': 11},
+            title_text="UAS Path Generation", hovermode="closest",
             legend=dict(
                 orientation="h",
                 yanchor="top",
@@ -390,16 +399,16 @@ class PlotlyResult():
                         args=[[None], 
                             dict(frame= { "duration": 50},
                                 fromcurrent= True,
-                                mode='immediate'#, 
-                                #transition= {"duration":10, "easing": "linear"}
+                                mode='immediate', 
+                                transition= {"duration":10, "easing": "linear"}
                                 )]),
                     dict(label='Pause',
                         method='animate',
                         args= [ [None],
                             dict(frame= { "duration": 0},
                                 fromcurrent= True,
-                                mode='immediate'#, 
-                                #transition= {"duration": 0, "easing": "linear"}
+                                mode='immediate', 
+                                transition= {"duration": 0, "easing": "linear"}
                                         )]
                     )]
                 )])
@@ -411,10 +420,11 @@ class PlotlyResult():
                                        lon=solution['lon'][:idx],mode='markers+lines')],traces=[0]))
              
             #frames.append(go.Frame(data=[go.Scatter(
-            #                           x=solution['lat'][:idx], 
-            #                           y=solution['lon'][:idx],mode='markers+lines')],traces=[4]))
+            #                           x=solution['lon'][:idx], 
+            #                           y=solution['lat'][:idx],mode='markers+lines')],traces=[4]))
             frames.append(go.Frame(data=[go.Contour(x=costmap_x, y=costmap_y, z=costmap.z_time[t], line_smoothing=0, 
                                     colorscale=colorscale,
+                                    name='Cost Time: '+str(t),
                                     contours=dict(
                                         start=costmap.z_time[t].min(), 
                                         end=costmap.z_time[t].max(), 
@@ -423,7 +433,7 @@ class PlotlyResult():
         fig.update(frames=frames)
         plotly.offline.plot(fig, filename='path.html')
 
-
+        
 
 if __name__ == "__main__":
 
@@ -447,19 +457,35 @@ if __name__ == "__main__":
               ( 20,-20),
               (-10,-20),
               (-30, 0)]
+    region = [( 0, 0),
+              ( 1, 0),
+              ( 1, 1),
+              ( 0, 1)]
     solution =[[[10,11,12,13,14,15,16,17,18,19],
                [10,11,12,13,14,15,16,17,18,19],'RRTstar'],[[20,21,22,23,24,25,26,27,28,29],
                [10,11,12,13,14,15,16,17,18,19],'RRTstar'],[[30,31,32,33,34,35,36,37,38,39],
                [10,11,12,13,14,15,16,17,18,19],'RRTstar'],[[40,41,42,43,44,45,46,47,48,49],
                [10,11,12,13,14,15,16,17,18,19],'RRTstar']]
     final_solution = {"lat":[10,20,30,40],"lon":[10,11,12,13]}
+    time_res = [0,1,2,3]
+
+    #start =(0.1,0.1,1) 
+    #goal = (0.9,0.9,1)
+    #region = [(0, 0), (1, 0), (1, 1), (0, 1)]
+    #time_res = [0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+    #path_x = [0.1, 0.2, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.9, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.9]
+    #path_y = [0.1, 0.1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.1, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.9]
+    #final_solution = {"lon":path_x,"lat":path_y}
+
     plotSol = PlotlyResult('','','')
     #plotSol.simplePlot(solution, final_solution,obstacle,'costmap',start,goal,region)
+
+    #time_res = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
     time = 4
     nrows = 100
     ncols = 100
     mapgen = MapGen(nrows, ncols,time)
-    mapgen.create()
-    time_res = [0,1,2,3]
+    mapgen.createFromMap()
+    
     plotSol.animedPlot(final_solution, time_res, mapgen, start, goal, region)
