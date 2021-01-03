@@ -124,6 +124,8 @@ class MapGen():
         image_rotate = rotate(sat_img,180)
         final_image = image_rotate[:,::-1]
         final_image = invert(final_image, True)+100
+        segment = final_image > 85
+        final_image = final_image * (segment+0.01)
 
         for t in range(self.time):
             self.z_time.append(final_image)

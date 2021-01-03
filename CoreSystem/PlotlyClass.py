@@ -324,8 +324,8 @@ class PlotlyResult():
         #Start position
         fig.append_trace(go.Scattermapbox(
             mode = "markers",
-            lon = [start[1]],
-            lat = [start[0]],
+            lon = [start[0]],
+            lat = [start[1]],
             marker = {'size':5,'color':"black"},
             name='Start'
             ),row=1,col=1)
@@ -334,8 +334,8 @@ class PlotlyResult():
         #goal position
         fig.append_trace(go.Scattermapbox(
             mode = "markers",
-            lon = [goal[1]],
-            lat = [goal[0]],
+            lon = [goal[0]],
+            lat = [goal[1]],
             marker = {'size':5,'color':"black"},
             name='Goal'
             ),row=1,col=1)
@@ -347,7 +347,7 @@ class PlotlyResult():
             y = [],
             mode='markers+lines',
             name='Solution Path',
-            marker=dict(size=5, color='black')
+            marker=dict(size=5, color='red')
             ),row=1,col=2)
 
         #5
@@ -419,9 +419,9 @@ class PlotlyResult():
                                        lat=solution['lat'][:idx], 
                                        lon=solution['lon'][:idx],mode='markers+lines')],traces=[0]))
              
-            #frames.append(go.Frame(data=[go.Scatter(
-            #                           x=solution['lon'][:idx], 
-            #                           y=solution['lat'][:idx],mode='markers+lines')],traces=[4]))
+            frames.append(go.Frame(data=[go.Scatter(
+                                       x=solution['lon'][:idx], 
+                                       y=solution['lat'][:idx],mode='markers+lines')],traces=[4]))
             frames.append(go.Frame(data=[go.Contour(x=costmap_x, y=costmap_y, z=costmap.z_time[t], line_smoothing=0, 
                                     colorscale=colorscale,
                                     name='Cost Time: '+str(t),
