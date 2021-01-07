@@ -1,5 +1,6 @@
 import sys
 import gc
+import time as tm
 try:
     from ompl import util as ou
     from ompl import base as ob
@@ -491,6 +492,8 @@ class OptimalPlanning():
 
 if __name__ == "__main__":
 
+    start_time = tm.time()
+
     #polygon = [(-12.0, -47.98), (-12.0, -46.99),
     #           (-12.0, -46.99), (-12.6, -46.99),
     #           (-12.6, -46.99), (-12.6, -47.98),
@@ -522,10 +525,7 @@ if __name__ == "__main__":
     #goal = (0.9,0.9,8)
     start =(0.34,0.64,1) 
     goal = (0.9,0.2,1)
-    region = [( 0, 0),
-              ( 1, 0),
-              ( 1, 1),
-              ( 0, 1)]
+    
     #start =(-12.62, -47.86, 0.2) 
     #goal = (-12.21, -47.28, 0.7)
     #region = [(-12.0, -47.98), 
@@ -533,6 +533,45 @@ if __name__ == "__main__":
     #        (-12.67, -46.99), 
     #        (-12.67, -47.98)]
 
+    start_real = (-19.869245, -43.963622,1) #Escola de Eng
+    goal_real = (-19.931071, -43.937778,1) #Praca da liberdade
+    # região da imagem testmap2
+    region_real = [(-19.849635, -44.014423), 
+              (-19.849635, -43.900210),
+              (-19.934877, -43.900210),
+              (-19.934877, -44.014423)]
+
+    lat_region = []
+    lon_region = []
+    for idx in range(len(region_real)):
+        lat_region.append(region_real[idx][0])
+        lon_region.append(region_real[idx][1])
+
+
+    lat_range = max(lat_region) -  min(lat_region)
+    lon_range = max(lon_region) -  min(lon_region)
+
+
+    #Lat/lon do pnt aleatoria menos a menor lat/lon
+    lat_diff_s = start_real[0] - min(lat_region)
+    lon_diff_s = start_real[1] - min(lon_region)
+    #Lat/lon do pnt aleatoria menos a menor lat/lon
+    lat_diff_g = goal_real[0] -  min(lat_region)
+    lon_diff_g = goal_real[1] -  min(lon_region)
+
+    #Porcentagem da diferença entre os range
+    lat_cent_s = lat_diff_s/lat_range
+    lon_cent_s = lon_diff_s/lon_range
+    #Porcentagem da diferença entre os range
+    lat_cent_g = lat_diff_g/lat_range
+    lon_cent_g = lon_diff_g/lon_range
+
+    start = (round(lon_cent_s,3),round(lat_cent_s,3),1)
+    goal = (round(lon_cent_g,3),round(lat_cent_g,3),1)
+    region = [( 0, 0),
+              ( 1, 0),
+              ( 1, 1),
+              ( 0, 1)]
 
     dimension = '2D'
     planner = 'RRTstar'
@@ -554,8 +593,8 @@ if __name__ == "__main__":
     time_res =[]
     run = True
     time = 1
-    nrows = 100
-    ncols = 100
+    nrows = 150
+    ncols = 150
     delta_d = 1/nrows
     fig = plt.figure()
     axis = plt.axes(xlim =(-0.2, 1.2),ylim =(-0.2, 1.2))
@@ -616,6 +655,7 @@ if __name__ == "__main__":
                 vector = p2-p1
                 vector = vector.normalize()
                 next_point = p1 + vector*delta_d
+                
             else:
                 p1 = Vector2(plans[-1].solutionSampled[0][0][1], plans[-1].solutionSampled[0][1][1])
                 p2 = Vector2(plans[-1].solutionSampled[0][0][2], plans[-1].solutionSampled[0][1][2])
@@ -638,7 +678,7 @@ if __name__ == "__main__":
                 #Se o ultimo costmap é do mesmo periodo que o atual
                 if round(t) == last_t:
                     #Tentar encontrar um valor melhor que o ultimo
-                    if plan_aux[lower_cost].solution[0][3] < plans[-1].solution[0][3] * 1.10 :
+                    if plan_aux[lower_cost].solution[0][3] < plans[-1].solution[0][3] * 1.05 and (plan_aux[lower_cost].solution != plans[-1].solution):
                         print('Add, Better Solution: ' +  str(last_t) + " : " + str(round(t)) + " : " + str(t) + " Pnt: " + str(next_point[0])+','+str(next_point[1]))
                         test.append(plan_aux[lower_cost].plotOptimal(delta_d,axis))
                         plans.append(plan_aux[lower_cost])
@@ -722,14 +762,24 @@ if __name__ == "__main__":
            # plans[-1]planspend(plans[-1].solutionSampled[0][0][0])
             #path_x.append(plans[-1].solution[0][1][0])
             #path_y.append(plans[-1].solution[0][0][0])
-
-        if (plans[-1].solution[0][0][0], plans[-1].solution[0][1][0]) == (goal[0],goal[1]):
+        goal_sampled = (round(goal[0]*(mapgen.z.shape[0]-1))*delta_d, round(goal[1]*(mapgen.z.shape[0]-1))*delta_d)
+        if (plans[-1].solutionSampled[0][0][0], plans[-1].solutionSampled[0][1][0]) == goal_sampled:
         #if (plans[-1].solution[0][1][0], plans[-1].solution[0][0][0]) == (goal[0],goal[1]):
             path_x.append(plans[-1].solution[0][0][0])
             path_y.append(plans[-1].solution[0][1][0])
+            time_res.append(round(t))
+            path_x.append(goal[0])
+            path_y.append(goal[1])
+            time_res.append(round(t))
             run = False
             im_ani = animation.ArtistAnimation(fig, ims, interval=3000/time)
             #plt.show()
+        #elif (plan_aux[-1].solution == plans[-1].solution and len(plan_aux[-1].solution[0][0])==2):
+        #    path_x.append(plans[-1].solution[0][0][1])
+        #    path_y.append(plans[-1].solution[0][1][1])
+        #    run = False
+        #    im_ani = animation.ArtistAnimation(fig, ims, interval=3000/time)
+            
         else:
             im_ani = animation.ArtistAnimation(fig, ims, interval=3000/time)
             #plt.show()
@@ -744,8 +794,15 @@ if __name__ == "__main__":
     fig.clf()
     gc.collect()
     plotSol = PlotlyResult('','','')
+    for idx in range(len(path_x)):
+        path_x[idx] = path_x[idx]*lon_range + min(lon_region)
+        path_y[idx] = path_y[idx]*lat_range + min(lat_region)
+
+
     final_solution = {"lon":path_x,"lat":path_y}
-    plotSol.animedPlot(final_solution, time_res, mapgen, start, goal, region)
+    plotSol.animedPlot(final_solution, time_res, mapgen, start_real, goal_real, region_real,'path.html')
+
+    print(str(tm.time() - start_time) + ' seconds')
 
     from matplotlib import pyplot as plt 
     import numpy as np 

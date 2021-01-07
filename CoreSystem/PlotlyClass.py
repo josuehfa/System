@@ -283,7 +283,7 @@ class PlotlyResult():
         #fig.show()
         print()
 
-    def animedPlot(self, solution, time_res, costmap, start, goal, region):
+    def animedPlot(self, solution, time_res, costmap, start, goal, region, filename):
         #colorscale to be used in the contour plot
         colorscale=[[0, '#ffffff'],
                     [0.25, '#a0ff7d'],
@@ -343,8 +343,8 @@ class PlotlyResult():
         #4
         #Solution trace for contour
         fig.append_trace(go.Scatter(
-            x = [], 
-            y = [],
+            x = solution['lon'], 
+            y = solution['lat'],
             mode='markers+lines',
             name='Solution Path',
             marker=dict(size=5, color='red')
@@ -355,12 +355,12 @@ class PlotlyResult():
         lat,lon = zip(*region)
         lat = list(lat)
         lon = list(lon)
-        costmap_x = np.linspace(lat[0],lat[1], len(costmap.x))
-        costmap_y = np.linspace(lon[0],lon[2], len(costmap.y))
+        costmap_y = np.linspace(min(lat),max(lat), len(costmap.y))
+        costmap_x = np.linspace(min(lon),max(lon), len(costmap.x))
         fig.append_trace(go.Contour(
+            z=costmap.z_time[0],
             x=costmap_x, 
             y=costmap_y, 
-            z=costmap.z_time[0], 
             ids=costmap.z_time,
             name='Cost Time: 0',
             line_smoothing=0,
@@ -372,8 +372,8 @@ class PlotlyResult():
                 showlines=False)
             ), row=1, col=2)
         #Fixa o eixo dos plots
-        fig.update_xaxes(range=[lat[0],lat[1]],showgrid=False,constrain="domain")
-        fig.update_yaxes(range=[lon[0],lon[2]],showgrid=False,constrain="domain")
+        fig.update_xaxes(range=[min(lon),max(lon)],showgrid=False,constrain="domain")
+        fig.update_yaxes(range=[min(lat),max(lat)],showgrid=False,constrain="domain")
         #Atualiza o layout
         token = 'pk.eyJ1Ijoiam9zdWVoZmEiLCJhIjoiY2tldnNnODB3MDBtdDJzbXUxMXowMTY5MyJ9.Vwj9BTqB1z9RLKlyh70RHw'  
         fig.update_layout(
@@ -416,12 +416,12 @@ class PlotlyResult():
         frames = []
         for idx, t in enumerate(time_res):
             frames.append(go.Frame(data=[go.Scattermapbox(
-                                       lat=solution['lat'][:idx], 
-                                       lon=solution['lon'][:idx],mode='markers+lines')],traces=[0]))
+                                       lat=solution['lat'][:idx+1], 
+                                       lon=solution['lon'][:idx+1],mode='markers+lines')],traces=[0]))
              
-            frames.append(go.Frame(data=[go.Scatter(
-                                       x=solution['lon'][:idx], 
-                                       y=solution['lat'][:idx],mode='markers+lines')],traces=[4]))
+            #frames.append(go.Frame(data=[go.Scatter(
+            #                           x=solution['lon'][:idx], 
+            #                           y=solution['lat'][:idx],mode='markers+lines')],traces=[4]))
             frames.append(go.Frame(data=[go.Contour(x=costmap_x, y=costmap_y, z=costmap.z_time[t], line_smoothing=0, 
                                     colorscale=colorscale,
                                     name='Cost Time: '+str(t),
@@ -431,7 +431,7 @@ class PlotlyResult():
                                         size=1, 
                                         showlines=False))],traces=[5]))
         fig.update(frames=frames)
-        plotly.offline.plot(fig, filename='path.html')
+        plotly.offline.plot(fig, filename=filename)
 
         
 
@@ -469,6 +469,14 @@ if __name__ == "__main__":
     final_solution = {"lat":[10,20,30,40],"lon":[10,11,12,13]}
     time_res = [0,1,2,3]
 
+    start_real = (-19.869245, -43.963622,1) #Escola de Eng
+    goal_real = (-19.931071, -43.937778,1) #Praca da liberdade
+    # região da imagem testmap2
+    region_real = [(-19.849635, -44.014423), 
+              (-19.849635, -43.900210),
+              (-19.934877, -43.900210),
+              (-19.934877, -44.014423)]
+
     #start =(0.1,0.1,1) 
     #goal = (0.9,0.9,1)
     #region = [(0, 0), (1, 0), (1, 1), (0, 1)]
@@ -483,9 +491,9 @@ if __name__ == "__main__":
     #time_res = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
     time = 4
-    nrows = 100
-    ncols = 100
+    nrows = 200
+    ncols = 200
     mapgen = MapGen(nrows, ncols,time)
     mapgen.createFromMap()
     
-    plotSol.animedPlot(final_solution, time_res, mapgen, start, goal, region)
+    plotSol.animedPlot(final_solution, time_res, mapgen, start_real, goal_real, region_real,'test.html')
