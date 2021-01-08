@@ -283,7 +283,7 @@ class PlotlyResult():
         #fig.show()
         print()
 
-    def animedPlot(self, solution, time_res, costmap, start, goal, region, filename):
+    def animedPlot(self, solution, time_res, costmap, start, goal, region, obstacle, filename):
         #colorscale to be used in the contour plot
         colorscale=[[0, '#ffffff'],
                     [0.25, '#a0ff7d'],
@@ -374,6 +374,20 @@ class PlotlyResult():
         #Fixa o eixo dos plots
         fig.update_xaxes(range=[min(lon),max(lon)],showgrid=False,constrain="domain")
         fig.update_yaxes(range=[min(lat),max(lat)],showgrid=False,constrain="domain")
+
+        #Trace for area of flight
+        if obstacle != [] :
+            for idx, polygon in enumerate(obstacle):
+                lat,lon = zip(*polygon[0])
+                lat = list(lat)
+                lon = list(lon)
+                fig.append_trace(go.Scattermapbox(
+                    lon = lon, 
+                    lat = lat,
+                    fill = "toself",
+                    name=polygon[3],
+                    marker = { 'size': 5, 'color': "rgba(255, 0, 0, 0)" }),row=1,col=1)
+
         #Atualiza o layout
         token = 'pk.eyJ1Ijoiam9zdWVoZmEiLCJhIjoiY2tldnNnODB3MDBtdDJzbXUxMXowMTY5MyJ9.Vwj9BTqB1z9RLKlyh70RHw'  
         fig.update_layout(
@@ -469,13 +483,86 @@ if __name__ == "__main__":
     final_solution = {"lat":[10,20,30,40],"lon":[10,11,12,13]}
     time_res = [0,1,2,3]
 
+    #Definição dos obstaculos
+    obstacle = []
+    cpor = [(-19.870782, -43.959432),
+            (-19.872528, -43.957651),
+            (-19.877101, -43.963053),
+            (-19.879381, -43.967742),
+            (-19.877050, -43.970242)]
+    obstacle.append((cpor,base,topo,'CPOR/CMBH'))
+
+    cdtn = [(-19.871252, -43.969874),
+            (-19.872025, -43.969005),
+            (-19.870834, -43.966205),
+            (-19.871449, -43.965390),
+            (-19.872377, -43.965454),
+            (-19.874022, -43.967578),
+            (-19.874012, -43.967868),
+            (-19.874224, -43.967954),
+            (-19.874476, -43.967785),
+            (-19.875472, -43.969258),
+            (-19.875772, -43.971406),
+            (-19.872241, -43.971170)]
+    obstacle.append((cdtn,base,topo,'CDTN-UFMG'))
+    
+    mineirao = [(-19.863243, -43.970448),
+                (-19.863667, -43.971784),
+                (-19.865690, -43.972889),
+                (-19.869151, -43.971661),
+                (-19.869080, -43.971318),
+                (-19.866134, -43.969398)]
+    obstacle.append((mineirao,base,topo,'Estadio Mineirão'))
+
+    independencia = [(-19.909092, -43.918879),
+                     (-19.909385, -43.916926),
+                     (-19.908094, -43.916733),
+                     (-19.907786, -43.918641)]
+    obstacle.append((independencia,base,topo,'Estadio Independencia'))
+
+    aeroporto_pampulha = [(-19.844565, -43.965362),
+                          (-19.847330, -43.950663),
+                          (-19.848571, -43.945384),
+                          (-19.853395, -43.936264),
+                          (-19.857926, -43.936929),
+                          (-19.848129, -43.965994)]
+    obstacle.append((aeroporto_pampulha,base,topo,'Aeroporto da Pampulha'))
+
+    aeroporto_carlos_prates = [(-19.905402, -43.986880),
+                               (-19.910378, -43.993943),
+                               (-19.911891, -43.993621),
+                               (-19.910698, -43.988835),
+                               (-19.911283, -43.988631),
+                               (-19.912014, -43.985533),
+                               (-19.913010, -43.984980),
+                               (-19.912120, -43.983269)]
+    obstacle.append((aeroporto_carlos_prates,base,topo,'Aeroporto Carlos Prates'))
+    
+
     start_real = (-19.869245, -43.963622,1) #Escola de Eng
     goal_real = (-19.931071, -43.937778,1) #Praca da liberdade
+
+    start_real = (-19.853342, -44.002499,1) #Zoologico
+    goal_real = (-19.927558, -43.911051) #Mangabeiras
+
     # região da imagem testmap2
     region_real = [(-19.849635, -44.014423), 
               (-19.849635, -43.900210),
               (-19.934877, -43.900210),
               (-19.934877, -44.014423)]
+
+    
+
+    plotSol = PlotlyResult('','','')
+
+    time = 4
+    nrows = 200
+    ncols = 200
+    mapgen = MapGen(nrows, ncols,time)
+    mapgen.createFromMap()
+    
+    plotSol.animedPlot(final_solution, time_res, mapgen, start_real, goal_real, region_real,obstacle,'test.html')
+
 
     #start =(0.1,0.1,1) 
     #goal = (0.9,0.9,1)
@@ -485,15 +572,6 @@ if __name__ == "__main__":
     #path_y = [0.1, 0.1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.1, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.9]
     #final_solution = {"lon":path_x,"lat":path_y}
 
-    plotSol = PlotlyResult('','','')
     #plotSol.simplePlot(solution, final_solution,obstacle,'costmap',start,goal,region)
 
     #time_res = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-
-    time = 4
-    nrows = 200
-    ncols = 200
-    mapgen = MapGen(nrows, ncols,time)
-    mapgen.createFromMap()
-    
-    plotSol.animedPlot(final_solution, time_res, mapgen, start_real, goal_real, region_real,'test.html')

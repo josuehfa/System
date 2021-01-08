@@ -102,6 +102,20 @@ class MapGen():
         self.y = y
         self.x = x
     
+    def createEmptyMap(self):
+        delta_d = 1/self.ncols
+        x = np.arange(self.ncols+1)*delta_d
+        y = np.arange(self.nrows+1)*delta_d
+        
+        for t in range(self.time):
+            z = np.zeros((self.nrows+1, self.ncols+1), dtype=np.uint8) + 1
+            z = np.asarray(z,dtype=np.double) 
+            self.z_time.append(z)
+
+        self.z = self.z_time[0]
+        self.y = y
+        self.x = x
+
     def createFromMap(self):
         from skimage.transform import rotate
         from skimage.transform import resize
@@ -175,7 +189,8 @@ if __name__ == "__main__":
                     ylim =(0, 1))
     mapgen = MapGen(nrows, ncols,time)
     #mapgen.create()
-    mapgen.createFromMap()
+    mapgen.createEmptyMap()
+    #mapgen.createFromMap()
     #mapgen.plot_map(axis)
     
     

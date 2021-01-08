@@ -26,6 +26,7 @@ import random
 from euclid import *
 from MapGenClass import *
 from PlotlyClass import *
+from ScenarioClass import *
 from matplotlib import pyplot as plt 
 import numpy as np 
 from matplotlib.animation import FuncAnimation 
@@ -494,97 +495,14 @@ if __name__ == "__main__":
 
     start_time = tm.time()
 
-    #polygon = [(-12.0, -47.98), (-12.0, -46.99),
-    #           (-12.0, -46.99), (-12.6, -46.99),
-    #           (-12.6, -46.99), (-12.6, -47.98),
-    #           (-12.6, -47.98), (-12.0, -47.98)]
-    #base = 20
-    #topo = 100
-    #obstacle = [(polygon, base, topo)]
 
-
-
-    # Solve the planning problem
-    polygon = [(-3,-2),
-               (-3, 5), 
-               ( 6, 5),
-               ( 6,-2)]
-    base = 2
-    topo = 6
-    
-    polygon2 = [(8, 9),
-                (8, 6),
-                (6, 6),
-                (6, 9)]
-    type_obstacle = 'CB'  
-
-    obstacle = [(polygon, base, topo, type_obstacle),(polygon2, base, topo,type_obstacle)]
-    #obstacle = [([(-12.200000000000001, -47.5), (-12.1, -47.5), (-12.1, -47.599999999999994), (-12.200000000000001, -47.599999999999994)], 0.2, 0.6), ([(-12.3, -47.5), (-12.2, -47.5), (-12.2, -47.599999999999994), (-12.3, -47.599999999999994)], 0.2, 0.6), ([(-12.3, -47.400000000000006), (-12.2, -47.400000000000006), (-12.2, -47.5), (-12.3, -47.5)], 0.2, 0.6), ([(-12.3, -47.1), (-12.2, -47.1), (-12.2, -47.199999999999996), (-12.3, -47.199999999999996)], 0.2, 0.6), ([(-12.4, -47.6), (-12.299999999999999, -47.6), (-12.299999999999999, -47.699999999999996), (-12.4, -47.699999999999996)], 0.2, 0.6), ([(-12.4, -47.5), (-12.299999999999999, -47.5), (-12.299999999999999, -47.599999999999994), (-12.4, -47.599999999999994)], 0.2, 0.6), ([(-12.4, -47.400000000000006), (-12.299999999999999, -47.400000000000006), (-12.299999999999999, -47.5), (-12.4, -47.5)], 0.2, 0.6), ([(-12.5, -47.7), (-12.399999999999999, -47.7), (-12.399999999999999, -47.8), (-12.5, -47.8)], 0.2, 0.6), ([(-12.5, -47.6), (-12.399999999999999, -47.6), (-12.399999999999999, -47.699999999999996), (-12.5, -47.699999999999996)], 0.2, 0.6), ([(-12.5, -47.5), (-12.399999999999999, -47.5), (-12.399999999999999, -47.599999999999994), (-12.5, -47.599999999999994)], 0.2, 0.6), ([(-12.5, -47.400000000000006), (-12.399999999999999, -47.400000000000006), (-12.399999999999999, -47.5), (-12.5, -47.5)], 0.2, 0.6), ([(-12.5, -47.300000000000004), (-12.399999999999999, -47.300000000000004), (-12.399999999999999, -47.4), (-12.5, -47.4)], 0.2, 0.6), ([(-12.600000000000001, -47.5), (-12.5, -47.5), (-12.5, -47.599999999999994), (-12.600000000000001, -47.599999999999994)], 0.2, 0.6), ([(-12.600000000000001, -47.400000000000006), (-12.5, -47.400000000000006), (-12.5, -47.5), (-12.600000000000001, -47.5)], 0.2, 0.6), ([(-12.600000000000001, -47.300000000000004), (-12.5, -47.300000000000004), (-12.5, -47.4), (-12.600000000000001, -47.4)], 0.2, 0.6)]
-
-    #start =(0.1,0.1,1) 
-    #goal = (0.9,0.9,8)
-    start =(0.34,0.64,1) 
-    goal = (0.9,0.2,1)
-    
-    #start =(-12.62, -47.86, 0.2) 
-    #goal = (-12.21, -47.28, 0.7)
-    #region = [(-12.0, -47.98), 
-    #        (-12.0, -46.99), 
-    #        (-12.67, -46.99), 
-    #        (-12.67, -47.98)]
-
-    start_real = (-19.869245, -43.963622,1) #Escola de Eng
-    goal_real = (-19.931071, -43.937778,1) #Praca da liberdade
-    # região da imagem testmap2
-    region_real = [(-19.849635, -44.014423), 
-              (-19.849635, -43.900210),
-              (-19.934877, -43.900210),
-              (-19.934877, -44.014423)]
-
-    lat_region = []
-    lon_region = []
-    for idx in range(len(region_real)):
-        lat_region.append(region_real[idx][0])
-        lon_region.append(region_real[idx][1])
-
-
-    lat_range = max(lat_region) -  min(lat_region)
-    lon_range = max(lon_region) -  min(lon_region)
-
-
-    #Lat/lon do pnt aleatoria menos a menor lat/lon
-    lat_diff_s = start_real[0] - min(lat_region)
-    lon_diff_s = start_real[1] - min(lon_region)
-    #Lat/lon do pnt aleatoria menos a menor lat/lon
-    lat_diff_g = goal_real[0] -  min(lat_region)
-    lon_diff_g = goal_real[1] -  min(lon_region)
-
-    #Porcentagem da diferença entre os range
-    lat_cent_s = lat_diff_s/lat_range
-    lon_cent_s = lon_diff_s/lon_range
-    #Porcentagem da diferença entre os range
-    lat_cent_g = lat_diff_g/lat_range
-    lon_cent_g = lon_diff_g/lon_range
-
-    start = (round(lon_cent_s,3),round(lat_cent_s,3),1)
-    goal = (round(lon_cent_g,3),round(lat_cent_g,3),1)
-    region = [( 0, 0),
-              ( 1, 0),
-              ( 1, 1),
-              ( 0, 1)]
+    scenario = ScenarioClass('ONE')
 
     dimension = '2D'
     planner = 'RRTstar'
 
 
-    polygon = [(0.45, 0.45), 
-               (0.45, 0.55),
-               (0.55, 0.55), 
-               (0.55, 0.45)]
-    base = 0.2
-    topo = 0.6
-    obstacle = [(polygon, base, topo)]
-
+    
 
     ims = []
     plans = []
@@ -593,14 +511,14 @@ if __name__ == "__main__":
     time_res =[]
     run = True
     time = 1
-    nrows = 150
-    ncols = 150
-    delta_d = 1/nrows
+    nrows = 100
+    ncols = 100
+    delta_d = 1/scenario.nrows
     fig = plt.figure()
     axis = plt.axes(xlim =(-0.2, 1.2),ylim =(-0.2, 1.2))
-    mapgen = MapGen(nrows, ncols,time)
+    #mapgen = MapGen(nrows, ncols,time)
     #mapgen.create()
-    mapgen.createFromMap()
+    #mapgen.createFromMap()
 
     t = 0
     last_t = 0
@@ -617,31 +535,32 @@ if __name__ == "__main__":
         test =[]
         if len(plans) == 0:
             for idx, alg in enumerate(['RRTstar']):
-                plan_aux.append(OptimalPlanning(start, goal, region, [], planner, dimension, mapgen.z_time[round(t)]))
+                plan_aux.append(OptimalPlanning(scenario.start, scenario.goal, scenario.region, scenario.obstacle, planner, dimension, scenario.mapgen.z_time[round(t)]))
                 result = plan_aux[idx].plan(15, alg, 'WeightedLengthAndClearanceCombo',delta_d)
-                test.append(plan_aux[idx].plotOptimal(delta_d,axis))
                 if plan_aux[idx].solution != []:
+                    test.append(plan_aux[idx].plotOptimal(delta_d,axis))
                     cost_aut.append(plan_aux[idx].solution[0][3])
                 else:
                     cost_aut.append(np.inf)
             lower_cost = cost_aut.index(min(cost_aut))
-            plans.append(plan_aux[lower_cost])
+            if plan_aux[lower_cost].solution != []:
+                plans.append(plan_aux[lower_cost])
 
-            print('Add, Start Solution: ' +  str(last_t) + " : " + str(round(t)) + " : " + str(t))
-            
-            path_x.append(plans[-1].solution[0][0][0])
-            path_y.append(plans[-1].solution[0][1][0])
-            time_res.append(round(t))
-            aux = mapgen.plot_map(round(t),axis) + test[0]
-            aux.append(axis.plot(path_x,path_y,'.',lw=3,color='black'))
-            aux[-1] = aux[-1][0]
-            aux = tuple(aux)
-            ims.append(aux)
+                print('Add, Start Solution: ' +  str(last_t) + " : " + str(round(t)) + " : " + str(t))
+                
+                path_x.append(plans[-1].solution[0][0][0])
+                path_y.append(plans[-1].solution[0][1][0])
+                time_res.append(round(t))
+                aux = scenario.mapgen.plot_map(round(t),axis) + test[0]
+                aux.append(axis.plot(path_x,path_y,'.',lw=3,color='black'))
+                aux[-1] = aux[-1][0]
+                aux = tuple(aux)
+                ims.append(aux)
 
-            last_t = round(t)
-            t = t + 0.1
-            if t >= time-1:
-                t = time-1
+                last_t = round(t)
+                t = t + 0.1
+                if t >= time-1:
+                    t = time-1
         
 
         else:
@@ -666,7 +585,7 @@ if __name__ == "__main__":
                 
 
             for idx, alg in enumerate(['RRTstar']):
-                plan_aux.append(OptimalPlanning((next_point[0],next_point[1]), goal, region, [], planner, dimension, mapgen.z_time[round(t)]))
+                plan_aux.append(OptimalPlanning((next_point[0],next_point[1]), scenario.goal, scenario.region, scenario.obstacle, planner, dimension, scenario.mapgen.z_time[round(t)]))
                 result = plan_aux[idx].plan(5, alg, 'WeightedLengthAndClearanceCombo',delta_d)
                 if plan_aux[idx].solution != []:
                     cost_aut.append(plan_aux[idx].solution[0][3])
@@ -686,7 +605,7 @@ if __name__ == "__main__":
                         path_y.append(plans[-1].solution[0][1][0])
                         time_res.append(round(t))
 
-                        aux = mapgen.plot_map(round(t),axis) + test[0]
+                        aux = scenario.mapgen.plot_map(round(t),axis) + test[0]
                         aux.append(axis.plot(path_x,path_y,'.',lw=3,color='black'))
                         aux[-1] = aux[-1][0]
                         aux = tuple(aux)
@@ -708,7 +627,7 @@ if __name__ == "__main__":
                         path_y.append(plans[-1].solution[0][1][0])
                         time_res.append(round(t))
 
-                        aux = mapgen.plot_map(round(t),axis) + test[0]
+                        aux = scenario.mapgen.plot_map(round(t),axis) + test[0]
                         aux.append(axis.plot(path_x,path_y,'.',lw=3,color='black'))
                         aux[-1] = aux[-1][0]
                         aux = tuple(aux)
@@ -735,7 +654,7 @@ if __name__ == "__main__":
                     path_y.append(plans[-1].solution[0][1][0])
                     time_res.append(round(t))
 
-                    aux = mapgen.plot_map(round(t),axis) + test[0]
+                    aux = scenario.mapgen.plot_map(round(t),axis) + test[0]
                     aux.append(axis.plot(path_x,path_y,'.',lw=3,color='black'))
                     aux[-1] = aux[-1][0]
                     aux = tuple(aux)
@@ -762,14 +681,14 @@ if __name__ == "__main__":
            # plans[-1]planspend(plans[-1].solutionSampled[0][0][0])
             #path_x.append(plans[-1].solution[0][1][0])
             #path_y.append(plans[-1].solution[0][0][0])
-        goal_sampled = (round(goal[0]*(mapgen.z.shape[0]-1))*delta_d, round(goal[1]*(mapgen.z.shape[0]-1))*delta_d)
+        goal_sampled = (round(scenario.goal[0]*(scenario.mapgen.z.shape[0]-1))*delta_d, round(scenario.goal[1]*(scenario.mapgen.z.shape[0]-1))*delta_d)
         if (plans[-1].solutionSampled[0][0][0], plans[-1].solutionSampled[0][1][0]) == goal_sampled:
         #if (plans[-1].solution[0][1][0], plans[-1].solution[0][0][0]) == (goal[0],goal[1]):
             path_x.append(plans[-1].solution[0][0][0])
             path_y.append(plans[-1].solution[0][1][0])
             time_res.append(round(t))
-            path_x.append(goal[0])
-            path_y.append(goal[1])
+            path_x.append(scenario.goal[0])
+            path_y.append(scenario.goal[1])
             time_res.append(round(t))
             run = False
             im_ani = animation.ArtistAnimation(fig, ims, interval=3000/time)
@@ -795,12 +714,12 @@ if __name__ == "__main__":
     gc.collect()
     plotSol = PlotlyResult('','','')
     for idx in range(len(path_x)):
-        path_x[idx] = path_x[idx]*lon_range + min(lon_region)
-        path_y[idx] = path_y[idx]*lat_range + min(lat_region)
+        path_x[idx] = path_x[idx]*scenario.lon_range + min(scenario.lon_region)
+        path_y[idx] = path_y[idx]*scenario.lat_range + min(scenario.lat_region)
 
 
     final_solution = {"lon":path_x,"lat":path_y}
-    plotSol.animedPlot(final_solution, time_res, mapgen, start_real, goal_real, region_real,'path.html')
+    plotSol.animedPlot(final_solution, time_res, scenario.mapgen, scenario.start_real, scenario.goal_real, scenario.region_real, scenario.obstacle_real,'path.html')
 
     print(str(tm.time() - start_time) + ' seconds')
 
@@ -868,3 +787,76 @@ if __name__ == "__main__":
     
 
 
+
+
+
+
+
+#polygon = [(0.45, 0.45), 
+#               (0.45, 0.55),
+#               (0.55, 0.55), 
+#               (0.55, 0.45)]
+#    base = 0.2
+#    topo = 0.6
+#    obstacle = [(polygon, base, topo)]
+
+#polygon = [(-12.0, -47.98), (-12.0, -46.99),
+    #           (-12.0, -46.99), (-12.6, -46.99),
+    #           (-12.6, -46.99), (-12.6, -47.98),
+    #           (-12.6, -47.98), (-12.0, -47.98)]
+    #base = 20
+    #topo = 100
+    #obstacle = [(polygon, base, topo)]
+
+
+
+    # Solve the planning problem
+    #polygon = [(-3,-2),
+    #           (-3, 5), 
+    #           ( 6, 5),
+    #           ( 6,-2)]
+    #base = 2
+    #topo = 6
+    
+    #polygon2 = [(8, 9),
+    #            (8, 6),
+    #            (6, 6),
+    #            (6, 9)]
+    #type_obstacle = 'CB'  
+
+    #obstacle = [(polygon, base, topo, type_obstacle),(polygon2, base, topo,type_obstacle)]
+    #obstacle = [([(-12.200000000000001, -47.5), (-12.1, -47.5), (-12.1, -47.599999999999994), (-12.200000000000001, -47.599999999999994)], 0.2, 0.6), ([(-12.3, -47.5), (-12.2, -47.5), (-12.2, -47.599999999999994), (-12.3, -47.599999999999994)], 0.2, 0.6), ([(-12.3, -47.400000000000006), (-12.2, -47.400000000000006), (-12.2, -47.5), (-12.3, -47.5)], 0.2, 0.6), ([(-12.3, -47.1), (-12.2, -47.1), (-12.2, -47.199999999999996), (-12.3, -47.199999999999996)], 0.2, 0.6), ([(-12.4, -47.6), (-12.299999999999999, -47.6), (-12.299999999999999, -47.699999999999996), (-12.4, -47.699999999999996)], 0.2, 0.6), ([(-12.4, -47.5), (-12.299999999999999, -47.5), (-12.299999999999999, -47.599999999999994), (-12.4, -47.599999999999994)], 0.2, 0.6), ([(-12.4, -47.400000000000006), (-12.299999999999999, -47.400000000000006), (-12.299999999999999, -47.5), (-12.4, -47.5)], 0.2, 0.6), ([(-12.5, -47.7), (-12.399999999999999, -47.7), (-12.399999999999999, -47.8), (-12.5, -47.8)], 0.2, 0.6), ([(-12.5, -47.6), (-12.399999999999999, -47.6), (-12.399999999999999, -47.699999999999996), (-12.5, -47.699999999999996)], 0.2, 0.6), ([(-12.5, -47.5), (-12.399999999999999, -47.5), (-12.399999999999999, -47.599999999999994), (-12.5, -47.599999999999994)], 0.2, 0.6), ([(-12.5, -47.400000000000006), (-12.399999999999999, -47.400000000000006), (-12.399999999999999, -47.5), (-12.5, -47.5)], 0.2, 0.6), ([(-12.5, -47.300000000000004), (-12.399999999999999, -47.300000000000004), (-12.399999999999999, -47.4), (-12.5, -47.4)], 0.2, 0.6), ([(-12.600000000000001, -47.5), (-12.5, -47.5), (-12.5, -47.599999999999994), (-12.600000000000001, -47.599999999999994)], 0.2, 0.6), ([(-12.600000000000001, -47.400000000000006), (-12.5, -47.400000000000006), (-12.5, -47.5), (-12.600000000000001, -47.5)], 0.2, 0.6), ([(-12.600000000000001, -47.300000000000004), (-12.5, -47.300000000000004), (-12.5, -47.4), (-12.600000000000001, -47.4)], 0.2, 0.6)]
+
+    #start =(0.1,0.1,1) 
+    #goal = (0.9,0.9,8)
+    #start =(0.34,0.64,1) 
+    #goal = (0.9,0.2,1)
+    
+    #start =(-12.62, -47.86, 0.2) 
+    #goal = (-12.21, -47.28, 0.7)
+    #region = [(-12.0, -47.98), 
+    #        (-12.0, -46.99), 
+    #        (-12.67, -46.99), 
+    #        (-12.67, -47.98)]
+
+
+    #start_real = (-19.869245, -43.963622,1) #Escola de Eng
+    #goal_real = (-19.931071, -43.937778,1) #Praca da liberdade
+    
+    #start_real = (-19.853342, -44.002499,1) #Zoologico
+    #goal_real = (-19.927558, -43.911051) #Mangabeiras
+
+    # região da imagem testmap2
+    #region_real = [(-19.849635, -44.014423), 
+    #          (-19.849635, -43.900210),
+    #          (-19.934877, -43.900210),
+    #          (-19.934877, -44.014423)]
+
+
+    #start = realToPorcent(start_real,region_real)
+    #goal = realToPorcent(goal_real,region_real)
+
+    #region = [( 0, 0),
+    #          ( 1, 0),
+    #          ( 1, 1),
+    #          ( 0, 1)]
