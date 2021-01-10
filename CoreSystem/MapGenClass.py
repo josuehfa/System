@@ -127,29 +127,22 @@ class MapGen():
             - Use a image to create a nrow x ncol matrix with values of populational density of Belo Horizonte.
 
         '''
-        from skimage.transform import rotate
-        from skimage.transform import resize
-        from skimage.color import rgb2hsv
-        from skimage.util import invert
         from skimage import io
-
+        from skimage.util import invert
+        from skimage.transform import rotate, resize
+    
         nrows = self.nrows
         ncols = self.ncols
         delta_d = 1/nrows
         x = np.arange(ncols+1)*delta_d
         y = np.arange(nrows+1)*delta_d
-
-        #original = data.astronaut()
-        original = io.imread('/home/josuehfa/System/CoreSystem/TestMap2.png')[:,:,:3]
+    
+        original = io.imread('/home/josuehfa/System/CoreSystem/popCalculated.png')[:,:,:3]
         image_resized = resize(original, (nrows+1,ncols+1),anti_aliasing=True)
         
-        hsv_img = rgb2hsv(image_resized)
-        sat_img = hsv_img[:, :, 1]*100
-        image_rotate = rotate(sat_img,180)
+        image_rotate = rotate(image_resized,180)
         final_image = image_rotate[:,::-1]
-        final_image = invert(final_image, True)+100
-        segment = final_image > 86
-        final_image = final_image * (segment+0.01)
+        final_image = invert(final_image, True)
 
         for t in range(self.time):
             self.z_time.append(final_image)

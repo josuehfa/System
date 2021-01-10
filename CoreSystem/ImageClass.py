@@ -27,29 +27,29 @@ result_density = match_template(density_resized, shape_resized)
 ij = np.unravel_index(np.argmax(result_density), result_density.shape)
 xdensity, ydensity = ij[::-1]
 
-fig = plt.figure(figsize=(8, 3))
-ax1 = plt.subplot(2, 3, 1)
-ax2 = plt.subplot(2, 3, 2)
-ax3 = plt.subplot(2, 3, 3, sharex=ax2, sharey=ax2)
+# fig = plt.figure(figsize=(8, 3))
+# ax1 = plt.subplot(2, 3, 1)
+# ax2 = plt.subplot(2, 3, 2)
+# ax3 = plt.subplot(2, 3, 3, sharex=ax2, sharey=ax2)
 
-ax1.imshow(shape_resized, cmap=plt.cm.gray)
-ax1.set_axis_off()
-ax1.set_title('template')
+# ax1.imshow(shape_resized, cmap=plt.cm.gray)
+# ax1.set_axis_off()
+# ax1.set_title('template')
 
-ax2.imshow(density_resized, cmap=plt.cm.gray)
-ax2.set_axis_off()
-ax2.set_title('image')
-# highlight matched region
+# ax2.imshow(density_resized, cmap=plt.cm.gray)
+# ax2.set_axis_off()
+# ax2.set_title('image')
+# # highlight matched region
 hdensity, wdensity = shape_resized.shape
-rect = plt.Rectangle((xdensity, ydensity), wdensity, hdensity, edgecolor='r', facecolor='none')
-ax2.add_patch(rect)
+# rect = plt.Rectangle((xdensity, ydensity), wdensity, hdensity, edgecolor='r', facecolor='none')
+# ax2.add_patch(rect)
 
-ax3.imshow(result_density)
-ax3.set_axis_off()
-ax3.set_title('`match_template`\nresult')
-# highlight matched region
-ax3.autoscale(False)
-ax3.plot(xdensity, ydensity, 'o', markeredgecolor='r', markerfacecolor='none', markersize=10)
+# ax3.imshow(result_density)
+# ax3.set_axis_off()
+# ax3.set_title('`match_template`\nresult')
+# # highlight matched region
+# ax3.autoscale(False)
+# ax3.plot(xdensity, ydensity, 'o', markeredgecolor='r', markerfacecolor='none', markersize=10)
 
 
 shape_resized = rgb2gray(resize(pampShape, (pampShape.shape[0]+pampShape.shape[0]//4,pampShape.shape[1]+pampShape.shape[0]//4),anti_aliasing=True))
@@ -60,31 +60,31 @@ ij = np.unravel_index(np.argmax(result_street), result_street.shape)
 xstreet, ystreet = ij[::-1]
 
 
-ax4 = plt.subplot(2, 3, 4)
-ax5 = plt.subplot(2, 3, 5)
-ax6 = plt.subplot(2, 3, 6, sharex=ax4, sharey=ax5)
+# ax4 = plt.subplot(2, 3, 4)
+# ax5 = plt.subplot(2, 3, 5)
+# ax6 = plt.subplot(2, 3, 6, sharex=ax4, sharey=ax5)
 
-ax4.imshow(shape_resized, cmap=plt.cm.gray)
-ax4.set_axis_off()
-ax4.set_title('template')
+# ax4.imshow(shape_resized, cmap=plt.cm.gray)
+# ax4.set_axis_off()
+# ax4.set_title('template')
 
-ax5.imshow(street_resized, cmap=plt.cm.gray)
-ax5.set_axis_off()
-ax5.set_title('image')
-# highlight matched region
+# ax5.imshow(street_resized, cmap=plt.cm.gray)
+# ax5.set_axis_off()
+# ax5.set_title('image')
+# # highlight matched region
 hstreet, wstreet = shape_resized.shape
-rect = plt.Rectangle((xstreet, ystreet), wstreet,hstreet, edgecolor='r', facecolor='none')
-ax5.add_patch(rect)
+# rect = plt.Rectangle((xstreet, ystreet), wstreet,hstreet, edgecolor='r', facecolor='none')
+# ax5.add_patch(rect)
 
-ax6.imshow(result_street)
-ax6.set_axis_off()
-ax6.set_title('`match_template`\nresult')
-# highlight matched region
-ax6.autoscale(False)
-ax6.plot(xstreet, ystreet, 'o', markeredgecolor='r', markerfacecolor='none', markersize=10)
+# ax6.imshow(result_street)
+# ax6.set_axis_off()
+# ax6.set_title('`match_template`\nresult')
+# # highlight matched region
+# ax6.autoscale(False)
+# ax6.plot(xstreet, ystreet, 'o', markeredgecolor='r', markerfacecolor='none', markersize=10)
 
 
-plt.show()
+# plt.show()
 
 
 #Proporção entre as imagens
@@ -101,19 +101,19 @@ street_prop = resize(street_resized, (round(street_resized.shape[0]*h_prop),roun
 #Invertendo o valor do street, nesse caso as ruas vão valer 0 e anularão esses pontos na segunda imagem
 street_prop = util.invert(street_prop)
 #Criando uma mascara: Se for maior que 0 True, else False ( Nesse caso, as ruas são False e o resto True)
-streetMask = street_prop > 0.75
+streetMask = street_prop > 0.2
 
 popDensity_gray = rgb2gray(popDensity)
 #Criando uma mascara para a densidade populacional, se for maior que 0 True, else False (Nesse caso o contorno é False e o interior True)
-popMask = popDensity_gray > 0
-io.imshow(popMask)
-plt.show()
+popMask = popDensity_gray > 0.01
+#io.imshow(popMask)
+#plt.show()
 
 #Como quanto maior a populacao mais escura a região, inverte-se e multiplicasse pela mascara para que 
 #Os contornos passem a ter o menor valor (em geral são divisas de bairros)
 popDensity_gray = (util.invert(popDensity_gray))*popMask
-io.imshow(popDensity_gray)
-plt.show()
+#io.imshow(popDensity_gray)
+#plt.show()
 
 x_cont = 0
 for idx in range((xdensity*2 - xstreet),((xdensity*2 - xstreet) + street_prop.shape[1])):
@@ -121,17 +121,264 @@ for idx in range((xdensity*2 - xstreet),((xdensity*2 - xstreet) + street_prop.sh
     for idy in range((ydensity*2 - ystreet),((ydensity*2 - ystreet) + street_prop.shape[0])):
         popDensity[idy][idx] = streetMask[y_cont][x_cont]*popDensity_gray[idy][idx]*popDensity[idy][idx]*10
         popDensity_gray[idy][idx] = streetMask[y_cont][x_cont]*popDensity_gray[idy][idx]
+        street_prop[y_cont][x_cont] = streetMask[y_cont][x_cont]*popDensity_gray[idy][idx]
         y_cont = y_cont + 1
     x_cont = x_cont + 1
 
-popDensity = util.invert(popDensity)
-io.imshow(popDensity)
+#street_prop = util.invert(street_prop)
+#io.imshow(street_prop)
+#plt.show()
+
+popDensity_gray  = util.invert(popDensity_gray)
+#io.imshow(popDensity_gray)
+#plt.show()
+
+
+street_prop = np.multiply(street_prop, np.where(street_prop >= 0.1, 110, 1))
+io.save('popCalculated.png',street_prop)
+
+
+
+street_prop = resize(street_prop, (200,200),anti_aliasing=True)
+
+
+#street_prop*=((street_prop >= 0.3)*1000 + (street_prop < 0.3)*100)
+
+lat_lon_i = (-19.829752116279057, -44.02262249999998)
+lat_lon_s = (-19.943540209302327, -43.90054215000001)
+
+lat_rsoares = -19.922752
+lon_rsoares = -43.945150
+lat_pirulito =-19.919133
+lon_pirulito = -43.938626
+
+
+x_rsoares_street = 950
+y_rsoares_street = 1105
+x_pirulito_street = 1030
+y_pirulito_street = 1062
+shape_street = (1352, 1497)
+
+
+
+x_r_percent_street = x_rsoares_street/shape_street[1]
+x_p_percent_street = x_pirulito_street/shape_street[1]
+y_r_percent_street = y_rsoares_street/shape_street[0]
+y_p_percent_street = y_pirulito_street/shape_street[0]
+
+
+x_r_percent_street = x_rsoares_street/shape_street[1]
+x_p_percent_street = x_pirulito_street/shape_street[1]
+y_r_percent_street = y_rsoares_street/shape_street[0]
+y_p_percent_street = y_pirulito_street/shape_street[0]
+
+
+lat_diff = lat_rsoares - lat_pirulito
+lon_diff = lon_rsoares - lon_pirulito
+x_diff = (x_r_percent_street - x_p_percent_street)*street_prop.shape[1]
+y_diff = (y_r_percent_street - y_p_percent_street)*street_prop.shape[0]
+
+lat_to_y =  lat_diff/y_diff
+lon_to_x = lon_diff/x_diff
+
+
+pnt_i = (0,0)
+pnt_s = (1352, 1497)
+
+pnt_i_y = pnt_i[0] - y_r_percent_street*street_prop.shape[0]
+pnt_i_x = pnt_i[1] - x_r_percent_street*street_prop.shape[1]
+
+pnt_i_lat = pnt_i_y*lat_to_y + lat_rsoares
+pnt_i_lon = pnt_i_x*lon_to_x + lon_rsoares
+
+pnt_s_y = pnt_s[0] - y_r_percent_street*street_prop.shape[0]
+pnt_s_x = pnt_s[1] - x_r_percent_street*street_prop.shape[1]
+
+pnt_s_lat = pnt_s_y*lat_to_y + lat_rsoares
+pnt_s_lon = pnt_s_x*lon_to_x + lon_rsoares
+
+print(pnt_i_lon, pnt_i_lat)
+print(pnt_s_lon, pnt_s_lat)
+
+
+test = (-19.933001, -43.938306)
+
+
+x_test = test[1] - lon_rsoares
+y_test = test[0] - lat_rsoares
+
+y_value = y_test/lat_to_y + y_r_percent_street*street_prop.shape[0]
+x_value = x_test/lon_to_x + x_r_percent_street*street_prop.shape[1]
+
+
+
+fig = plt.figure(figsize=(8, 3))
+ax1 = plt.subplot(1,2,1)
+ax2 = plt.subplot(1,2,2)
+
+ax1.imshow(street_prop)
+ax1.set_axis_off()
+ax1.autoscale(False)
+ax1.plot(x_value, y_value, 'o', markeredgecolor='r', markerfacecolor='none', markersize=10)
+
+
+x = np.linspace(pnt_i_lon,pnt_s_lon,street_prop.shape[1])
+y = np.linspace(pnt_i_lat,pnt_s_lat,street_prop.shape[0])
+
+#ax2.imshow(street_prop)
+ax2.set_axis_off()
+ax2.autoscale(False)
+ax2.contourf(x, y, street_prop)
+ax2.plot(test[1], test[0], 'o', markeredgecolor='r', markerfacecolor='none', markersize=10)
+ax2.plot(pnt_i_lon, pnt_i_lat, 'o', markeredgecolor='r', markerfacecolor='none', markersize=10)
+ax2.plot(pnt_s_lon, pnt_s_lat, 'o', markeredgecolor='r', markerfacecolor='none', markersize=10)
+
 plt.show()
 
-popDensity_gray  = util.invert(popDensity_gray)*100
-io.imshow(popDensity_gray)
-plt.show()
 
+import plotly
+import plotly.express as px
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+
+fig = make_subplots(
+            rows=1, cols=2,
+            column_widths=[0.45,0.45],
+            row_heights=[1],
+            subplot_titles=("Solution Path in a Real Map","2D CostMap"),
+            specs=[[{"type": "Scattermapbox"},{"type": "contour"}]])
+#0
+#Trace for solution  
+fig.append_trace(go.Scattermapbox(
+    lat=[],
+    lon=[],
+    name='Solution Path',
+    mode='markers+lines',
+    marker=dict(size=5, color='blue')
+    ),row=1,col=1)  
+
+
+region = [(-19.829752116279057, -44.02262249999998),
+          (-19.829752116279057, -43.90054215000001),
+          (-19.943540209302327, -43.90054215000001),
+          (-19.943540209302327, -44.02262249999998)]
+
+lat_aux = [reg[0] for reg in region]
+lon_aux = [reg[1] for reg in region]
+fig.append_trace(go.Scattermapbox(
+    lon = lon_aux, 
+    lat = lat_aux,
+    fill = "toself",
+    name='Area of Flight',
+    marker = { 'size': 5, 'color': "rgba(123, 239, 178, 1)" }),row=1,col=1)
+
+#5
+#Contour plot
+x = np.linspace(pnt_i_lon,pnt_s_lon,shape_street[1])
+y = np.linspace(pnt_i_lat,pnt_s_lat,shape_street[0])
+fig.append_trace(go.Contour(
+    z=street_prop,
+    x=x, 
+    y=y,
+    name='Cost Time: 0',
+    line_smoothing=0,
+    colorscale='dense',
+    contours=dict(
+        start=street_prop.min(), 
+        end=street_prop.max(), 
+        size=1, 
+        showlines=False)
+    ), row=1, col=2)
+#Fixa o eixo dos plots
+fig.update_layout(
+    mapbox = {
+        #'style': "outdoors",
+        'style': "stamen-terrain",
+        'center': {'lon': -43.9520, 'lat': -19.8997 },
+        #'accesstoken': token,
+        'zoom': 11},
+    title_text="UAS Path Generation", hovermode="closest",
+    legend=dict(
+        orientation="h",
+        yanchor="top",
+        #y=1.02,
+        xanchor="right",
+        x=1
+    ),
+    updatemenus=[dict( type="buttons",
+        showactive= False,
+        buttons=[
+            dict(label="Play",
+                method="animate",
+                args=[[None], 
+                    dict(frame= { "duration": 50},
+                        fromcurrent= True,
+                        mode='immediate', 
+                        transition= {"duration":10, "easing": "linear"}
+                        )]),
+            dict(label='Pause',
+                method='animate',
+                args= [ [None],
+                    dict(frame= { "duration": 0},
+                        fromcurrent= True,
+                        mode='immediate', 
+                        transition= {"duration": 0, "easing": "linear"}
+                                )]
+            )]
+        )])
+
+plotly.offline.plot(fig, filename='test.html')
+
+
+x_rsoares = 1497
+y_rsoares = 1840
+x_pirulito = 1577
+y_pirulito = 1796
+shape = (3571, 2621)
+
+x_r_percent = x_rsoares/shape[1]
+x_p_percent = x_pirulito/shape[1]
+y_r_percent = y_rsoares/shape[0]
+y_p_percent = y_pirulito/shape[0]
+
+
+x_r_percent = x_rsoares/shape[1]
+x_p_percent = x_pirulito/shape[1]
+y_r_percent = y_rsoares/shape[0]
+y_p_percent = y_pirulito/shape[0]
+
+popDensity = resize(popDensity_gray, (700,700),anti_aliasing=True)
+
+lat_diff = lat_rsoares - lat_pirulito
+lon_diff = lon_rsoares - lon_pirulito
+x_diff = (x_r_percent - x_p_percent)*popDensity.shape[1]
+y_diff = (y_r_percent - y_p_percent)*popDensity.shape[0]
+
+lat_to_y =  lat_diff/y_diff
+lon_to_x = lon_diff/x_diff
+
+
+test = (-19.933001, -43.938306)
+
+x_test = test[1] - lon_rsoares
+y_test = test[0] - lat_rsoares
+
+y_value = y_test/lat_to_y + y_r_percent*popDensity.shape[0]
+x_value = x_test/lon_to_x + x_r_percent*popDensity.shape[1]
+
+
+
+fig = plt.figure(figsize=(8, 3))
+ax1 = plt.subplot()
+
+
+ax1.imshow(popDensity)
+ax1.set_axis_off()
+ax1.autoscale(False)
+ax1.plot(x_value, y_value, 'o', markeredgecolor='r', markerfacecolor='none', markersize=10)
+
+
+plt.show()
 
 
 #grayscale = rgb2gray(original)
