@@ -403,7 +403,7 @@ class OptimalPlanning():
             lat.append(polygon[0][0][0])
             lon.append(polygon[0][0][1])
         #    ax.plot(lon, lat, linestyle='-', color='red')
-            aux.append(axis.fill(lon, lat, facecolor='gray', edgecolor='black'))
+            aux.append(axis.fill(lat, lon, facecolor='gray', edgecolor='black'))
             aux[-1]=aux[-1][0]
         
         #Region
@@ -496,7 +496,7 @@ if __name__ == "__main__":
     start_time = tm.time()
 
 
-    scenario = ScenarioClass('ONE')
+    scenario = ScenarioClass('TWO')
 
     dimension = '2D'
     planner = 'RRTstar'
@@ -523,7 +523,7 @@ if __name__ == "__main__":
     t = 0
     last_t = 0
     tried = 0
-    max_try = 4
+    max_try = 2
     pnt = 0
     while (run == True):
         #ims = []
@@ -586,7 +586,7 @@ if __name__ == "__main__":
 
             for idx, alg in enumerate(['RRTstar']):
                 plan_aux.append(OptimalPlanning((next_point[0],next_point[1]), scenario.goal, scenario.region, scenario.obstacle, planner, dimension, scenario.mapgen.z_time[round(t)]))
-                result = plan_aux[idx].plan(5, alg, 'WeightedLengthAndClearanceCombo',delta_d)
+                result = plan_aux[idx].plan(10, alg, 'WeightedLengthAndClearanceCombo',delta_d)
                 if plan_aux[idx].solution != []:
                     cost_aut.append(plan_aux[idx].solution[0][3])
                 else:
@@ -731,10 +731,14 @@ if __name__ == "__main__":
     import matplotlib.animation as animation
     from matplotlib import pyplot
     
-    im_ani = animation.ArtistAnimation(fig, ims, interval=10000/time, blit=True)
+    im_ani = animation.ArtistAnimation(fig, ims, interval=50, blit=True)
     #anim = FuncAnimation(fig, animate, init_func = init, 
     #                    frames =len(path_y) , interval = 200, blit = True) 
     
+    # Set up formatting for the movie files
+    writermp4 = animation.FFMpegWriter(fps=60) 
+    im_ani.save('path.mp4', writer=writermp4)
+
     plt.show()
 
 

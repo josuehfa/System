@@ -306,7 +306,7 @@ class PlotlyResult():
             lon=[],
             name='Solution Path',
             mode='markers+lines',
-            marker=dict(size=5, color='red')
+            marker=dict(size=5, color='blue')
             ),row=1,col=1)
 
         #1
@@ -324,8 +324,8 @@ class PlotlyResult():
         #Start position
         fig.append_trace(go.Scattermapbox(
             mode = "markers",
-            lon = [start[0]],
-            lat = [start[1]],
+            lon = [start[1]],
+            lat = [start[0]],
             marker = {'size':5,'color':"black"},
             name='Start'
             ),row=1,col=1)
@@ -334,8 +334,8 @@ class PlotlyResult():
         #goal position
         fig.append_trace(go.Scattermapbox(
             mode = "markers",
-            lon = [goal[0]],
-            lat = [goal[1]],
+            lon = [goal[1]],
+            lat = [goal[0]],
             marker = {'size':5,'color':"black"},
             name='Goal'
             ),row=1,col=1)
