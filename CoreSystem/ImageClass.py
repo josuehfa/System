@@ -134,8 +134,8 @@ popDensity_gray  = util.invert(popDensity_gray)
 #plt.show()
 
 
-street_prop = np.multiply(street_prop, np.where(street_prop >= 0.1, 110, 1))
-io.save('popCalculated.png',street_prop)
+#street_prop = np.multiply(street_prop, np.where(street_prop >= 0.1, 110, 1))
+io.imsave('popCalculated.png',street_prop) ###
 
 
 
@@ -201,7 +201,7 @@ print(pnt_i_lon, pnt_i_lat)
 print(pnt_s_lon, pnt_s_lat)
 
 
-test = (-19.933001, -43.938306)
+test = (-19.869245, -43.963622)
 
 
 x_test = test[1] - lon_rsoares

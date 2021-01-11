@@ -54,12 +54,14 @@ class ScenarioClass():
         self.goal_real = (-19.931071, -43.937778,1)
 
         #test
-        #self.start_real = (-19.869461, -43.967717)
-        #self.goal_real = (-19.882749, -43.966805)
+        self.start_real = (-19.836548, -44.008020)
+        self.goal_real = (-19.926052, -43.908075)
 
         #Região de Voo
-        self.region_real = [(-19.849635, -44.014423),(-19.849635, -43.900210),
-                            (-19.934877, -43.900210),(-19.934877, -44.014423)]
+        self.region_real = [(-19.829752116279057, -44.02262249999998),
+                            (-19.829752116279057, -43.90054215000001),
+                            (-19.943540209302327, -43.90054215000001),
+                            (-19.943540209302327, -44.02262249999998)]
         #Definição dos obstaculos
         base = 0
         topo = 0
@@ -114,8 +116,8 @@ class ScenarioClass():
         
         #Parametros para criação do mapa
         self.time = 1
-        self.nrows = 100
-        self.ncols = 100
+        self.nrows = 150
+        self.ncols = 150
         self.mapgen = MapGen(self.nrows, self.ncols,self.time)
         self.mapgen.createScenarioOne()
 
@@ -136,12 +138,17 @@ class ScenarioClass():
         self.goal_real = (-19.931071, -43.937778,1)
 
         #test
-        #self.start_real = (-19.869461, -43.967717)
-        #self.goal_real = (-19.882749, -43.966805)
+        self.start_real = (-19.836548, -44.008020)
+        self.goal_real = (-19.926052, -43.908075)
+
 
         #Região de Voo
-        self.region_real = [(-19.849635, -44.014423),(-19.849635, -43.900210),
-                            (-19.934877, -43.900210),(-19.934877, -44.014423)]
+        #self.region_real = [(-19.849635, -44.014423),(-19.849635, -43.900210),
+        #                    (-19.934877, -43.900210),(-19.934877, -44.014423)]
+        self.region_real = [(-19.829752116279057, -44.02262249999998),
+                            (-19.829752116279057, -43.90054215000001),
+                            (-19.943540209302327, -43.90054215000001),
+                            (-19.943540209302327, -44.02262249999998)]
         #Definição dos obstaculos
         base = 0
         topo = 0
@@ -196,8 +203,8 @@ class ScenarioClass():
         
         #Parametros para criação do mapa
         self.time = 1
-        self.nrows = 100
-        self.ncols = 100
+        self.nrows = 150
+        self.ncols = 150
         self.mapgen = MapGen(self.nrows, self.ncols,self.time)
         self.mapgen.createScenarioTwo()
 

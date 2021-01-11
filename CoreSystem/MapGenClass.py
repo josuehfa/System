@@ -137,12 +137,18 @@ class MapGen():
         x = np.arange(ncols+1)*delta_d
         y = np.arange(nrows+1)*delta_d
     
-        original = io.imread('/home/josuehfa/System/CoreSystem/popCalculated.png')[:,:,:3]
+        original = io.imread('/home/josuehfa/System/CoreSystem/popCalculated.png')
         image_resized = resize(original, (nrows+1,ncols+1),anti_aliasing=True)
-        
         image_rotate = rotate(image_resized,180)
         final_image = image_rotate[:,::-1]
-        final_image = invert(final_image, True)
+        final_image = np.multiply(final_image, np.where(final_image >= 0.1, 110, 1))
+        #io.imshow(image_resized)
+        #plt.show()
+
+        #image_rotate = rotate(image_resized,180)
+        #final_image = image_rotate[:,::-1]
+        #final_image = invert(final_image, True)
+        
 
         for t in range(self.time):
             self.z_time.append(final_image)
@@ -217,15 +223,16 @@ if __name__ == "__main__":
     from matplotlib import pyplot
     ims = []
     time = 1
-    nrows = 100
-    ncols = 100
+    nrows = 500
+    ncols = 500
     delta_d = 1/nrows
     fig = plt.figure()
     axis = plt.axes(xlim =(0, 1),  
                     ylim =(0, 1))
     mapgen = MapGen(nrows, ncols,time)
     #mapgen.create()
-    mapgen.createEmptyMap()
+    mapgen.createScenarioTwo()
+    #mapgen.createEmptyMap()
     #mapgen.createFromMap()
     #mapgen.plot_map(axis)
     

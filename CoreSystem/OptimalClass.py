@@ -489,14 +489,19 @@ class OptimalPlanning():
             ax.plot(x_main,y_main)
 
         #plt.show()
-    
+
+def PlanningStatus(scenario,plans):
+    porcent_lat = abs(plans[-1].solution[0][0][0] - scenario.start[0])/abs(scenario.goal[0] - scenario.start[0])
+    porcent_lon = abs(plans[-1].solution[0][1][0] - scenario.start[1])/abs(scenario.goal[1] - scenario.start[1])
+    print('Start: (' + str(scenario.start[0]) + ',' + str(scenario.start[1])+') ... Position: (' + str(plans[-1].solution[0][0][0]) + ',' + str(plans[-1].solution[0][1][0])+') ... Goal: (' + str(scenario.goal[0]) + ',' + str(scenario.goal[1])+')')
+    print('Solution(%): '+ str(round(100*(porcent_lat+porcent_lon)/2,2)) + '%  ....  Lat(%): '+ str(round(100*(porcent_lat),2))+ '%  ....  Lon(%): '+ str(round(100*(porcent_lon),2))+'%' )
 
 if __name__ == "__main__":
 
     start_time = tm.time()
 
 
-    scenario = ScenarioClass('TWO')
+    scenario = ScenarioClass('ONE')
 
     dimension = '2D'
     planner = 'RRTstar'
@@ -511,8 +516,8 @@ if __name__ == "__main__":
     time_res =[]
     run = True
     time = 1
-    nrows = 100
-    ncols = 100
+    #nrows = 200
+    #ncols = 200
     delta_d = 1/scenario.nrows
     fig = plt.figure()
     axis = plt.axes(xlim =(-0.2, 1.2),ylim =(-0.2, 1.2))
@@ -536,7 +541,7 @@ if __name__ == "__main__":
         if len(plans) == 0:
             for idx, alg in enumerate(['RRTstar']):
                 plan_aux.append(OptimalPlanning(scenario.start, scenario.goal, scenario.region, scenario.obstacle, planner, dimension, scenario.mapgen.z_time[round(t)]))
-                result = plan_aux[idx].plan(15, alg, 'WeightedLengthAndClearanceCombo',delta_d)
+                result = plan_aux[idx].plan(10, alg, 'WeightedLengthAndClearanceCombo',delta_d)
                 if plan_aux[idx].solution != []:
                     test.append(plan_aux[idx].plotOptimal(delta_d,axis))
                     cost_aut.append(plan_aux[idx].solution[0][3])
@@ -546,6 +551,7 @@ if __name__ == "__main__":
             if plan_aux[lower_cost].solution != []:
                 plans.append(plan_aux[lower_cost])
 
+                PlanningStatus(scenario,plans)
                 print('Add, Start Solution: ' +  str(last_t) + " : " + str(round(t)) + " : " + str(t))
                 
                 path_x.append(plans[-1].solution[0][0][0])
@@ -586,7 +592,7 @@ if __name__ == "__main__":
 
             for idx, alg in enumerate(['RRTstar']):
                 plan_aux.append(OptimalPlanning((next_point[0],next_point[1]), scenario.goal, scenario.region, scenario.obstacle, planner, dimension, scenario.mapgen.z_time[round(t)]))
-                result = plan_aux[idx].plan(10, alg, 'WeightedLengthAndClearanceCombo',delta_d)
+                result = plan_aux[idx].plan(0.5+tried, alg, 'WeightedLengthAndClearanceCombo',delta_d)
                 if plan_aux[idx].solution != []:
                     cost_aut.append(plan_aux[idx].solution[0][3])
                 else:
@@ -598,6 +604,8 @@ if __name__ == "__main__":
                 if round(t) == last_t:
                     #Tentar encontrar um valor melhor que o ultimo
                     if plan_aux[lower_cost].solution[0][3] < plans[-1].solution[0][3] * 1.05 and (plan_aux[lower_cost].solution != plans[-1].solution):
+                        
+                        PlanningStatus(scenario,plans)
                         print('Add, Better Solution: ' +  str(last_t) + " : " + str(round(t)) + " : " + str(t) + " Pnt: " + str(next_point[0])+','+str(next_point[1]))
                         test.append(plan_aux[lower_cost].plotOptimal(delta_d,axis))
                         plans.append(plan_aux[lower_cost])
@@ -620,6 +628,7 @@ if __name__ == "__main__":
                         pnt = 1
 
                     elif tried >= max_try: 
+                        PlanningStatus(scenario,plans)
                         print('Add, tried Solution: ' +  str(last_t) + " : " + str(round(t)) + " : " + str(t) + " Pnt: " + str(next_point[0])+','+str(next_point[1]))
                         test.append(plan_aux[lower_cost].plotOptimal(delta_d,axis))
                         plans.append(plan_aux[lower_cost])
@@ -647,6 +656,7 @@ if __name__ == "__main__":
                         tried = tried + 1
 
                 else:
+                    PlanningStatus(scenario,plans)
                     print('Add, Other time: ' +  str(last_t) + " : " + str(round(t)) + " : " + str(t)+ " Pnt: " + str(next_point[0])+','+str(next_point[1]))
                     test.append(plan_aux[lower_cost].plotOptimal(delta_d,axis))
                     plans.append(plan_aux[lower_cost])
@@ -668,6 +678,7 @@ if __name__ == "__main__":
                 
             else:
                 print('Pop Solution - Time: ' +  str(round(t)) + " : " + str(t))
+                plans.pop()
                 continue
             
         

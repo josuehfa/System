@@ -302,8 +302,8 @@ class PlotlyResult():
         #0
         #Trace for solution  
         fig.append_trace(go.Scattermapbox(
-            lat=[],
-            lon=[],
+            lat=solution['lat'],
+            lon=solution['lon'],
             name='Solution Path',
             mode='markers+lines',
             marker=dict(size=5, color='blue')
@@ -429,9 +429,9 @@ class PlotlyResult():
 
         frames = []
         for idx, t in enumerate(time_res):
-            frames.append(go.Frame(data=[go.Scattermapbox(
-                                       lat=solution['lat'][:idx+1], 
-                                       lon=solution['lon'][:idx+1],mode='markers+lines')],traces=[0]))
+            #frames.append(go.Frame(data=[go.Scattermapbox(
+            #                           lat=solution['lat'][:idx+1], 
+            #                           lon=solution['lon'][:idx+1],mode='markers+lines')],traces=[0]))
              
             #frames.append(go.Frame(data=[go.Scatter(
             #                           x=solution['lon'][:idx], 
