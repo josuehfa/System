@@ -501,7 +501,7 @@ if __name__ == "__main__":
     start_time = tm.time()
 
 
-    scenario = ScenarioClass('ONE')
+    scenario = ScenarioClass('TWO')
 
     dimension = '2D'
     planner = 'RRTstar'

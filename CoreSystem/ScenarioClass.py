@@ -55,7 +55,7 @@ class ScenarioClass():
 
         #test
         self.start_real = (-19.836548, -44.008020)
-        self.goal_real = (-19.926052, -43.908075)
+        self.goal_real = (-19.916969, -43.909915)
 
         #Região de Voo
         self.region_real = [(-19.829752116279057, -44.02262249999998),
@@ -139,7 +139,7 @@ class ScenarioClass():
 
         #test
         self.start_real = (-19.836548, -44.008020)
-        self.goal_real = (-19.926052, -43.908075)
+        self.goal_real = (-19.916969, -43.909915)
 
 
         #Região de Voo
