@@ -141,14 +141,7 @@ class MapGen():
         image_resized = resize(original, (nrows+1,ncols+1),anti_aliasing=True)
         image_rotate = rotate(image_resized,180)
         final_image = image_rotate[:,::-1]
-        final_image = np.multiply(final_image, np.where(final_image >= 0.1, 110, 1))
-        #io.imshow(image_resized)
-        #plt.show()
-
-        #image_rotate = rotate(image_resized,180)
-        #final_image = image_rotate[:,::-1]
-        #final_image = invert(final_image, True)
-        
+        final_image = np.multiply(final_image, np.where(final_image >= 0.1, 110, 1))        
 
         for t in range(self.time):
             self.z_time.append(final_image)
@@ -157,6 +150,50 @@ class MapGen():
         self.z = self.z_time[0]
         self.y = y
         self.x = x
+
+    def createScenarioThree(self, vertiports, radius):
+        '''
+        Map of Scenario Three:
+            - Use a image to create a nrow x ncol matrix with values of populational density of Belo Horizonte.
+            - Create points for safe landing and determine a radius from those points where the aircraft could operate.  
+
+        '''
+        from skimage import io
+        from skimage.util import invert
+        from skimage.transform import rotate, resize
+    
+        nrows = self.nrows
+        ncols = self.ncols
+        delta_d = 1/nrows
+        x = np.arange(ncols+1)*delta_d
+        y = np.arange(nrows+1)*delta_d
+    
+        original = io.imread('/home/josuehfa/System/CoreSystem/popCalculated.png')
+        image_resized = resize(original, (nrows+1,ncols+1),anti_aliasing=True)
+        image_rotate = rotate(image_resized,180)
+        final_image = image_rotate[:,::-1]
+        final_image = np.multiply(final_image, np.where(final_image >= 0.1, 110, 1))
+
+        vertiports_map = np.zeros((nrows+1, ncols+1), dtype=np.uint8)
+        for vertiport in vertiports:
+            xx,yy = disk((vertiport[1]*nrows,vertiport[0]*nrows),radius*nrows)
+            x_del = np.argwhere( (xx <= 0) | (xx >= nrows) )
+            y_del = np.argwhere( (yy <= 0) | (yy >= ncols) )
+            xx = np.delete(xx, np.concatenate((x_del, y_del), axis=0))
+            yy = np.delete(yy, np.concatenate((x_del, y_del), axis=0))
+            vertiports_map[xx,yy] = 1
+         
+        mask = vertiports_map < 1
+        mapimage = final_image*vertiports_map + mask*100
+
+        for t in range(self.time):
+            self.z_time.append(mapimage)
+
+        self.obs_time = []
+        self.z = self.z_time[0]
+        self.y = y
+        self.x = x
+
 
     def createFromMap(self):
         from skimage.transform import rotate
@@ -229,9 +266,13 @@ if __name__ == "__main__":
     fig = plt.figure()
     axis = plt.axes(xlim =(0, 1),  
                     ylim =(0, 1))
+    
+    vertiports = [(0.123, 0.816), (0.19, 0.639), (0.289, 0.487), (0.355, 0.294), (0.543, 0.228), (0.737, 0.195), (0.9, 0.187)]
+    radius = 0.2
     mapgen = MapGen(nrows, ncols,time)
     #mapgen.create()
-    mapgen.createScenarioTwo()
+    mapgen.createScenarioThree(vertiports,radius)
+    #mapgen.createScenarioTwo()
     #mapgen.createEmptyMap()
     #mapgen.createFromMap()
     #mapgen.plot_map(axis)

@@ -483,6 +483,7 @@ if __name__ == "__main__":
     final_solution = {"lat":[10,20,30,40],"lon":[10,11,12,13]}
     time_res = [0,1,2,3]
 
+    time_res = [0]
     #Definição dos obstaculos
     obstacle = []
     cpor = [(-19.870782, -43.959432),
@@ -555,12 +556,14 @@ if __name__ == "__main__":
 
     plotSol = PlotlyResult('','','')
 
-    time = 4
+    time = 1
     nrows = 200
     ncols = 200
+    vertiports = [(0.062, 0.754), (0.12, 0.94), (0.246, 0.214), (0.602, 0.072), (0.923, 0.234)]
+    radius = 0.25
     mapgen = MapGen(nrows, ncols,time)
-    mapgen.createFromMap()
-    
+    #mapgen.create()
+    mapgen.createScenarioThree(vertiports,radius)
     plotSol.animedPlot(final_solution, time_res, mapgen, start_real, goal_real, region_real,obstacle,'test.html')
 
 
