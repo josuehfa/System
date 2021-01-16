@@ -16,6 +16,8 @@ class ScenarioClass():
             self.Scenario_Three()
         elif scenario == 'FOUR':
             self.Scenario_Four()
+        elif scenario == 'FIVE':
+            self.Scenario_Five()
         
     def realToPorcent(self,point,region):
         '''
@@ -212,7 +214,7 @@ class ScenarioClass():
         self.obstacle_real = self.generateObstacle()
 
         #Geração dos vertiports
-        self.radius = 0.25
+        self.radius = 0.24
         self.vertiports_real = [(-19.887738, -44.015104),
                                (-19.836548, -44.008020),
                                (-19.919213, -43.992603),
@@ -245,7 +247,137 @@ class ScenarioClass():
         self.mapgen.createScenarioThree(self.vertiports,self.radius)
     
     def Scenario_Four(self):
+        '''
+        Quarto cenario:
+            Objetivo:
+                -   Ir da EE-UFMG ate a Praça da Liberdade evitando as geofence out e evitando regioes com condições meteorologicas severas
+            Otimização em relação a:
+                -   Menor Caminho
+                -   Geofence Out para os obstaculos definidos no inicio
+                -   Condições meteorologicas
+        '''
+        #Escola de Eng
+        self.start_real = (-19.869245, -43.963622,1) 
+        #Praca da liberdade
+        self.goal_real = (-19.931071, -43.937778,1)
+
+        #test
+        self.start_real = (-19.836548, -44.008020)
+        self.goal_real = (-19.916969, -43.909915)
+
+
+        #Região de Voo
+        #self.region_real = [(-19.849635, -44.014423),(-19.849635, -43.900210),
+        #                    (-19.934877, -43.900210),(-19.934877, -44.014423)]
+        self.region_real = [(-19.829752116279057, -44.02262249999998),
+                            (-19.829752116279057, -43.90054215000001),
+                            (-19.943540209302327, -43.90054215000001),
+                            (-19.943540209302327, -44.02262249999998)]
+        
+        #Geração dos Obstaculos
+        self.obstacle_real = self.generateObstacle()
+
+        #Geração dos vertiports
+        #self.radius = 0.23
+        #self.vertiports_real = [(-19.887738, -44.015104),
+        #                       (-19.836548, -44.008020),
+        #                       (-19.919213, -43.992603),
+        #                       (-19.935340, -43.949120),
+        #                       (-19.916969, -43.909915)]
+
+        #Scale start and goal to 0-1 range
+        self.start = self.realToPorcent(self.start_real,self.region_real)
+        self.goal = self.realToPorcent(self.goal_real,self.region_real)
+        self.region = [(0, 0),(1, 0),(1, 1),(0, 1)]
+
+        #Scale obstacle to 0-1 range
+        self.obstacle = []
+        for obs in self.obstacle_real:
+            aux = []
+            for point in obs[0]:
+                aux.append(self.realToPorcent(point,self.region_real))
+            self.obstacle.append((aux,obs[1],obs[2],obs[3]))
+
+        #scale vertiports location
+        #self.vertiports = []
+        #for vertiport in self.vertiports_real:
+        #    self.vertiports.append(self.realToPorcent(vertiport,self.region_real))
+
+        #Parametros para criação do mapa
+        self.time = 24
+        self.nrows = 150
+        self.ncols = 150
+        self.mapgen = MapGen(self.nrows, self.ncols,self.time)
+        self.mapgen.createScenarioFour()
         pass
+
+    def Scenario_Five(self):
+        '''
+        Quarto cenario:
+            Objetivo:
+                -   Ir da EE-UFMG ate a Praça da Liberdade evitando as geofence out, passando pelas regiões com 
+                menor densidade populacional (safety) e evitando regioes com condições meteorologicas severas
+            Otimização em relação a:
+                -   Menor Caminho
+                -   Geofence Out para os obstaculos definidos no inicio
+                -   Densidade Populacional obtida na imagem do IBGE
+                -   Condições meteorologicas
+        '''
+        #Escola de Eng
+        self.start_real = (-19.869245, -43.963622,1) 
+        #Praca da liberdade
+        self.goal_real = (-19.931071, -43.937778,1)
+
+        #test
+        self.start_real = (-19.836548, -44.008020)
+        self.goal_real = (-19.916969, -43.909915)
+
+
+        #Região de Voo
+        #self.region_real = [(-19.849635, -44.014423),(-19.849635, -43.900210),
+        #                    (-19.934877, -43.900210),(-19.934877, -44.014423)]
+        self.region_real = [(-19.829752116279057, -44.02262249999998),
+                            (-19.829752116279057, -43.90054215000001),
+                            (-19.943540209302327, -43.90054215000001),
+                            (-19.943540209302327, -44.02262249999998)]
+        
+        #Geração dos Obstaculos
+        self.obstacle_real = self.generateObstacle()
+
+        #Geração dos vertiports
+        #self.radius = 0.23
+        #self.vertiports_real = [(-19.887738, -44.015104),
+        #                       (-19.836548, -44.008020),
+        #                       (-19.919213, -43.992603),
+        #                       (-19.935340, -43.949120),
+        #                       (-19.916969, -43.909915)]
+
+        #Scale start and goal to 0-1 range
+        self.start = self.realToPorcent(self.start_real,self.region_real)
+        self.goal = self.realToPorcent(self.goal_real,self.region_real)
+        self.region = [(0, 0),(1, 0),(1, 1),(0, 1)]
+
+        #Scale obstacle to 0-1 range
+        self.obstacle = []
+        for obs in self.obstacle_real:
+            aux = []
+            for point in obs[0]:
+                aux.append(self.realToPorcent(point,self.region_real))
+            self.obstacle.append((aux,obs[1],obs[2],obs[3]))
+
+        #scale vertiports location
+        #self.vertiports = []
+        #for vertiport in self.vertiports_real:
+        #    self.vertiports.append(self.realToPorcent(vertiport,self.region_real))
+
+        #Parametros para criação do mapa
+        self.time = 24
+        self.nrows = 150
+        self.ncols = 150
+        self.mapgen = MapGen(self.nrows, self.ncols,self.time)
+        self.mapgen.createScenarioFive()
+        pass
+
 
 
 if __name__ == "__main__":

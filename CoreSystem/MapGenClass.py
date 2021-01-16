@@ -16,6 +16,7 @@ class MapGen():
         self.z = []
         self.z_time = []
         self.obs_time = []
+        self.verti_perimeters = []
 
     def create(self):
 
@@ -141,7 +142,8 @@ class MapGen():
         image_resized = resize(original, (nrows+1,ncols+1),anti_aliasing=True)
         image_rotate = rotate(image_resized,180)
         final_image = image_rotate[:,::-1]
-        final_image = np.multiply(final_image, np.where(final_image >= 0.1, 110, 1))        
+        final_image = np.multiply(final_image, np.where(final_image >= 0.1, 110, 1))
+        final_image = final_image + 0.1        
 
         for t in range(self.time):
             self.z_time.append(final_image)
@@ -161,6 +163,8 @@ class MapGen():
         from skimage import io
         from skimage.util import invert
         from skimage.transform import rotate, resize
+        from skimage.draw import disk
+        from skimage.draw import circle_perimeter
     
         nrows = self.nrows
         ncols = self.ncols
@@ -174,8 +178,17 @@ class MapGen():
         final_image = image_rotate[:,::-1]
         final_image = np.multiply(final_image, np.where(final_image >= 0.1, 110, 1))
 
+        self.vertiports = vertiports
         vertiports_map = np.zeros((nrows+1, ncols+1), dtype=np.uint8)
         for vertiport in vertiports:
+            #Obtem os dados de perimetros para cada vertice
+            xp,yp = circle_perimeter(int(vertiport[1]*nrows),int(vertiport[0]*nrows),int(radius*nrows))
+            x_del = np.argwhere( (xp <= 0) | (xp >= nrows) )
+            y_del = np.argwhere( (yp <= 0) | (yp >= ncols) )
+            xp = np.delete(xp, np.concatenate((x_del, y_del), axis=0))/nrows
+            yp = np.delete(yp, np.concatenate((x_del, y_del), axis=0))/nrows
+            self.verti_perimeters.append([xp,yp])
+            #Obtem a região dentro do circulo de perimetro
             xx,yy = disk((vertiport[1]*nrows,vertiport[0]*nrows),radius*nrows)
             x_del = np.argwhere( (xx <= 0) | (xx >= nrows) )
             y_del = np.argwhere( (yy <= 0) | (yy >= ncols) )
@@ -185,6 +198,7 @@ class MapGen():
          
         mask = vertiports_map < 1
         mapimage = final_image*vertiports_map + mask*100
+        mapimage = mapimage + 0.1
 
         for t in range(self.time):
             self.z_time.append(mapimage)
@@ -193,6 +207,106 @@ class MapGen():
         self.z = self.z_time[0]
         self.y = y
         self.x = x
+
+    def createScenarioFour(self):
+        '''
+        Map of Scenario Four:
+            - Use a meteorological data as cost
+        '''
+        import os
+        from skimage import io
+        from skimage.util import crop
+        from skimage.util import invert
+        from skimage.color import rgb2gray
+        from skimage.transform import rotate, resize
+    
+        nrows = self.nrows
+        ncols = self.ncols
+        delta_d = 1/nrows
+        x = np.arange(ncols+1)*delta_d
+        y = np.arange(nrows+1)*delta_d
+
+        # Dados do radar meteorologico de Gama/DF (5 elemento de retorno) obtidos na redemet
+        # (result = redemet.get_produto_radar(tipo='maxcappi',area='tm',data='2021011414',anima=5))
+        mypath = '/home/josuehfa/System/CoreSystem/MeteorologicalData/'
+        (_, _, filenames) = next(os.walk(mypath))
+        filenames = sorted(filenames)
+        time = len(filenames)
+
+        z_time = []
+        for t in range(self.time):
+
+            original = io.imread(os.path.join(mypath, filenames[t]))
+            image_resized = rgb2gray(resize(original, (2*nrows+1,2*ncols+1),anti_aliasing=True))
+            image_croped = crop(image_resized, ((nrows/2, nrows/2), (nrows/2, nrows/2)), copy=False)
+            image_rotate = rotate(image_croped,180)
+            final_image = image_rotate[:,::-1]
+            final_image = np.multiply(final_image, np.where(final_image >= 0.1, 110, 1))
+            self.z_time.append(final_image)
+        
+
+        self.obs_time = []
+        self.z = self.z_time[0]
+        self.y = y
+        self.x = x
+
+    def createScenarioFive(self):
+        '''
+        Map of Scenario Five:
+            - Use a image to create a nrow x ncol matrix with values of populational density of Belo Horizonte.
+            - Use a meteorological data as cost
+        '''
+        import os
+        from skimage import io
+        from skimage.util import crop
+        from skimage.util import invert
+        from skimage.color import rgb2gray
+        from skimage.transform import rotate, resize
+    
+        nrows = self.nrows
+        ncols = self.ncols
+        delta_d = 1/nrows
+        x = np.arange(ncols+1)*delta_d
+        y = np.arange(nrows+1)*delta_d
+
+
+        # Dados do radar meteorologico de Gama/DF (5 elemento de retorno) obtidos na redemet
+        # (result = redemet.get_produto_radar(tipo='maxcappi',area='tm',data='2021011414',anima=5))
+        mypath = '/home/josuehfa/System/CoreSystem/MeteorologicalData/'
+        (_, _, filenames) = next(os.walk(mypath))
+        filenames = sorted(filenames)
+        time = len(filenames)
+
+        z_time = []
+        for t in range(self.time):
+
+            original_met = io.imread(os.path.join(mypath, filenames[t]))
+            image_resized_met = rgb2gray(resize(original_met, (2*nrows+1,2*ncols+1),anti_aliasing=True))
+            image_croped_met = crop(image_resized_met, ((nrows/2, nrows/2), (nrows/2, nrows/2)), copy=False)
+            image_rotate_met = rotate(image_croped_met,180)
+            final_image_met = image_rotate_met[:,::-1]
+            final_image_met = np.multiply(final_image_met, np.where(final_image_met >= 0.1, 110, 1))
+
+            original_pop = io.imread('/home/josuehfa/System/CoreSystem/popCalculated.png')
+            image_resized_pop = resize(original_pop, (nrows+1,ncols+1),anti_aliasing=True)
+            image_rotate_pop = rotate(image_resized_pop,180)
+            final_image_pop = image_rotate_pop[:,::-1]
+            final_image_pop = np.multiply(final_image_pop, np.where(final_image_pop >= 0.1, 110, 1))
+
+            final_image = 1.4*final_image_met + final_image_pop
+            final_image = final_image + 0.1       
+
+
+
+            self.z_time.append(final_image)
+        
+
+        self.obs_time = []
+        self.z = self.z_time[0]
+        self.y = y
+        self.x = x
+
+
 
 
     def createFromMap(self):
@@ -239,7 +353,7 @@ class MapGen():
     def plot_map(self, t, axis):
         #Obstacle
         aux_im = []
-        aux_im.append(axis.pcolormesh(self.x, self.y, self.z_time[t]*0.01, cmap='RdBu', shading='nearest', vmin=-5, vmax=5))
+        aux_im.append(axis.pcolormesh(self.x, self.y, self.z_time[t]*0.01, cmap='RdBu', shading='nearest'))
         if self.obs_time != [] :
             for idx, polygon in enumerate(self.obs_time[t]):
                 lat,lon = zip(*polygon[0])
@@ -271,17 +385,18 @@ if __name__ == "__main__":
     radius = 0.2
     mapgen = MapGen(nrows, ncols,time)
     #mapgen.create()
-    mapgen.createScenarioThree(vertiports,radius)
+    #mapgen.createScenarioThree(vertiports,radius)
     #mapgen.createScenarioTwo()
     #mapgen.createEmptyMap()
     #mapgen.createFromMap()
     #mapgen.plot_map(axis)
+    mapgen.createScenarioFive()
     
     
     for t in range(time):
         #Obstacle
         aux_im = []
-        aux_im.append(axis.pcolormesh(mapgen.x, mapgen.y, mapgen.z_time[t]*delta_d, cmap='RdBu', shading='nearest', vmin=-5, vmax=5))
+        aux_im.append(axis.pcolormesh(mapgen.x, mapgen.y, mapgen.z_time[t]*delta_d, cmap='rainbow', shading='nearest'))
         if mapgen.obs_time != [] :
             for idx, polygon in enumerate(mapgen.obs_time[t]):
                 lat,lon = zip(*polygon[0])

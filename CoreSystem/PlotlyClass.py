@@ -1,13 +1,16 @@
+import plotly
 import numpy as np
 import pandas as pd
-import plotly
 import plotly.express as px
+from numpy import pi, sin, cos
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from skimage.draw import ellipse 
 from skimage.draw import ellipse_perimeter
 from skimage.draw import disk
 from MapGenClass import *
+
+from ScenarioClass import *
 class PlotlyResult():
 #Class to create plots using Plotly Library
 
@@ -283,7 +286,7 @@ class PlotlyResult():
         #fig.show()
         print()
 
-    def animedPlot(self, solution, time_res, costmap, start, goal, region, obstacle, filename):
+    def animedPlot(self, solution, time_res, costmap, start, goal, region, obstacle,scenario, filename):
         #colorscale to be used in the contour plot
         colorscale=[[0, '#ffffff'],
                     [0.25, '#a0ff7d'],
@@ -343,8 +346,10 @@ class PlotlyResult():
         #4
         #Solution trace for contour
         fig.append_trace(go.Scatter(
-            x = solution['lon'], 
-            y = solution['lat'],
+            #x = solution['lon'], 
+            #y = solution['lat'],
+            x = [], 
+            y = [],
             mode='markers+lines',
             name='Solution Path',
             marker=dict(size=5, color='red')
@@ -387,6 +392,49 @@ class PlotlyResult():
                     fill = "toself",
                     name=polygon[3],
                     marker = { 'size': 5, 'color': "rgba(255, 0, 0, 0)" }),row=1,col=1)
+        
+        #Cria o perimetro ao redor dos vertiports
+        if costmap.verti_perimeters != []:
+            vertiport_lat, vertiport_lon = zip(*scenario.vertiports_real)
+            fig.append_trace(go.Scattermapbox(
+                    lon = vertiport_lon, 
+                    lat = vertiport_lat,
+                    mode='markers',
+                    name='Vertiport',
+                    marker=dict(size=5, color='yellow')
+                    ),row=1,col=1)
+            fig.append_trace(go.Scatter(
+                    x = vertiport_lon, 
+                    y = vertiport_lat,
+                    mode='markers',
+                    name='Vertiports',
+                    marker=dict(size=5, color='yellow')
+                    ),row=1,col=2)
+            verti_r_lat = []
+            verti_r_lon = []
+            for idx, verti_region in enumerate(costmap.verti_perimeters):
+                r_lon = verti_region[1]*scenario.lon_range + min(scenario.lon_region)
+                r_lat = verti_region[0]*scenario.lat_range + min(scenario.lat_region)
+
+                verti_r_lon.extend(r_lon)
+                verti_r_lat.extend(r_lat)
+            fig.append_trace(go.Scattermapbox(
+                mode = "markers",
+                lon = verti_r_lon,
+                lat = verti_r_lat,
+                marker = {'size':5,'color':"green"},
+                name='Vertiport Region'
+                ),row=1,col=1)
+            fig.append_trace(go.Scatter(
+                x = verti_r_lon, 
+                y = verti_r_lat,
+                mode='markers',
+                name='Vertiport Region',
+                marker=dict(size=5, color='green')
+                ),row=1,col=2)
+                
+                
+                
 
         #Atualiza o layout
         token = 'pk.eyJ1Ijoiam9zdWVoZmEiLCJhIjoiY2tldnNnODB3MDBtdDJzbXUxMXowMTY5MyJ9.Vwj9BTqB1z9RLKlyh70RHw'  
@@ -411,10 +459,10 @@ class PlotlyResult():
                     dict(label="Play",
                         method="animate",
                         args=[[None], 
-                            dict(frame= { "duration": 50},
+                            dict(frame= { "duration": 100},
                                 fromcurrent= True,
                                 mode='immediate', 
-                                transition= {"duration":10, "easing": "linear"}
+                                transition= {"duration":0, "easing": "linear"}
                                 )]),
                     dict(label='Pause',
                         method='animate',
@@ -433,9 +481,9 @@ class PlotlyResult():
             #                           lat=solution['lat'][:idx+1], 
             #                           lon=solution['lon'][:idx+1],mode='markers+lines')],traces=[0]))
              
-            #frames.append(go.Frame(data=[go.Scatter(
-            #                           x=solution['lon'][:idx], 
-            #                           y=solution['lat'][:idx],mode='markers+lines')],traces=[4]))
+            frames.append(go.Frame(data=[go.Scatter(
+                                       x=solution['lon'][:idx], 
+                                       y=solution['lat'][:idx],mode='markers+lines')],traces=[4]))
             frames.append(go.Frame(data=[go.Contour(x=costmap_x, y=costmap_y, z=costmap.z_time[t], line_smoothing=0, 
                                     colorscale=colorscale,
                                     name='Cost Time: '+str(t),
@@ -556,6 +604,8 @@ if __name__ == "__main__":
 
     plotSol = PlotlyResult('','','')
 
+    scenario = ScenarioClass('THREE')
+
     time = 1
     nrows = 200
     ncols = 200
@@ -564,7 +614,7 @@ if __name__ == "__main__":
     mapgen = MapGen(nrows, ncols,time)
     #mapgen.create()
     mapgen.createScenarioThree(vertiports,radius)
-    plotSol.animedPlot(final_solution, time_res, mapgen, start_real, goal_real, region_real,obstacle,'test.html')
+    plotSol.animedPlot(final_solution, time_res, scenario.mapgen, scenario.start_real, scenario.goal_real, scenario.region_real, scenario.obstacle, scenario,'test.html')
 
 
     #start =(0.1,0.1,1) 

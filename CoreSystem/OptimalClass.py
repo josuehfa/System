@@ -501,7 +501,7 @@ if __name__ == "__main__":
     start_time = tm.time()
 
 
-    scenario = ScenarioClass('THREE')
+    scenario = ScenarioClass('FIVE')
 
     dimension = '2D'
     planner = 'RRTstar'
@@ -541,7 +541,7 @@ if __name__ == "__main__":
         if len(plans) == 0:
             for idx, alg in enumerate(['RRTstar']):
                 plan_aux.append(OptimalPlanning(scenario.start, scenario.goal, scenario.region, scenario.obstacle, planner, dimension, scenario.mapgen.z_time[round(t)]))
-                result = plan_aux[idx].plan(10, alg, 'WeightedLengthAndClearanceCombo',delta_d)
+                result = plan_aux[idx].plan(5, alg, 'WeightedLengthAndClearanceCombo',delta_d)
                 if plan_aux[idx].solution != []:
                     test.append(plan_aux[idx].plotOptimal(delta_d,axis))
                     cost_aut.append(plan_aux[idx].solution[0][3])
@@ -565,8 +565,8 @@ if __name__ == "__main__":
 
                 last_t = round(t)
                 t = t + 0.1
-                if t >= time-1:
-                    t = time-1
+                if t >= scenario.time-1:
+                    t = scenario.time-1
         
 
         else:
@@ -621,8 +621,8 @@ if __name__ == "__main__":
                         
                         last_t = round(t)
                         t = t + 0.1
-                        if t >= time-1:
-                            t = time-1
+                        if t >= scenario.time-1:
+                            t = scenario.time-1
                         
                         tried = 0
                         pnt = 1
@@ -644,8 +644,8 @@ if __name__ == "__main__":
                         
                         last_t = round(t)
                         t = t + 0.1
-                        if t >= time-1:
-                            t = time-1
+                        if t >= scenario.time-1:
+                            t = scenario.time-1
                         
                         tried = 0
                         pnt = 1
@@ -672,8 +672,8 @@ if __name__ == "__main__":
                     
                     last_t = round(t)
                     t = t + 0.1
-                    if t >= time-1:
-                        t = time-1
+                    if t >= scenario.time-1:
+                        t = scenario.time-1
             
                 
             else:
@@ -730,7 +730,7 @@ if __name__ == "__main__":
 
 
     final_solution = {"lon":path_x,"lat":path_y}
-    plotSol.animedPlot(final_solution, time_res, scenario.mapgen, scenario.start_real, scenario.goal_real, scenario.region_real, scenario.obstacle_real,'path.html')
+    plotSol.animedPlot(final_solution, time_res, scenario.mapgen, scenario.start_real, scenario.goal_real, scenario.region_real, scenario.obstacle_real,scenario,'path.html')
 
     print(str(tm.time() - start_time) + ' seconds')
 
