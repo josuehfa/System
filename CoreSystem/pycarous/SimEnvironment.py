@@ -242,7 +242,7 @@ class SimEnvironment:
 
                 #Test
                 if round(self.current_time,1) == 160.0:
-                    fp = [[37.108177, -76.389207, 5.0, 1.0, [0, 0, 0], [0.0, 0, 0]]]
+                    fp = [[37.102577,-76.387807, 5.0, 1.0, [0, 0, 0], [0.0, 0, 0]]]
                     ic.InputFlightplan(fp,False,False)
 
                 if ic.CheckMissionComplete():
