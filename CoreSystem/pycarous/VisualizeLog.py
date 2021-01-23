@@ -50,7 +50,7 @@ if __name__ == "__main__":
             pb.localPlans = pb.ownshipLog['localPlans']
             pb.localFences = pb.ownshipLog['localFences']
             pb.params = data['parameters']
-            pb.daa_radius = pb.params['DET_1_WCV_DTHR']*0.3048
+            pb.daa_radius = pb.params['DET_1_WCV_DTHR']*0.3048*10
             pb.localMergeFixes = data['mergefixes']
             pbs.append(pb)
             _xmin = np.min(np.array(pb.ownshipLog['positionNED'])[:,1])

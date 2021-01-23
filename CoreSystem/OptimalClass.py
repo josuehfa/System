@@ -30,7 +30,6 @@ from ScenarioClass import *
 from matplotlib import pyplot as plt 
 import numpy as np 
 from matplotlib.animation import FuncAnimation 
-import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 from matplotlib import pyplot
@@ -428,11 +427,7 @@ def PlanningStatus(scenario,plans):
 
 if __name__ == "__main__":
 
-<<<<<<< HEAD
     start_time = tm.time()
-=======
-    scenario = ScenarioClass('FIVE')
->>>>>>> 732c80dff2a0a49a0e71bca6faa8bc387b2461be
 
     scenario = ScenarioClass('FOUR')
     dimension = '2D'
@@ -533,10 +528,6 @@ if __name__ == "__main__":
                         t = t + 0.1
                         if t >= scenario.time-1:
                             t = scenario.time-1
-<<<<<<< HEAD
-=======
-                        
->>>>>>> 732c80dff2a0a49a0e71bca6faa8bc387b2461be
                         tried = 0
                         pnt = 1
 
@@ -627,13 +618,9 @@ if __name__ == "__main__":
 
 
     final_solution = {"lon":path_x,"lat":path_y}
-<<<<<<< HEAD
 
 
     plotSol.animedPlot(final_solution, time_res, scenario.mapgen, scenario.start_real, scenario.goal_real, scenario.region_real, scenario.obstacle_real,scenario,'CoreSystem/Results/path.html')
-=======
-    plotSol.animedPlot(final_solution, time_res, scenario.mapgen, scenario.start_real, scenario.goal_real, scenario.region_real, scenario.obstacle_real,scenario,'path.html')
->>>>>>> 732c80dff2a0a49a0e71bca6faa8bc387b2461be
 
     print(str(tm.time() - start_time) + ' seconds')
 

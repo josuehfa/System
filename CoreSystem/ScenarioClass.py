@@ -94,13 +94,13 @@ class ScenarioClass():
                 -   Geofence Out para os obstaculos definidos no inicio
         '''
         #Escola de Eng
-        self.start_real = (-19.869245, -43.963622,1) 
+        self.start_real = (-19.869245, -43.963622,0) 
         #Praca da liberdade
-        self.goal_real = (-19.931071, -43.937778,1)
+        self.goal_real = (-19.931071, -43.937778,0)
 
         #test
-        self.start_real = (-19.836548, -44.008020)
-        self.goal_real = (-19.916969, -43.909915)
+        self.start_real = (-19.836548, -44.008020,0)
+        self.goal_real = (-19.916969, -43.909915,0)
 
         #Região de Voo
         self.region_real = [(-19.829752116279057, -44.02262249999998),
@@ -142,13 +142,13 @@ class ScenarioClass():
                 -   Densidade Populacional obtida na imagem do IBGE
         '''
         #Escola de Eng
-        self.start_real = (-19.869245, -43.963622,1) 
+        self.start_real = (-19.869245, -43.963622,0) 
         #Praca da liberdade
-        self.goal_real = (-19.931071, -43.937778,1)
+        self.goal_real = (-19.931071, -43.937778,0)
 
         #test
-        self.start_real = (-19.836548, -44.008020)
-        self.goal_real = (-19.916969, -43.909915)
+        self.start_real = (-19.836548, -44.008020,0)
+        self.goal_real = (-19.916969, -43.909915,0)
 
 
         #Região de Voo
@@ -193,13 +193,13 @@ class ScenarioClass():
                 -   Densidade Populacional obtida na imagem do IBGE
         '''
         #Escola de Eng
-        self.start_real = (-19.869245, -43.963622,1) 
+        self.start_real = (-19.869245, -43.963622,0) 
         #Praca da liberdade
-        self.goal_real = (-19.931071, -43.937778,1)
+        self.goal_real = (-19.931071, -43.937778,0)
 
         #test
-        self.start_real = (-19.836548, -44.008020)
-        self.goal_real = (-19.916969, -43.909915)
+        self.start_real = (-19.836548, -44.008020,0)
+        self.goal_real = (-19.916969, -43.909915,0)
 
 
         #Região de Voo
@@ -257,13 +257,13 @@ class ScenarioClass():
                 -   Condições meteorologicas
         '''
         #Escola de Eng
-        self.start_real = (-19.869245, -43.963622,1) 
+        self.start_real = (-19.869245, -43.963622,0) 
         #Praca da liberdade
-        self.goal_real = (-19.931071, -43.937778,1)
+        self.goal_real = (-19.931071, -43.937778,0)
 
         #test
-        self.start_real = (-19.836548, -44.008020)
-        self.goal_real = (-19.916969, -43.909915)
+        self.start_real = (-19.836548, -44.008020,0)
+        self.goal_real = (-19.916969, -43.909915,0)
 
 
         #Região de Voo
@@ -324,13 +324,13 @@ class ScenarioClass():
                 -   Condições meteorologicas
         '''
         #Escola de Eng
-        self.start_real = (-19.869245, -43.963622,1) 
+        self.start_real = (-19.869245, -43.963622,0) 
         #Praca da liberdade
-        self.goal_real = (-19.931071, -43.937778,1)
+        self.goal_real = (-19.931071, -43.937778,0)
 
         #test
-        self.start_real = (-19.836548, -44.008020)
-        self.goal_real = (-19.916969, -43.909915)
+        self.start_real = (-19.836548, -44.008020,0)
+        self.goal_real = (-19.916969, -43.909915,0)
 
 
         #Região de Voo

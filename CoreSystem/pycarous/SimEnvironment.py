@@ -241,9 +241,9 @@ class SimEnvironment:
                 ic.InputWind(self.windFrom, self.windSpeed)
 
                 #Test
-                if round(self.current_time,1) == 160.0:
-                    fp = [[37.102577,-76.387807, 5.0, 1.0, [0, 0, 0], [0.0, 0, 0]]]
-                    ic.InputFlightplan(fp,False,False)
+                #if round(self.current_time,1) == 160.0:
+                #    fp = [[37.102577,-76.387807, 5.0, 1.0, [0, 0, 0], [0.0, 0, 0]]]
+                #    ic.InputFlightplan(fp,False,False)
 
                 if ic.CheckMissionComplete():
                     ic.Terminate()
@@ -280,7 +280,85 @@ class SimEnvironment:
             simComplete = all(ic.missionComplete for ic in self.icInstances)
         self.ConvertLogsToLocalCoordinates()
 
-    def ConvertLogsToLocalCoordinates(self):
+    def RunSimulationOptimal(self,scenario, plans):
+        """ Run simulation with optimal planning until mission complete or time limit reached """
+        simComplete = False
+        if self.mergeFixFile is not None:
+            for ic in self.icInstances:
+                ic.InputMergeFixes(self.mergeFixFile)
+        if self.fasttime:
+            t0 = 0
+        else:
+            t0 = time.time()
+        self.current_time = t0
+
+        while not simComplete:
+            status = False
+
+            # Advance time
+            duration = self.current_time - t0
+            if self.fasttime:
+                self.count += 1
+                self.current_time += self.dT
+                self.RunSimulatedTraffic()
+                if self.verbose > 0:
+                    print("Sim Duration: %.1fs" % (duration), end="\r")
+            else:
+                time_now = time.time()
+                if time_now - self.current_time >= self.dT:
+                    dT = time_now - self.current_time
+                    self.current_time = time_now
+                    self.count += 1
+                    self.RunSimulatedTraffic(dT=dT)
+                    if self.verbose > 0:
+                        print("Sim Duration: %.1fs" % (duration), end="\r")
+            self.windFrom, self.windSpeed = self.GetWind()
+
+            # Update Icarous instances
+            for i, ic in enumerate(self.icInstances):
+                ic.InputWind(self.windFrom, self.windSpeed)
+
+                #Test
+                #if round(self.current_time,1) == 160.0:
+                #    fp = [[37.102577,-76.387807, 5.0, 1.0, [0, 0, 0], [0.0, 0, 0]]]
+                #    ic.InputFlightplan(fp,False,False)
+
+                if ic.CheckMissionComplete():
+                    ic.Terminate()
+
+                # Send mission start command
+                if not ic.missionStarted and duration >= self.icStartDelay[i]:
+                    ic.StartMission()
+                    if self.verbose > 0:
+                        print("%s : Start command sent at %f" %
+                              (ic.callsign, self.current_time))
+
+                # Run Icarous
+                status |= ic.Run()
+
+                # Check if time limit has been met
+                if ic.missionStarted and not ic.missionComplete:
+                    if duration >= self.icTimeLimit[i]:
+                        ic.missionComplete = True
+                        ic.Terminate()
+                        if self.verbose > 0:
+                            print("%s : Time limit reached at %f" %
+                                  (ic.callsign, self.current_time))
+
+            if self.time_limit is not None and duration >= self.time_limit:
+                for ic in self.icInstances:
+                    ic.missionComplete = True
+                    ic.Terminate()
+                    if self.verbose > 0:
+                        print("Time limit reached at %f" % self.current_time)
+            
+            # Exchange all V2V data between vehicles in the environment
+            self.ExchangeV2VData()
+
+            simComplete = all(ic.missionComplete for ic in self.icInstances)
+        self.ConvertLogsToLocalCoordinates()
+
+    def ConvertLogsToLocalCoordinates(self):    
         # Convert flightplans from all instances to a common reference frame
         to_local = self.icInstances[0].ConvertToLocalCoordinates
         for i, ic in enumerate(self.icInstances):
