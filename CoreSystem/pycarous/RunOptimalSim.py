@@ -12,11 +12,18 @@ import matplotlib.pyplot as plt
 import time
 import numpy as np
 import argparse
+from euclid import *
+from geographiclib.geodesic import Geodesic
 
 def checkDAAType(value):
     if value.upper() not in ['DAIDALUS','ACAS']:
         raise argparse.ArgumentTypeError("%s is an invalid DAA option" % value)
     return value.upper()
+
+
+def get_bearing(lat_lon1, lat_lon2):
+    brng = Geodesic.WGS84.Inverse(lat_lon1[0], lat_lon1[1], lat_lon2[0], lat_lon2[1])['azi1']
+    return brng
 
 parser = argparse.ArgumentParser(description=\
 " Run a fast time simulation of Icarous with the provided inputs.\n\
@@ -31,7 +38,7 @@ parser.add_argument("-f", "--flightplan", type=str, default='/home/josuehfa/Syst
                    help='flightplan file. default: data/flightplan.txt')
 parser.add_argument("-t", "--traffic", type=str, default='/home/josuehfa/System/CoreSystem/pycarous/data/traffic.txt',
                    help='File containing traffic initial condition. See data/traffic.txt for example')
-parser.add_argument("-l", "--tlimit", type=float, default=1000,
+parser.add_argument("-l", "--tlimit", type=float, default=10000,
                    help='set max sim time limit (in seconds). default 300 s')
 parser.add_argument("-p", "--params", type=str, default='/home/josuehfa/System/CoreSystem/pycarous/data/icarous_default.parm',
                    help='icarous parameter file. default: data/icarous_default.parm')
@@ -65,6 +72,7 @@ scenario = ScenarioClass('FOUR')
 dimension = '2D'
 planner = 'RRTstar'
 processing_time = 1
+speed_aircraft = 4.5
 
 plans = []
 fig = plt.figure()
@@ -75,6 +83,7 @@ path_x = []
 path_y = []
 plan_aux = []
 cost_aut = []
+time_res = []
 
 for idx, alg in enumerate(['RRTstar']):
     plan_aux.append(OptimalPlanning(scenario.start, scenario.goal, scenario.region, scenario.obstacle, planner, dimension, scenario.mapgen.z_time[round(0)]))
@@ -94,17 +103,31 @@ if plan_aux[lower_cost].solution != []:
     path_y.append(plans[-1].solution[0][1][0])
     ims.append(plotResult(plans[-1],axis, scenario, path_x, path_y, 0))
 
+p1 = Vector2(plans[-1].solutionSampled[0][0][0], plans[-1].solutionSampled[0][1][0])
+p2 = Vector2(plans[-1].solutionSampled[0][0][1], plans[-1].solutionSampled[0][1][1])
+vector = p2-p1
+vector = vector.normalize()
+next_point = p1 + vector*delta_d
+
 fp_start = []
-for idx in range(len(plans[-1].solution[0][0])):
-    lat = plans[-1].solution[0][1][idx]*scenario.lat_range + min(scenario.lat_region)
-    lon = plans[-1].solution[0][0][idx]*scenario.lon_range + min(scenario.lon_region)
+#Startup Waypoint
+fp_start.append([scenario.start_real[0], scenario.start_real[1], 0.0, speed_aircraft, [0, 0, 0], [0.0, 0, 0]])
+#First Calculeted Waypoint
+lat = next_point[1]*scenario.lat_range + min(scenario.lat_region)
+lon = next_point[0]*scenario.lon_range + min(scenario.lon_region)
+fp_start.append([lat, lon, 5.0, speed_aircraft, [0, 0, 0], [0.0, 0, 0]])
+
+#fp_start = []
+#for idx in range(len(plans[-1].solution[0][0])):
+#    lat = plans[-1].solution[0][1][idx]*scenario.lat_range + min(scenario.lat_region)
+#    lon = plans[-1].solution[0][0][idx]*scenario.lon_range + min(scenario.lon_region)
     
     #[lat, lon, alt, wp_metric, tcp, tcp_value]
     #fp = [[37.102177, -76.387207, 5.0, 1.0, [0, 0, 0], [0.0, 0, 0]]]
-    if idx == 0 or idx == len(plans[-1].solution[0][0])-1:
-        fp_start.append([lat, lon, 0.0, 4.5, [0, 0, 0], [0.0, 0, 0]])
-    else:
-        fp_start.append([lat, lon, 5.0, 4.5, [0, 0, 0], [0.0, 0, 0]])
+#    if idx == 0 or idx == len(plans[-1].solution[0][0])-1:
+#        fp_start.append([lat, lon, 0.0, speed_aircraft, [0, 0, 0], [0.0, 0, 0]])
+#    else:
+#        fp_start.append([lat, lon, 5.0, speed_aircraft, [0, 0, 0], [0.0, 0, 0]])
 
 
 # Initialize simulation environment
@@ -115,9 +138,15 @@ HomePos = list(scenario.start_real)
 
 # Add traffic inputs
 if args.traffic != '':
-    tfinputs = ReadTrafficInput(args.traffic)
-    for tf in tfinputs:
-        sim.AddTraffic(tf[0], fp_start[1][:3], *tf[1:])
+    #tfinputs = ReadTrafficInput(args.traffic)
+    #for tf in tfinputs:
+    #    sim.AddTraffic(tf[0], fp_start[1][:3], *tf[1:])
+    #[id, range [m], bearing [deg], altitude [m], speed [m/s], heading [deg], climb rate [m/s]]
+    idx = 1
+    tfHomePos = fp_start[idx][:3]
+    bearing = get_bearing(fp_start[idx-1][:2],fp_start[idx][:2])
+    tf = [1, 300, bearing, 5, 5, 180+bearing, 0]
+    sim.AddTraffic(tf[0],tfHomePos, *tf[1:])
 
 # Initialize Icarous class
 if args.cfs:
@@ -150,12 +179,22 @@ if args.uncertainty:
     sim.SetPosUncertainty(0.1, 0.1, 0, 0, 0, 0)
 
 # Run the Simulation
-sim.RunSimulationOptimal(scenario, plans)
+sim.RunSimulationOptimal(scenario, plans, path_x, path_y, delta_d, processing_time, planner, dimension, ims, axis, time_res, speed_aircraft)
 
 # Save json log outputs
 sim.WriteLog()
 
 
+fig.clf()
+gc.collect()
+plotSol = PlotlyResult('','','')
+for idx in range(len(path_x)):
+    path_x[idx] = path_x[idx]*scenario.lon_range + min(scenario.lon_region)
+    path_y[idx] = path_y[idx]*scenario.lat_range + min(scenario.lat_region)
+
+
+final_solution = {"lon":path_x,"lat":path_y}
+plotSol.animedPlot(final_solution, time_res, scenario.mapgen, scenario.start_real, scenario.goal_real, scenario.region_real, scenario.obstacle_real,scenario,'/home/josuehfa/System/CoreSystem/Results/path.html')
 
 
 print(str(time.time() - start_time) + ' seconds')

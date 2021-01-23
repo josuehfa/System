@@ -263,7 +263,10 @@ class ScenarioClass():
 
         #test
         self.start_real = (-19.836548, -44.008020,0)
+        #proximo ao sta tereza
         self.goal_real = (-19.916969, -43.909915,0)
+        #proximo a ufmg
+        self.goal_real = (-19.877282, -43.954133,0)
 
 
         #Região de Voo

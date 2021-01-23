@@ -51,7 +51,7 @@ class Guidance():
           self.lib.InitGuidance.restype  = c_void_p
           self.lib.guidSetParams.argtypes = [c_void_p,POINTER(GuidanceParam)]
           self.lib.guidSetAircraftState.argtypes = [c_void_p,c_double*3,c_double*3]
-          self.lib.guidInputFlightplanData.argtypes = [c_void_p,c_char_p,Waypoint*50,c_int,c_double,c_bool,c_double]
+          self.lib.guidInputFlightplanData.argtypes = [c_void_p,c_char_p,Waypoint*500,c_int,c_double,c_bool,c_double]
           self.lib.RunGuidance.argtypes = [c_void_p, c_double]
           self.lib.guidInputVelocityCmd.argtypes = [c_void_p, c_double*3]
           self.lib.guidGetOutput.argtypes = [c_void_p,POINTER(GuidanceOutput)]
@@ -85,7 +85,7 @@ class Guidance():
 
      def InputFlightplanData(self,planID,fp,repair=False,repairTurnRate=0):
           n = len(fp)
-          wparray = Waypoint*50
+          wparray = Waypoint*500
           wpts = wparray()
           for i,wp in enumerate(fp):
                wpts[i] = wp

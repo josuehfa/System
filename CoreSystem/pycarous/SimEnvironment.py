@@ -1,6 +1,7 @@
+import sys, os
 import numpy as np
 import time
-
+from euclid import *
 from vehiclesim import UamVtolSim
 from ichelper import distance, ConvertVnedToTrkGsVs
 from Merger import LogData, MergerData, MAX_NODES
@@ -8,7 +9,11 @@ from Interfaces import V2Vdata
 from communicationmodels import channelmodels as cm
 from communicationmodels import get_propagation_model, get_reception_model
 from communicationmodels import get_transmitter, get_receiver
-
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+from OptimalClass import *
+from MapGenClass import *
+from PlotlyClass import *
+from ScenarioClass import *
 
 class SimEnvironment:
     """ Class to manage pycarous fast time simulations """
@@ -280,7 +285,7 @@ class SimEnvironment:
             simComplete = all(ic.missionComplete for ic in self.icInstances)
         self.ConvertLogsToLocalCoordinates()
 
-    def RunSimulationOptimal(self,scenario, plans):
+    def RunSimulationOptimal(self,scenario, plans, path_x, path_y, delta_d,processing_time, planner, dimension, ims, axis, time_res, speed_aircraft):
         """ Run simulation with optimal planning until mission complete or time limit reached """
         simComplete = False
         if self.mergeFixFile is not None:
@@ -291,6 +296,13 @@ class SimEnvironment:
         else:
             t0 = time.time()
         self.current_time = t0
+
+
+        min_dist = distance(scenario.start_real[0],scenario.start_real[1],scenario.start_real[0]+scenario.lat_range*delta_d,scenario.start_real[1]+scenario.lon_range*delta_d)
+        min_time = min_dist/(speed_aircraft*2)
+        time_ompl = min_time
+        cont = 0
+        run = True
 
         while not simComplete:
             status = False
@@ -318,11 +330,140 @@ class SimEnvironment:
             for i, ic in enumerate(self.icInstances):
                 ic.InputWind(self.windFrom, self.windSpeed)
 
-                #Test
-                #if round(self.current_time,1) == 160.0:
-                #    fp = [[37.102577,-76.387807, 5.0, 1.0, [0, 0, 0], [0.0, 0, 0]]]
-                #    ic.InputFlightplan(fp,False,False)
+                #Time to the last point 
+                if round(self.current_time*1.05,1) == round(ic.localPlans[0][-1][0],1):
+                    tried = 0
+                    max_try = 1
+                    while tried <= max_try:
+                        plan_aux = []
+                        cost_aut = []
+                        if tried <= max_try:
+                            #Linear algegra to return the next point in a line
+                            p1 = Vector2(plans[-1].solutionSampled[0][0][0], plans[-1].solutionSampled[0][1][0])
+                            p2 = Vector2(plans[-1].solutionSampled[0][0][1], plans[-1].solutionSampled[0][1][1])
+                            vector = p2-p1
+                            vector = vector.normalize()
+                            next_point = p1 + vector*delta_d
+                            
+                        else:
+                            p1 = Vector2(plans[-1].solutionSampled[0][0][1], plans[-1].solutionSampled[0][1][1])
+                            p2 = Vector2(plans[-1].solutionSampled[0][0][2], plans[-1].solutionSampled[0][1][2])
+                            vector = p2-p1
+                            vector = vector.normalize()
+                            next_point = p1 + vector*delta_d
+                            
+                        for idx, alg in enumerate(['RRTstar']):
+                            plan_aux.append(OptimalPlanning((next_point[0],next_point[1]), scenario.goal, scenario.region, scenario.obstacle, planner, dimension, scenario.mapgen.z_time[round(cont)]))
+                            result = plan_aux[idx].plan(processing_time+tried, alg, 'WeightedLengthAndClearanceCombo',delta_d)
+                            if plan_aux[idx].solution != []:
+                                cost_aut.append(plan_aux[idx].solution[0][3])
+                            else:
+                                cost_aut.append(np.inf)
+                        lower_cost = cost_aut.index(min(cost_aut))
 
+                        #Se existir solução
+                        if plan_aux[lower_cost].solution != []:
+                            #Se o ultimo costmap é do mesmo periodo que o atual
+                            if time_ompl == time_ompl:
+                                #Tentar encontrar um valor melhor que o ultimo
+                                if plan_aux[lower_cost].solution[0][3] < plans[-1].solution[0][3] * 1.05 and (plan_aux[lower_cost].solution != plans[-1].solution):
+                                    plans.append(plan_aux[lower_cost])
+                                    PlanningStatus(scenario,plans)
+                                    print('Add, Better Solution: ' +  str(time_ompl) + " : " + str(cont) + " : " + str(min_time) + " Pnt: " + str(next_point[0])+','+str(next_point[1]))
+                                    
+                                    path_x.append(plans[-1].solution[0][0][0])
+                                    path_y.append(plans[-1].solution[0][1][0])
+                                    time_res.append(int(round(cont)))
+                                    ims.append(plotResult(plans[-1],axis, scenario, path_x, path_y, round(cont)))
+                                    
+                                    tried = 0
+                                    pnt = 1
+                                    break
+
+                                elif tried >= max_try: 
+                                    plans.append(plan_aux[lower_cost])
+                                    PlanningStatus(scenario,plans)
+                                    print('Add, tried Solution: ' +  str(time_ompl) + " : " + str(cont) + " : " + str(min_time) + " Pnt: " + str(next_point[0])+','+str(next_point[1]))
+                                    
+                                    path_x.append(plans[-1].solution[0][0][0])
+                                    path_y.append(plans[-1].solution[0][1][0])
+                                    time_res.append(int(round(cont)))
+                                    ims.append(plotResult(plans[-1],axis, scenario, path_x, path_y, round(cont)))
+                                    
+                                    tried = 0
+                                    pnt = 1
+                                    break
+                                else:
+                                    print('Tried: '+ str(tried) + " - (" + str(next_point[0])+','+str(next_point[1])+")" )
+                                    if tried >= max_try :
+                                        pnt = pnt +1    
+                                    tried = tried + 1
+
+                            else:
+                                plans.append(plan_aux[lower_cost])
+                                PlanningStatus(scenario,plans)
+                                print('Add, Other time: ' +  str(time_ompl) + " : " + str(cont) + " : " + str(min_time)+ " Pnt: " + str(next_point[0])+','+str(next_point[1]))
+                                
+                                path_x.append(plans[-1].solution[0][0][0])
+                                path_y.append(plans[-1].solution[0][1][0])
+                                time_res.append(int(round(cont)))
+                                ims.append(plotResult(plans[-1],axis, scenario, path_x, path_y, round(cont)))
+
+                                                
+                            
+                        else:
+                            print('Pop Solution - Time: ' +  str(round(t)) + " : " + str(t))
+                            plans.pop()
+                            continue
+                        
+
+                        goal_sampled = (round(scenario.goal[0]*(scenario.mapgen.z.shape[0]-1))*delta_d, round(scenario.goal[1]*(scenario.mapgen.z.shape[0]-1))*delta_d)
+                        if (plans[-1].solutionSampled[0][0][0], plans[-1].solutionSampled[0][1][0]) == goal_sampled:
+                            path_x.append(plans[-1].solution[0][0][0])
+                            path_y.append(plans[-1].solution[0][1][0])
+                            time_res.append(int(round(cont)))
+                            path_x.append(scenario.goal[0])
+                            path_y.append(scenario.goal[1])
+                            time_res.append(int(round(cont)))
+                            run = False
+                            break
+
+                    #Tempo para reprocessar a rota
+                    time_ompl = time_ompl + min_time
+                    cont = cont + 0.1
+                    if cont >= len(scenario.mapgen.z_time)-1:
+                        cont = len(scenario.mapgen.z_time)-1
+
+                    #fp_start = []
+                    #for idx in range(len(plans[-1].solution[0][0])):
+                    #    lat = plans[-1].solution[0][1][idx]*scenario.lat_range + min(scenario.lat_region)
+                    #    lon = plans[-1].solution[0][0][idx]*scenario.lon_range + min(scenario.lon_region)
+                        
+                        #[lat, lon, alt, wp_metric, tcp, tcp_value]
+                        #fp = [[37.102177, -76.387207, 5.0, 1.0, [0, 0, 0], [0.0, 0, 0]]]
+                    #    if idx == 0 or idx == len(plans[-1].solution[0][0])-1:
+                    #        fp_start.append([lat, lon, 0.0, speed_aircraft, [0, 0, 0], [0.0, 0, 0]])
+                    #    else:
+                    #        fp_start.append([lat, lon, 5.0, speed_aircraft, [0, 0, 0], [0.0, 0, 0]])
+
+                    fp_start = []
+                    #First Calculeted Waypoint
+                    p1 = Vector2(plans[-1].solutionSampled[0][0][0], plans[-1].solutionSampled[0][1][0])
+                    p2 = Vector2(plans[-1].solutionSampled[0][0][1], plans[-1].solutionSampled[0][1][1])
+                    vector = p2-p1
+                    vector = vector.normalize()
+                    next_point = p1 + vector*delta_d
+                    lat = next_point[1]*scenario.lat_range + min(scenario.lat_region)
+                    lon = next_point[0]*scenario.lon_range + min(scenario.lon_region)
+                    fp_start.append([lat, lon, 5.0, speed_aircraft, [0, 0, 0], [0.0, 0, 0]])
+
+
+
+                    #Input flightplan
+                    #Use the first plan of OMPL
+                    if run:
+                        ic.InputFlightplan(fp_start[:1],eta=False,repair=False)
+                
                 if ic.CheckMissionComplete():
                     ic.Terminate()
 

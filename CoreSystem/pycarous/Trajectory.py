@@ -38,7 +38,7 @@ class Trajectory():
         self.lib.TrajManager_InputGeofenceData.argtypes = [c_void_p,c_int,c_int,c_int,c_double,c_double,POINTER(c_double*2)]
         self.lib.TrajManager_InputTraffic.argtypes = [c_void_p,c_int,c_double*3,c_double*3,c_double]
         self.lib.TrajManager_InputTraffic.restype = c_int
-        self.lib.TrajManager_InputFlightPlan.argtypes = [c_void_p,c_char_p,Waypoint*50,c_int,c_double,c_bool,c_double]
+        self.lib.TrajManager_InputFlightPlan.argtypes = [c_void_p,c_char_p,Waypoint*500,c_int,c_double,c_bool,c_double]
         self.lib.TrajManager_GetTotalWaypoints.argtypes = [c_void_p,c_char_p]
         self.lib.TrajManager_GetTotalWaypoints.restype = c_int
         self.lib.TrajManager_CombinePlan.argtypes = [c_void_p,c_char_p,c_char_p,c_int]
@@ -88,7 +88,7 @@ class Trajectory():
 
     def InputFlightplanData(self,planID,fp,repair=False,repairTurnRate=0.0):
           n = len(fp)
-          wparray = Waypoint*50
+          wparray = Waypoint*500
           wpts = wparray()
           for i,wp in enumerate(fp):
                wpts[i] = wp
