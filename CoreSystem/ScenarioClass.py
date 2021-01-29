@@ -385,5 +385,5 @@ class ScenarioClass():
 
 if __name__ == "__main__":
 
-    scenario = ScenarioClass('THREE')
+    scenario = ScenarioClass('FOUR')
     pass

@@ -1,7 +1,12 @@
 from ctypes import byref
 import numpy as np
 import time
-
+import sys, os
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+from OptimalClass import *
+from MapGenClass import *
+from PlotlyClass import *
+from ScenarioClass import *
 from Interfaces import CommandTypes, GeofenceConflict
 from Cognition import Cognition, CognitionParams
 from Guidance import Guidance, GuidanceParam, GuidanceMode
@@ -613,8 +618,8 @@ def VisualizeSimData(icList,allplans=False,showtraffic=True,xmin=-100,ymin=-100,
     from Animation import AgentAnimation
     anim= AgentAnimation(xmin,ymin, xmax,ymax,playbkspeed,interval,record,filename)
 
-    vehicleSize1 = np.abs(xmax - xmin)/100
-    vehicleSize2 = np.abs(ymax - ymin)/100
+    vehicleSize1 = np.abs(xmax - xmin)/10000
+    vehicleSize2 = np.abs(ymax - ymin)/10000
     vehicleSize  = np.max([vehicleSize1,vehicleSize2])
     for j,ic in enumerate(icList):
         anim.AddAgent('ownship'+str(j),vehicleSize,'r',ic.ownshipLog,show_circle=True,circle_rad=ic.daa_radius)
@@ -624,6 +629,59 @@ def VisualizeSimData(icList,allplans=False,showtraffic=True,xmin=-100,ymin=-100,
 
             if i > 0 and allplans:
                 anim.AddPath(np.array(pln),'k--')
+        tfids = ic.trafficLog.keys()
+        if showtraffic:
+            for key in tfids:
+                anim.AddAgent('traffic'+str(key),vehicleSize,'b',ic.trafficLog[key])
+        for fence in ic.localFences:
+            fence.append(fence[0])
+            anim.AddFence(np.array(fence),'c-.')
+    for fix in icList[0].localMergeFixes:
+        anim.AddZone(fix[::-1][1:3],icList[0].params['COORD_ZONE'],'r')
+        anim.AddZone(fix[::-1][1:3],icList[0].params['SCHEDULE_ZONE'],'b')
+        anim.AddZone(fix[::-1][1:3],icList[0].params['ENTRY_RADIUS'],'g')
+
+    anim.run()
+
+
+def VisualizeSimDataOptimal(icList,scenario_time, scenario,allplans=True,showtraffic=True,xmin=-100,ymin=-100,xmax=100,ymax=100,playbkspeed=1,interval=30,record=False,filename=""):
+    '''
+    ic: icarous object
+    allplans: True - plot all computed plans, False - plot only the mission plan
+    xmin,ymin : plot axis min values
+    xmax,ymax : plot axis max values
+    interval  : Interval between frames
+    '''
+    if record:
+        import matplotlib; matplotlib.use('Agg')
+    from Animation import AgentAnimation
+    anim = AgentAnimation(xmin,ymin, xmax,ymax,icList[0].ownshipLog,scenario_time,playbkspeed,interval,record,filename)
+
+    #scenario = ScenarioClass(scenario)
+
+    vehicleSize1 = np.abs(xmax - xmin)/3000
+    vehicleSize2 = np.abs(ymax - ymin)/3000
+    vehicleSize  = np.max([vehicleSize1,vehicleSize2])
+    #Tentativa de adicionar o mapa de custos
+    anim.AddCostMap(scenario.mapgen,xmin,xmax,ymin,ymax)
+    anim.AddZoom()
+    anim.AddObstacles(scenario)
+    anim.AddWaypoint()
+    for j,ic in enumerate(icList):
+        anim.AddAgent('ownship'+str(j),vehicleSize,'r',ic.ownshipLog,show_circle=True,circle_rad=ic.daa_radius)
+        #for i,pln in enumerate(ic.localPlans):
+        #    pln_aux = []
+        #    for k, vec in enumerate(pln):
+        #        vec[1] = ic.localCoords[k][0]
+        #        vec[2] = ic.localCoords[k][1]
+        #        pln_aux.append(vec)
+
+        #    if i == 0:
+        #        anim.AddPath(np.array(pln_aux),'k--')
+                
+        #    if i > 0 and allplans:
+        #        anim.AddPath(np.array(pln_aux),'k--')
+        
         tfids = ic.trafficLog.keys()
         if showtraffic:
             for key in tfids:

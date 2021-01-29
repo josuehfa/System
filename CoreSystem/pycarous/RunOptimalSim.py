@@ -68,7 +68,8 @@ if args.cfs:
 
 #OptimalClass Startup
 start_time = time.time()
-scenario = ScenarioClass('FOUR')
+scen_num = 'FOUR'
+scenario = ScenarioClass(scen_num)
 dimension = '2D'
 planner = 'RRTstar'
 processing_time = 1
@@ -181,17 +182,20 @@ if args.uncertainty:
 # Run the Simulation
 sim.RunSimulationOptimal(scenario, plans, path_x, path_y, delta_d, processing_time, planner, dimension, ims, axis, time_res, speed_aircraft)
 
-# Save json log outputs
-sim.WriteLog()
 
-
+localCoords = []
 fig.clf()
 gc.collect()
 plotSol = PlotlyResult('','','')
 for idx in range(len(path_x)):
     path_x[idx] = path_x[idx]*scenario.lon_range + min(scenario.lon_region)
     path_y[idx] = path_y[idx]*scenario.lat_range + min(scenario.lat_region)
+    localCoords.append([path_y[idx],path_x[idx]])
 
+
+
+# Save json log outputs
+sim.WriteLogOptimal(time_res,scen_num,localCoords)
 
 final_solution = {"lon":path_x,"lat":path_y}
 plotSol.animedPlot(final_solution, time_res, scenario.mapgen, scenario.start_real, scenario.goal_real, scenario.region_real, scenario.obstacle_real,scenario,'/home/josuehfa/System/CoreSystem/Results/path.html')

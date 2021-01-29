@@ -412,7 +412,7 @@ class SimEnvironment:
                                                 
                             
                         else:
-                            print('Pop Solution - Time: ' +  str(round(t)) + " : " + str(t))
+                            print('Pop Solution - Time: ' +  str(round(cont)) + " : " + str(cont))
                             plans.pop()
                             continue
                         
@@ -529,3 +529,8 @@ class SimEnvironment:
         """ Write json logs for each icarous instance """
         for ic in self.icInstances:
             ic.WriteLog()
+    
+    def WriteLogOptimal(self,scenario_time,scenario,localCoords):
+        """ Write json logs for each icarous instance """
+        for ic in self.icInstances:
+            ic.WriteLogOptimal(logname="",scenario_time=scenario_time,scenario=scenario,localCoords=localCoords)

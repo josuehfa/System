@@ -73,7 +73,8 @@ class IcarousInterface(abc.ABC):
                            "altbands": [],
                            "vsbands": [],
                            "localPlans": [],
-                           "localFences": []}
+                           "localFences": [],
+                           "localCoords":[]}
         self.trafficLog = {}
         self.logRateHz = logRateHz
         self.minLogInterval = 1/self.logRateHz - 0.01
@@ -294,6 +295,37 @@ class IcarousInterface(abc.ABC):
                     "parameters": self.params,
                     "mergefixes": self.localMergeFixes,
                     "sim_type": self.simType}
+
+        import json
+        with open(logname, 'w') as f:
+            json.dump(log_data, f)
+
+    def WriteLogOptimal(self, logname="",scenario_time=[],scenario='',localCoords=[]):
+        """
+        Save log data to a json file
+        :param logname: name for the log file, default is simlog-[callsign].json
+        """
+
+        self.ownshipLog['localPlans'] = self.localPlans
+        self.ownshipLog['localFences'] = self.localFences
+        self.ownshipLog['localCoords'] = localCoords
+
+        if logname == "":
+            logname = "simlog-%s.json" % self.callsign
+        if self.verbose > 0:
+            print("writing log: %s" % logname)
+        waypoints = [[wp.time,wp.latitude,wp.longitude,wp.altitude,*wp.tcp,*wp.tcpValue]\
+                      for wp in self.flightplan1]
+        log_data = {"ownship": self.ownshipLog,
+                    "traffic": self.trafficLog,
+                    "origin": self.home_pos,
+                    "waypoints": waypoints,
+                    "geofences": self.fenceList,
+                    "parameters": self.params,
+                    "mergefixes": self.localMergeFixes,
+                    "sim_type": self.simType,
+                    "scenario_time":scenario_time,
+                    "scenario":scenario}
 
         import json
         with open(logname, 'w') as f:
