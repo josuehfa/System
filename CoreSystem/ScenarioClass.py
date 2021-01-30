@@ -1,6 +1,7 @@
 import sys
 import numpy as np
 from MapGenClass import *
+from skimage.draw import *
 
 class ScenarioClass():
     def __init__(self, scenario):
@@ -381,7 +382,23 @@ class ScenarioClass():
         self.mapgen.createScenarioFive()
         pass
 
+    def pathCost(self,path_x,path_y,scenrio_time):
+        cost = 0
+        
+        for idx in range(len(scenrio_time)-1):
+            costmap = self.mapgen.z_time[scenrio_time[idx]]
 
+            x1 = round(path_x[idx]*(costmap.shape[0]-1))
+            y1 = round(path_y[idx]*(costmap.shape[1]-1))
+            x2 = round(path_x[idx+1]*(costmap.shape[0]-1))
+            y2 = round(path_y[idx+1]*(costmap.shape[1]-1))
+            xx, yy, val = line_aa(x1, y1, x2, y2)
+
+            for idx in range(len(xx)-1):
+                cost = cost + costmap[xx[idx+1]][yy[idx+1]]*0.1
+        
+        self.pathcost = cost
+        return cost
 
 if __name__ == "__main__":
 

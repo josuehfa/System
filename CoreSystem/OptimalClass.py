@@ -429,7 +429,7 @@ if __name__ == "__main__":
 
     start_time = tm.time()
 
-    scenario = ScenarioClass('FOUR')
+    scenario = ScenarioClass('THREE')
     dimension = '2D'
     planner = 'RRTstar'
 
@@ -609,6 +609,9 @@ if __name__ == "__main__":
         
         
     
+    cost = scenario.pathCost(path_x, path_y, time_res)
+    print('Custo do trajeto: ' + str(cost))
+
     fig.clf()
     gc.collect()
     plotSol = PlotlyResult('','','')
@@ -622,7 +625,7 @@ if __name__ == "__main__":
 
     plotSol.animedPlot(final_solution, time_res, scenario.mapgen, scenario.start_real, scenario.goal_real, scenario.region_real, scenario.obstacle_real,scenario,'CoreSystem/Results/path.html')
 
-    print(str(tm.time() - start_time) + ' seconds')
+    print("Tempo total de processamento: "+ str(tm.time() - start_time) + ' seconds')
 
     from matplotlib import pyplot as plt 
     import numpy as np 
@@ -635,18 +638,14 @@ if __name__ == "__main__":
     im_ani = animation.ArtistAnimation(fig, ims, interval=50, blit=True)
     #anim = FuncAnimation(fig, animate, init_func = init, 
     #                    frames =len(path_y) , interval = 200, blit = True) 
-    
     # Set up formatting for the movie files
     writermp4 = animation.FFMpegWriter(fps=60) 
     im_ani.save('CoreSystem/Results/path.mp4', writer=writermp4)
-
     plt.show()
-
 
     # initializing a figure in  
     # which the graph will be plottpath_ed 
     fig = plt.figure()  
-    
     # marking the x-axis and y-axis 
     axis = plt.axes(xlim =(-0.2, 1.2),  
                     ylim =(-0.2, 1.2))  
@@ -664,16 +663,11 @@ if __name__ == "__main__":
     #x = np.linspace(0, 4, 1000)
     #y = np.sin(2 * np.pi * (x - 0.01))
     def animate(i): 
-    
         # plots a sine graph 
-         
         line.set_data(path_x[:i], path_y[:i])
-        
         return line, 
-    
     anim = FuncAnimation(fig, animate, init_func = init, 
                         frames =len(path_y) , interval = 200, blit = True) 
-    
     plt.show()
 
 

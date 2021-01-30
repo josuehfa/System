@@ -530,7 +530,7 @@ class SimEnvironment:
         for ic in self.icInstances:
             ic.WriteLog()
     
-    def WriteLogOptimal(self,scenario_time,scenario,localCoords):
+    def WriteLogOptimal(self,scenario_time,scenario,localCoords,cost):
         """ Write json logs for each icarous instance """
         for ic in self.icInstances:
-            ic.WriteLogOptimal(logname="",scenario_time=scenario_time,scenario=scenario,localCoords=localCoords)
+            ic.WriteLogOptimal(logname="",scenario_time=scenario_time,scenario=scenario,localCoords=localCoords,cost=cost)

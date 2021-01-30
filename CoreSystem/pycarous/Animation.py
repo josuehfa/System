@@ -13,6 +13,7 @@ class AgentAnimation():
         plt.xlabel("x [m]")
         plt.ylabel("y [m]")
 
+        self.current_time = 0 
         self.ax = plt.axes(xlim=(xmin, xmax), ylim=(ymin, ymax))
         self.paths = {}
         self.paths_zoom = {}
@@ -38,13 +39,14 @@ class AgentAnimation():
         x_range = xmin-xmax
         y_range = ymin-ymax
         self.axins_pos = [[xmin - (x_range)*0.65, ymin - (y_range)*0.65],[xmin - (x_range)*0.65, ymin - (y_range)*0.65 - (y_range)*0.3]]
+        
 
         #Costmap timevector
         self.minlen = len(data['position'])
         cont = 0
         self.costtime = []
         self.pathtime = []
-        minToCoord = int(round((self.minlen-1)/(len(data['localCoords'])-1)))
+        minToCoord = int(round((self.minlen-1)/(len(data['localCoords'])-1)))+1
         for idx in range(0,self.minlen):
             if idx > minToCoord*(cont+1):
                 cont = cont +1
@@ -65,8 +67,8 @@ class AgentAnimation():
         self.data[name] = data
         self.minlen = len(data['position'])
         
-        line, = plt.plot(0,0)
-        line_zoom, = self.axins.plot(0,0)
+        line, = plt.plot(0,0,'w')
+        line_zoom, = self.axins.plot(0,0,'w')
         self.paths[name] = line
         self.paths_zoom[name] = line_zoom 
         self.agentsRadius[name] = radius
@@ -179,6 +181,20 @@ class AgentAnimation():
         #Global path 
         pln_aux = []
         cont = 0
+        
+        #for k, vec in enumerate(self.data['ownship0']['localPlans'][0]):
+        #    if self.current_time >= vec[0] or vec[0] == 0.0:
+        #        cont = cont + 1
+        #    else:
+        #        break
+        
+        #for k, vec in enumerate(self.data['ownship0']['localPlans'][0][0:cont+1]):
+        #    vec[1] = self.data['ownship0']['localCoords'][k][0]
+        #    vec[2] = self.data['ownship0']['localCoords'][k][1]
+        #    pln_aux.append(vec)
+        #self.AddPath(np.array(pln_aux),'k.-')
+
+
         idx = self.pathtime[i]+2
         if idx >= max(self.pathtime):
             idx = max(self.pathtime)-1
@@ -301,6 +317,7 @@ class AgentAnimation():
 
     def animate(self,i):
         i = int(i*self.speed)
+        self.current_time = self.current_time + 0.05
         if i < self.minlen-1:
             self.UpdateCostMap(i)
             self.UpdateZoom(i)

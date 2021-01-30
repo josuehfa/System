@@ -300,7 +300,7 @@ class IcarousInterface(abc.ABC):
         with open(logname, 'w') as f:
             json.dump(log_data, f)
 
-    def WriteLogOptimal(self, logname="",scenario_time=[],scenario='',localCoords=[]):
+    def WriteLogOptimal(self, logname="",scenario_time=[],scenario='',localCoords=[],cost=0):
         """
         Save log data to a json file
         :param logname: name for the log file, default is simlog-[callsign].json
@@ -325,7 +325,8 @@ class IcarousInterface(abc.ABC):
                     "mergefixes": self.localMergeFixes,
                     "sim_type": self.simType,
                     "scenario_time":scenario_time,
-                    "scenario":scenario}
+                    "scenario":scenario,
+                    "cost":cost}
 
         import json
         with open(logname, 'w') as f:

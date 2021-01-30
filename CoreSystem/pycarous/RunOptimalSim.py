@@ -68,11 +68,11 @@ if args.cfs:
 
 #OptimalClass Startup
 start_time = time.time()
-scen_num = 'FOUR'
+scen_num = 'THREE'
 scenario = ScenarioClass(scen_num)
 dimension = '2D'
 planner = 'RRTstar'
-processing_time = 1
+processing_time = 0.5
 speed_aircraft = 4.5
 
 plans = []
@@ -182,6 +182,8 @@ if args.uncertainty:
 # Run the Simulation
 sim.RunSimulationOptimal(scenario, plans, path_x, path_y, delta_d, processing_time, planner, dimension, ims, axis, time_res, speed_aircraft)
 
+cost = scenario.pathCost(path_x, path_y, time_res)
+print('Custo do trajeto: ' + str(cost))
 
 localCoords = []
 fig.clf()
@@ -195,7 +197,7 @@ for idx in range(len(path_x)):
 
 
 # Save json log outputs
-sim.WriteLogOptimal(time_res,scen_num,localCoords)
+sim.WriteLogOptimal(time_res,scen_num,localCoords,cost)
 
 final_solution = {"lon":path_x,"lat":path_y}
 plotSol.animedPlot(final_solution, time_res, scenario.mapgen, scenario.start_real, scenario.goal_real, scenario.region_real, scenario.obstacle_real,scenario,'/home/josuehfa/System/CoreSystem/Results/path.html')
