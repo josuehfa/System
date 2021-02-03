@@ -2,9 +2,9 @@ System
 ======
 
 ## Simulation Example
-- Running the system with a intruder aircraft and with dynamic meteorological condition.
+- Running the system with an intruder aircraft and with a dynamic meteorological condition.
 
-![](system.gif)
+![Demo File](https://github.com/josuehfa/System/blob/master/system.gif)
 
 
 
