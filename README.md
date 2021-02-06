@@ -1,6 +1,13 @@
 System
 ======
 
+## Simulation Example
+- Running the system with an intruder aircraft and with a dynamic meteorological condition.
+
+![Demo File](https://github.com/josuehfa/System/blob/master/system.gif)
+
+
+
 ## Setup 
 A system for path planning and navigation of UAS using ICAROUS, Ardupilot, RedeMet and others under MAVLink Protocol. 
 
