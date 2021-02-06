@@ -177,8 +177,8 @@ class ScenarioClass():
         
         #Parametros para criação do mapa
         self.time = 1
-        self.nrows = 15
-        self.ncols = 15
+        self.nrows = 150
+        self.ncols = 150
         self.mapgen = MapGen(self.nrows, self.ncols,self.time)
         self.mapgen.createScenarioTwo()
 
@@ -201,6 +201,7 @@ class ScenarioClass():
         #test
         self.start_real = (-19.836548, -44.008020,0)
         self.goal_real = (-19.916969, -43.909915,0)
+
 
 
         #Região de Voo

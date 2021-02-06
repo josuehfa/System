@@ -8,11 +8,12 @@ import math
 
 
 class AgentAnimation():
-    def __init__(self,xmin,ymin,xmax,ymax,data,scenario_time,playbkspeed=1,interval=5,record=False,filename=""):
+    def __init__(self,xmin,ymin,xmax,ymax,data,scenario,scenario_time,playbkspeed=1,interval=5,record=False,filename=""):
         self.fig = plt.figure(frameon=True)
         plt.xlabel("x [m]")
         plt.ylabel("y [m]")
 
+        self.scenario = scenario
         self.current_time = 0 
         self.ax = plt.axes(xlim=(xmin, xmax), ylim=(ymin, ymax))
         self.paths = {}
@@ -171,6 +172,33 @@ class AgentAnimation():
         plt.plot(fence[:,1],fence[:,0],color)
         plt.scatter(fence[:,1],fence[:,0])
     
+    def AddStartGoal(self):
+        start_goal = [self.scenario.start_real[0:2],self.scenario.goal_real[0:2]]
+        y,x = zip(*start_goal)
+        self.sg, = self.ax.plot(x,y,color='yellow', marker='o',markersize=6,linestyle='')
+        self.annot_start = self.ax.annotate('Start',
+            xy=(x[0],y[0]), xycoords='data',
+            xytext=(-70, -80), textcoords='offset points',
+            size=8,
+            bbox=dict(boxstyle="round4,pad=.5", fc="0.8"),
+            arrowprops=dict(arrowstyle="->",
+                            connectionstyle="angle,angleA=-90,angleB=0,rad=50"))
+        self.annot_goal = self.ax.annotate('Goal',
+            xy=(x[1],y[1]), xycoords='data',
+            xytext=(-70, -80), textcoords='offset points',
+            size=8,
+            bbox=dict(boxstyle="round4,pad=.5", fc="0.8"),
+            arrowprops=dict(arrowstyle="->",
+                            connectionstyle="angle,angleA=0,angleB=-90,rad=50"))
+        
+
+    def UpdateStartGoal(self):
+        start_goal = [self.scenario.start_real[0:2],self.scenario.goal_real[0:2]]
+        y,x = zip(*start_goal)
+        self.sg.set_data(x,y)
+        self.annot_start.set_text('Start')
+        self.annot_goal.set_text('Goal')
+
     def AddWaypoint(self):
         self.wp, = self.ax.plot(0,0,'k.-')
         self.wp_zoom, = self.axins.plot(0,0,'k.-')
@@ -229,16 +257,16 @@ class AgentAnimation():
         self.axins.set_yticklabels('')
         self.rectzoom = patches.Rectangle((x1,y1),x2-x1,y2-y1,linewidth=1,edgecolor='r',fill=False)
         self.ax.add_patch(self.rectzoom)
-        self.first_line, = self.ax.plot([x2,self.axins_pos[0][0]],[y2,self.axins_pos[0][1]],'k',linewidth=0.5)
-        self.second_line, = self.ax.plot([x2,self.axins_pos[1][0]],[y2,self.axins_pos[1][1]],'k',linewidth=0.5)
+        #self.first_line, = self.ax.plot([x2,self.axins_pos[0][0]],[y2,self.axins_pos[0][1]],'k',linewidth=0.5)
+        #self.second_line, = self.ax.plot([x2,self.axins_pos[1][0]],[y2,self.axins_pos[1][1]],'k',linewidth=0.5)
         #self.rectpatch, self.connects = self.ax.indicate_inset_zoom(self.axins)
         #self.ax.add_patch(self.rectpatch)
 
     def UpdateZoom(self,i):
         position = self.last_position
         x1, x2, y1, y2 = position[0]*1.000015, position[0]*0.999986,  position[1]*1.000024, position[1]*0.999975
-        self.first_line.set_data([x2,self.axins_pos[0][0]],[y2,self.axins_pos[0][1]])
-        self.second_line.set_data([x2,self.axins_pos[1][0]],[y2,self.axins_pos[1][1]])
+        #self.first_line.set_data([x2,self.axins_pos[0][0]],[y2,self.axins_pos[0][1]])
+        #self.second_line.set_data([x2,self.axins_pos[1][0]],[y2,self.axins_pos[1][1]])
         z = self.costmap.z_time[self.costtime[i]]*0.01
         self.pcolorzoom.set_array(z.ravel())
         self.axins.set_xlim(x1, x2)
@@ -280,10 +308,17 @@ class AgentAnimation():
             lat.append(polygon[0][0][0])
             lon.append(polygon[0][0][1])
         #    ax.plot(lon, lat, linestyle='-', color='red')
-            plt.fill(lat, lon, facecolor='gray', edgecolor='black')
-            self.axins.fill(lat, lon, facecolor='gray', edgecolor='black')
-
+            self.obs, = self.ax.fill(lat, lon, facecolor='gray', edgecolor='black')
+            self.obsaxins, = self.axins.fill(lat, lon, facecolor='gray', edgecolor='black')
     
+    def UpdateObstacles(self):
+        #Obstacle
+        for polygon in self.scenario.obstacle_real:
+            self.obs.set_xy(polygon[0])
+            self.obs.set_fill(True)
+            self.obsaxins.set_xy(polygon[0])
+            self.obsaxins.set_fill(True)
+
     def UpdateBands(self,position,bands,sectors):
         numBands = bands["numBands"]
         low      = bands["low"]
@@ -320,8 +355,11 @@ class AgentAnimation():
         self.current_time = self.current_time + 0.05
         if i < self.minlen-1:
             self.UpdateCostMap(i)
+            self.UpdateObstacles()
             self.UpdateZoom(i)
             self.UpdateWaypoint(i)
+            self.UpdateStartGoal()
+            
 
             for j, vehicle in enumerate(self.agents):
                 

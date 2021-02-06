@@ -68,7 +68,7 @@ if args.cfs:
 
 #OptimalClass Startup
 start_time = time.time()
-scen_num = 'THREE'
+scen_num = 'TWO'
 scenario = ScenarioClass(scen_num)
 dimension = '2D'
 planner = 'RRTstar'

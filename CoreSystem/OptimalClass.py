@@ -433,7 +433,7 @@ if __name__ == "__main__":
     dimension = '2D'
     planner = 'RRTstar'
 
-    processing_time = 1
+    processing_time = 8
 
     ims = []
     plans = []

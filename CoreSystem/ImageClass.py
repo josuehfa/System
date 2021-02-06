@@ -14,9 +14,10 @@ from skimage import data
 from skimage.feature import match_template
 
 #original = data.astronaut()
-pampShape = io.imread('/home/josuehfa/System/CoreSystem/PampulhaShape.png')[:,:,:3]
-popDensity = io.imread('/home/josuehfa/System/CoreSystem/PopulationDensity.png')[:,:,:3]
-bhStreets = io.imread('/home/josuehfa/System/CoreSystem/BeloHorizonteStreets_Edited2.png')[:,:,:3]
+pampShape = io.imread('/home/josuehfa/System/CoreSystem/ImageLib/PampulhaShape.png')[:,:,:3]
+#popDensity = io.imread('/home/josuehfa/System/CoreSystem/ImageLib/PopulationDensity.png')[:,:,:3]
+popDensity = io.imread('/home/josuehfa/System/CoreSystem/ImageLib/popDensityNew.png')[:,:,:3]
+bhStreets = io.imread('/home/josuehfa/System/CoreSystem/ImageLib/BeloHorizonteStreets_Edited2.png')[:,:,:3]
 
 
 
@@ -27,29 +28,30 @@ result_density = match_template(density_resized, shape_resized)
 ij = np.unravel_index(np.argmax(result_density), result_density.shape)
 xdensity, ydensity = ij[::-1]
 
-# fig = plt.figure(figsize=(8, 3))
-# ax1 = plt.subplot(2, 3, 1)
-# ax2 = plt.subplot(2, 3, 2)
-# ax3 = plt.subplot(2, 3, 3, sharex=ax2, sharey=ax2)
+fig1 = plt.figure(figsize=(8, 3))
+ax1 = plt.subplot(1, 3, 1)
+ax2 = plt.subplot(1, 3, 2)
+ax3 = plt.subplot(1, 3, 3)
 
-# ax1.imshow(shape_resized, cmap=plt.cm.gray)
-# ax1.set_axis_off()
-# ax1.set_title('template')
+ax1.imshow(shape_resized, cmap=plt.cm.gray)
+ax1.set_axis_off()
+ax1.set_title('Template')
 
-# ax2.imshow(density_resized, cmap=plt.cm.gray)
-# ax2.set_axis_off()
-# ax2.set_title('image')
+
+ax2.imshow(density_resized, cmap=plt.cm.gray)
+ax2.set_axis_off()
+ax2.set_title('Population Density')
 # # highlight matched region
 hdensity, wdensity = shape_resized.shape
-# rect = plt.Rectangle((xdensity, ydensity), wdensity, hdensity, edgecolor='r', facecolor='none')
-# ax2.add_patch(rect)
+rect = plt.Rectangle((xdensity, ydensity), wdensity, hdensity, edgecolor='r', facecolor='none')
+ax2.add_patch(rect)
 
-# ax3.imshow(result_density)
-# ax3.set_axis_off()
-# ax3.set_title('`match_template`\nresult')
-# # highlight matched region
-# ax3.autoscale(False)
-# ax3.plot(xdensity, ydensity, 'o', markeredgecolor='r', markerfacecolor='none', markersize=10)
+ax3.imshow(result_density)
+ax3.set_axis_off()
+ax3.set_title('Match Result')
+# highlight matched region
+ax3.autoscale(False)
+ax3.plot(xdensity, ydensity, 'o', markeredgecolor='r', markerfacecolor='none', markersize=10)
 
 
 shape_resized = rgb2gray(resize(pampShape, (pampShape.shape[0]+pampShape.shape[0]//4,pampShape.shape[1]+pampShape.shape[0]//4),anti_aliasing=True))
@@ -59,32 +61,32 @@ result_street = match_template(street_resized, shape_resized)
 ij = np.unravel_index(np.argmax(result_street), result_street.shape)
 xstreet, ystreet = ij[::-1]
 
+fig2 = plt.figure(figsize=(8, 3))
+ax1 = plt.subplot(1, 3, 1)
+ax5 = plt.subplot(1, 3, 2)
+ax6 = plt.subplot(1, 3, 3)
 
-# ax4 = plt.subplot(2, 3, 4)
-# ax5 = plt.subplot(2, 3, 5)
-# ax6 = plt.subplot(2, 3, 6, sharex=ax4, sharey=ax5)
+ax1.imshow(shape_resized, cmap=plt.cm.gray)
+ax1.set_axis_off()
+ax1.set_title('Template')
 
-# ax4.imshow(shape_resized, cmap=plt.cm.gray)
-# ax4.set_axis_off()
-# ax4.set_title('template')
-
-# ax5.imshow(street_resized, cmap=plt.cm.gray)
-# ax5.set_axis_off()
-# ax5.set_title('image')
+ax5.imshow(street_resized, cmap=plt.cm.gray)
+ax5.set_axis_off()
+ax5.set_title('Streets of BH')
 # # highlight matched region
 hstreet, wstreet = shape_resized.shape
-# rect = plt.Rectangle((xstreet, ystreet), wstreet,hstreet, edgecolor='r', facecolor='none')
-# ax5.add_patch(rect)
+rect = plt.Rectangle((xstreet, ystreet), wstreet,hstreet, edgecolor='r', facecolor='none')
+ax5.add_patch(rect)
 
-# ax6.imshow(result_street)
-# ax6.set_axis_off()
-# ax6.set_title('`match_template`\nresult')
-# # highlight matched region
-# ax6.autoscale(False)
-# ax6.plot(xstreet, ystreet, 'o', markeredgecolor='r', markerfacecolor='none', markersize=10)
+ax6.imshow(result_street)
+ax6.set_axis_off()
+ax6.set_title('Match Result')
+# highlight matched region
+ax6.autoscale(False)
+ax6.plot(xstreet, ystreet, 'o', markeredgecolor='r', markerfacecolor='none', markersize=10)
 
 
-# plt.show()
+plt.show()
 
 
 #Proporção entre as imagens

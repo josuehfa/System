@@ -655,7 +655,7 @@ def VisualizeSimDataOptimal(icList,scenario_time, scenario,allplans=True,showtra
     if record:
         import matplotlib; matplotlib.use('Agg')
     from Animation import AgentAnimation
-    anim = AgentAnimation(xmin,ymin, xmax,ymax,icList[0].ownshipLog,scenario_time,playbkspeed,interval,record,filename)
+    anim = AgentAnimation(xmin,ymin, xmax,ymax,icList[0].ownshipLog,scenario, scenario_time,playbkspeed,interval,record,filename)
 
     #scenario = ScenarioClass(scenario)
 
@@ -664,9 +664,10 @@ def VisualizeSimDataOptimal(icList,scenario_time, scenario,allplans=True,showtra
     vehicleSize  = np.max([vehicleSize1,vehicleSize2])
     #Tentativa de adicionar o mapa de custos
     anim.AddCostMap(scenario.mapgen,xmin,xmax,ymin,ymax)
-    anim.AddZoom()
     anim.AddObstacles(scenario)
+    anim.AddZoom()
     anim.AddWaypoint()
+    anim.AddStartGoal()
     for j,ic in enumerate(icList):
         anim.AddAgent('ownship'+str(j),vehicleSize,'r',ic.ownshipLog,show_circle=True,circle_rad=ic.daa_radius)
         #for i,pln in enumerate(ic.localPlans):
