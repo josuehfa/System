@@ -158,7 +158,7 @@ plt.show()
 
 
 
-street_prop = resize(street_prop, (200,200),anti_aliasing=True)
+#street_prop = resize(street_prop, (200,200),anti_aliasing=True)
 
 
 #street_prop*=((street_prop >= 0.3)*1000 + (street_prop < 0.3)*100)

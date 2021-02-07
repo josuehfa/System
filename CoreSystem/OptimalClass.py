@@ -127,7 +127,7 @@ class OptimalPlanning():
             xx, yy, val = line_aa(x1, y1, x2, y2)
             cost = 0
             for idx in range(len(xx)-1):
-                cost = cost + self.costmap[xx[idx+1]][yy[idx+1]]*0.1
+                cost = cost + self.costmap[xx[idx+1]][yy[idx+1]]
             #cost = (cost/(len(xx)))
             return ob.Cost(cost)
 

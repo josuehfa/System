@@ -156,10 +156,15 @@ class ScenarioClass():
         #Região de Voo
         #self.region_real = [(-19.849635, -44.014423),(-19.849635, -43.900210),
         #                    (-19.934877, -43.900210),(-19.934877, -44.014423)]
-        self.region_real = [(-19.829752116279057, -44.02262249999998),
-                            (-19.829752116279057, -43.90054215000001),
-                            (-19.943540209302327, -43.90054215000001),
-                            (-19.943540209302327, -44.02262249999998)]
+        #self.region_real = [(-19.829752116279057, -44.02262249999998),
+        #                    (-19.829752116279057, -43.90054215000001),
+        #                    (-19.943540209302327, -43.90054215000001),
+        #                    (-19.943540209302327, -44.02262249999998)]
+        self.region_real = [(-19.833299760869554, -44.021236149999986),
+                            (-19.833299760869554, -43.901276100000004),
+                            (-19.942577826086957, -43.901276100000004),
+                            (-19.942577826086957, -44.021236149999986)]
+
         
         #Geração dos Obstaculos
         self.obstacle_real = self.generateObstacle()
@@ -178,8 +183,8 @@ class ScenarioClass():
         
         #Parametros para criação do mapa
         self.time = 1
-        self.nrows = 150
-        self.ncols = 150
+        self.nrows = 200
+        self.ncols = 200
         self.mapgen = MapGen(self.nrows, self.ncols,self.time)
         self.mapgen.createScenarioTwo()
 
@@ -244,8 +249,8 @@ class ScenarioClass():
 
         #Parametros para criação do mapa
         self.time = 1
-        self.nrows = 150
-        self.ncols = 150
+        self.nrows = 500
+        self.ncols = 500
         self.mapgen = MapGen(self.nrows, self.ncols,self.time)
         self.mapgen.createScenarioThree(self.vertiports,self.radius)
     

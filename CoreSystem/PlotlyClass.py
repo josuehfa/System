@@ -604,7 +604,7 @@ if __name__ == "__main__":
 
     plotSol = PlotlyResult('','','')
 
-    scenario = ScenarioClass('THREE')
+    scenario = ScenarioClass('TWO')
 
     time = 1
     nrows = 200
@@ -613,7 +613,7 @@ if __name__ == "__main__":
     radius = 0.25
     mapgen = MapGen(nrows, ncols,time)
     #mapgen.create()
-    mapgen.createScenarioThree(vertiports,radius)
+    mapgen.createScenarioTwo()
     plotSol.animedPlot(final_solution, time_res, scenario.mapgen, scenario.start_real, scenario.goal_real, scenario.region_real, scenario.obstacle, scenario,'test.html')
 
 

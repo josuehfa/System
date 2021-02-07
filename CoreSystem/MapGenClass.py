@@ -148,8 +148,30 @@ class MapGen():
         image_resized = resize(original, (nrows+1,ncols+1),anti_aliasing=True)
         image_rotate = rotate(image_resized,180)
         final_image = image_rotate[:,::-1]
-        final_image = np.multiply(final_image, np.where(final_image >= 0.12, 200, 1))
-        final_image = final_image + 0.1        
+        
+        lower = final_image < 0.15
+        lower_med = (lower != True) * (final_image < 0.25)
+        medium = (lower != True) * (lower_med != True) *  (final_image < 0.35)
+        medium_med = (lower != True) * (lower_med != True) * (medium != True) *  (final_image < 0.45)
+        upper = (lower != True) * (lower_med != True) * (medium != True) * (medium_med != True) * (final_image < 1) 
+
+        l_factor = 20
+        lm_factor = 40
+        m_factor = 80
+        mm_factor = 160
+        u_factor = 320
+
+        final_image = (final_image*lower*l_factor)+\
+                    (final_image*lower_med*lm_factor)+\
+                    (final_image*medium*m_factor)+\
+                    (final_image*medium_med*mm_factor)+\
+                    (final_image*upper*u_factor)
+        #final_image = np.multiply(final_image, np.where(final_image >= 0.11, 20, 1))
+        #final_image = np.multiply(final_image, np.where(final_image >= 0.23, 40, 1))
+        #final_image = np.multiply(final_image, np.where(final_image >= 0.34, 80, 1))
+        #final_image = np.multiply(final_image, np.where(final_image >= 0.46, 160, 1))
+        #final_image = np.multiply(final_image, np.where(final_image >= 0.56, 320, 1))
+        #final_image = final_image + 0.1        
 
         for t in range(self.time):
             self.z_time.append(final_image)
@@ -380,8 +402,8 @@ if __name__ == "__main__":
     from matplotlib import pyplot
     ims = []
     time = 10
-    nrows = 150
-    ncols = 150
+    nrows = 500
+    ncols = 500
     delta_d = 1/nrows
     fig = plt.figure()
     axis = plt.axes(xlim =(0, 1),  
