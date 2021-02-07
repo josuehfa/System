@@ -131,7 +131,13 @@ class MapGen():
         from skimage import io
         from skimage.util import invert
         from skimage.transform import rotate, resize
-    
+
+        #0.901 - Menor densidade
+        #0.773
+        #0.664
+        #0.556
+        #0.465 - Maior densidade
+
         nrows = self.nrows
         ncols = self.ncols
         delta_d = 1/nrows
@@ -142,7 +148,7 @@ class MapGen():
         image_resized = resize(original, (nrows+1,ncols+1),anti_aliasing=True)
         image_rotate = rotate(image_resized,180)
         final_image = image_rotate[:,::-1]
-        final_image = np.multiply(final_image, np.where(final_image >= 0.1, 110, 1))
+        final_image = np.multiply(final_image, np.where(final_image >= 0.12, 200, 1))
         final_image = final_image + 0.1        
 
         for t in range(self.time):
@@ -374,8 +380,8 @@ if __name__ == "__main__":
     from matplotlib import pyplot
     ims = []
     time = 10
-    nrows = 500
-    ncols = 500
+    nrows = 150
+    ncols = 150
     delta_d = 1/nrows
     fig = plt.figure()
     axis = plt.axes(xlim =(0, 1),  
@@ -386,11 +392,11 @@ if __name__ == "__main__":
     mapgen = MapGen(nrows, ncols,time)
     #mapgen.create()
     #mapgen.createScenarioThree(vertiports,radius)
-    #mapgen.createScenarioTwo()
+    mapgen.createScenarioTwo()
     #mapgen.createEmptyMap()
     #mapgen.createFromMap()
     #mapgen.plot_map(axis)
-    mapgen.createScenarioFive()
+    #mapgen.createScenarioFive()
     
     
     for t in range(time):

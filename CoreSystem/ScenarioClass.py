@@ -103,6 +103,7 @@ class ScenarioClass():
         self.start_real = (-19.836548, -44.008020,0)
         self.goal_real = (-19.916969, -43.909915,0)
 
+        
         #Região de Voo
         self.region_real = [(-19.829752116279057, -44.02262249999998),
                             (-19.829752116279057, -43.90054215000001),
@@ -403,5 +404,5 @@ class ScenarioClass():
 
 if __name__ == "__main__":
 
-    scenario = ScenarioClass('FOUR')
+    scenario = ScenarioClass('TWO')
     pass

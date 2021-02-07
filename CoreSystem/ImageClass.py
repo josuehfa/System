@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 
 from skimage import data
-from skimage.color import rgb2gray
+from skimage.color import rgb2gray,gray2rgb
 from skimage import data, color
 from skimage.transform import rescale, resize, downscale_local_mean
 from skimage.color import rgb2hsv
@@ -16,13 +16,13 @@ from skimage.feature import match_template
 #original = data.astronaut()
 pampShape = io.imread('/home/josuehfa/System/CoreSystem/ImageLib/PampulhaShape.png')[:,:,:3]
 #popDensity = io.imread('/home/josuehfa/System/CoreSystem/ImageLib/PopulationDensity.png')[:,:,:3]
-popDensity = io.imread('/home/josuehfa/System/CoreSystem/ImageLib/popDensityNew.png')[:,:,:3]
+popDensity = io.imread('/home/josuehfa/Pictures/popDensityNew.png')[:,:,:3]
 bhStreets = io.imread('/home/josuehfa/System/CoreSystem/ImageLib/BeloHorizonteStreets_Edited2.png')[:,:,:3]
 
 
 
-shape_resized = rgb2gray(resize(pampShape, (pampShape.shape[0]//2,pampShape.shape[1]//2),anti_aliasing=True))
-density_resized = rgb2gray(resize(popDensity, (popDensity.shape[0]//2,popDensity.shape[1]//2),anti_aliasing=True))
+shape_resized = rgb2gray(resize(pampShape, (pampShape.shape[0],pampShape.shape[1]),anti_aliasing=True))
+density_resized = rgb2gray(resize(popDensity, (round(popDensity.shape[0]*4.4),round(popDensity.shape[1]*4.4)),anti_aliasing=True))
 
 result_density = match_template(density_resized, shape_resized)
 ij = np.unravel_index(np.argmax(result_density), result_density.shape)
@@ -86,12 +86,19 @@ ax6.autoscale(False)
 ax6.plot(xstreet, ystreet, 'o', markeredgecolor='r', markerfacecolor='none', markersize=10)
 
 
-plt.show()
+
+
+#Proporção entre as imagens (+ hard ajust)
+h_prop = hdensity/hstreet + hdensity/hstreet*0.078
+w_prop = wdensity/wstreet + wdensity/wstreet*0.01
 
 
 #Proporção entre as imagens
-h_prop = hdensity*2/hstreet + hdensity*2/hstreet*0.052
-w_prop = wdensity*2/wstreet + wdensity*2/wstreet*0.028
+#h_prop = hdensity*2/hstreet + hdensity*2/hstreet*0.052
+#w_prop = wdensity*2/wstreet + wdensity*2/wstreet*0.028
+
+#h_prop = hdensity*2/hstreet + hdensity*2/hstreet*0.052
+#w_prop = wdensity*2/wstreet + wdensity*2/wstreet*0.028
 
 #Modificando o ponto (x,y) para o novo tamanho da imagem
 xstreet = round(xstreet*w_prop)
@@ -103,13 +110,23 @@ street_prop = resize(street_resized, (round(street_resized.shape[0]*h_prop),roun
 #Invertendo o valor do street, nesse caso as ruas vão valer 0 e anularão esses pontos na segunda imagem
 street_prop = util.invert(street_prop)
 #Criando uma mascara: Se for maior que 0 True, else False ( Nesse caso, as ruas são False e o resto True)
-streetMask = street_prop > 0.2
+streetMask = street_prop > 0.4
+io.imshow(streetMask)
+plt.show()
 
-popDensity_gray = rgb2gray(popDensity)
+
+popDensity_gray = rgb2gray(density_resized)
 #Criando uma mascara para a densidade populacional, se for maior que 0 True, else False (Nesse caso o contorno é False e o interior True)
-popMask = popDensity_gray > 0.01
+popMask = density_resized > 0.05
 #io.imshow(popMask)
 #plt.show()
+
+#Niveis:
+#0.901 - Menor densidade
+#0.773
+#0.664
+#0.556
+#0.465 - Maior densidade
 
 #Como quanto maior a populacao mais escura a região, inverte-se e multiplicasse pela mascara para que 
 #Os contornos passem a ter o menor valor (em geral são divisas de bairros)
@@ -118,26 +135,26 @@ popDensity_gray = (util.invert(popDensity_gray))*popMask
 #plt.show()
 
 x_cont = 0
-for idx in range((xdensity*2 - xstreet),((xdensity*2 - xstreet) + street_prop.shape[1])):
+for idx in range((xdensity - xstreet),((xdensity - xstreet) + street_prop.shape[1])):
     y_cont = 0
-    for idy in range((ydensity*2 - ystreet),((ydensity*2 - ystreet) + street_prop.shape[0])):
-        popDensity[idy][idx] = streetMask[y_cont][x_cont]*popDensity_gray[idy][idx]*popDensity[idy][idx]*10
-        popDensity_gray[idy][idx] = streetMask[y_cont][x_cont]*popDensity_gray[idy][idx]
+    for idy in range((ydensity - ystreet),((ydensity - ystreet) + street_prop.shape[0])):
+        #popDensity[idy][idx] = streetMask[y_cont][x_cont]*popDensity_gray[idy][idx]*popDensity[idy][idx]*10
+        #popDensity_gray[idy][idx] = streetMask[y_cont][x_cont]*popDensity_gray[idy][idx]
         street_prop[y_cont][x_cont] = streetMask[y_cont][x_cont]*popDensity_gray[idy][idx]
         y_cont = y_cont + 1
     x_cont = x_cont + 1
 
 #street_prop = util.invert(street_prop)
-#io.imshow(street_prop)
-#plt.show()
+io.imshow(street_prop)
+plt.show()
 
-popDensity_gray  = util.invert(popDensity_gray)
+#popDensity_gray  = util.invert(popDensity_gray)
 #io.imshow(popDensity_gray)
 #plt.show()
 
 
 #street_prop = np.multiply(street_prop, np.where(street_prop >= 0.1, 110, 1))
-io.imsave('popCalculated.png',street_prop) ###
+#io.imsave('popCalculatedFinal.png',street_prop) ###
 
 
 
@@ -155,11 +172,11 @@ lat_pirulito =-19.919133
 lon_pirulito = -43.938626
 
 
-x_rsoares_street = 950
-y_rsoares_street = 1105
-x_pirulito_street = 1030
-y_pirulito_street = 1062
-shape_street = (1352, 1497)
+x_rsoares_street = 933
+y_rsoares_street = 1137
+x_pirulito_street = 1013
+y_pirulito_street = 1091
+shape_street = (1389, 1471)
 
 
 
@@ -185,7 +202,7 @@ lon_to_x = lon_diff/x_diff
 
 
 pnt_i = (0,0)
-pnt_s = (1352, 1497)
+pnt_s = (1389, 1471)
 
 pnt_i_y = pnt_i[0] - y_r_percent_street*street_prop.shape[0]
 pnt_i_x = pnt_i[1] - x_r_percent_street*street_prop.shape[1]

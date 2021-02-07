@@ -429,11 +429,11 @@ if __name__ == "__main__":
 
     start_time = tm.time()
 
-    scenario = ScenarioClass('THREE')
+    scenario = ScenarioClass('TWO')
     dimension = '2D'
     planner = 'RRTstar'
 
-    processing_time = 8
+    processing_time = 0.1
 
     ims = []
     plans = []
