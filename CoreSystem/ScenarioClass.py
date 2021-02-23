@@ -3,6 +3,26 @@ import numpy as np
 from MapGenClass import *
 from skimage.draw import *
 
+import math
+
+radius_of_earth = 6378100.0
+
+def distance(lat1, lon1, lat2, lon2):
+    '''return distance between two points in meters,
+    coordinates are in degrees
+    thanks to http://www.movable-type.co.uk/scripts/latlong.html'''
+    lat1 = math.radians(lat1)
+    lat2 = math.radians(lat2)
+    lon1 = math.radians(lon1)
+    lon2 = math.radians(lon2)
+    dLat = lat2 - lat1
+    dLon = lon2 - lon1
+
+    a = math.sin(0.5*dLat)**2 + math.sin(0.5*dLon)**2 * math.cos(lat1) * math.cos(lat2)
+    c = 2.0 * math.atan2(math.sqrt(a), math.sqrt(1.0-a))
+    return radius_of_earth * c
+
+
 class ScenarioClass():
     def __init__(self, scenario):
         '''
@@ -10,14 +30,19 @@ class ScenarioClass():
             -  Define what scenario will be executed 
         '''
         if scenario == 'ONE':
+            self.scenario = 'ONE'
             self.Scenario_One()
         elif scenario == 'TWO':
+            self.scenario = 'TWO'
             self.Scenario_Two()
         elif scenario == 'THREE':
+            self.scenario = 'THREE'
             self.Scenario_Three()
         elif scenario == 'FOUR':
+            self.scenario = 'FOUR'
             self.Scenario_Four()
         elif scenario == 'FIVE':
+            self.scenario = 'FIVE'
             self.Scenario_Five()
         
     def realToPorcent(self,point,region):
@@ -103,13 +128,22 @@ class ScenarioClass():
         self.start_real = (-19.836548, -44.008020,0)
         self.goal_real = (-19.916969, -43.909915,0)
 
-        
+        #TESTFINAL
+        self.start_real = (-19.854007, -43.984364)
+        #self.goal_real = (-19.889572, -43.949868)
+        self.goal_real = (-19.916489, -43.933327)
+
         #Região de Voo
-        self.region_real = [(-19.829752116279057, -44.02262249999998),
-                            (-19.829752116279057, -43.90054215000001),
-                            (-19.943540209302327, -43.90054215000001),
-                            (-19.943540209302327, -44.02262249999998)]
-        
+        #self.region_real = [(-19.829752116279057, -44.02262249999998),
+        #                    (-19.829752116279057, -43.90054215000001),
+        #                    (-19.943540209302327, -43.90054215000001),
+        #                    (-19.943540209302327, -44.02262249999998)]
+        self.region_real = [(-19.833299760869554, -44.021236149999986),
+                            (-19.833299760869554, -43.901276100000004),
+                            (-19.942577826086957, -43.901276100000004),
+                            (-19.942577826086957, -44.021236149999986)]
+
+
         #Geração dos Obstaculos
         self.obstacle_real = self.generateObstacle()
 
@@ -127,8 +161,8 @@ class ScenarioClass():
         
         #Parametros para criação do mapa
         self.time = 1
-        self.nrows = 150
-        self.ncols = 150
+        self.nrows = 200
+        self.ncols = 200
         self.mapgen = MapGen(self.nrows, self.ncols,self.time)
         self.mapgen.createScenarioOne()
 
@@ -152,6 +186,10 @@ class ScenarioClass():
         self.start_real = (-19.836548, -44.008020,0)
         self.goal_real = (-19.916969, -43.909915,0)
 
+        #TESTFINAL
+        self.start_real = (-19.854007, -43.984364)
+        #self.goal_real = (-19.889572, -43.949868)
+        self.goal_real = (-19.916489, -43.933327)
 
         #Região de Voo
         #self.region_real = [(-19.849635, -44.014423),(-19.849635, -43.900210),
@@ -167,8 +205,9 @@ class ScenarioClass():
 
         
         #Geração dos Obstaculos
-        self.obstacle_real = self.generateObstacle()
-
+        #self.obstacle_real = self.generateObstacle()
+        self.obstacle_real = []
+        
         #Scale start and goal to 0-1 range
         self.start = self.realToPorcent(self.start_real,self.region_real)
         self.goal = self.realToPorcent(self.goal_real,self.region_real)
@@ -183,8 +222,8 @@ class ScenarioClass():
         
         #Parametros para criação do mapa
         self.time = 1
-        self.nrows = 200
-        self.ncols = 200
+        self.nrows = 250
+        self.ncols = 250
         self.mapgen = MapGen(self.nrows, self.ncols,self.time)
         self.mapgen.createScenarioTwo()
 
@@ -383,15 +422,41 @@ class ScenarioClass():
 
         #Parametros para criação do mapa
         self.time = 24
-        self.nrows = 150
-        self.ncols = 150
+        self.nrows = 200
+        self.ncols = 200
         self.mapgen = MapGen(self.nrows, self.ncols,self.time)
         self.mapgen.createScenarioFive()
         pass
 
     def pathCost(self,path_x,path_y,scenrio_time):
-        cost = 0
+
+        distlat = distance(self.region_real[0][0],self.region_real[0][1],self.region_real[3][0],self.region_real[3][1])
+        distlon = distance(self.region_real[1][0],self.region_real[1][1],self.region_real[2][0],self.region_real[2][1])
+        areamin = (distlat*distlon)/(self.ncols*self.ncols)
         
+        def weightFunc(cost,areamin):
+
+            if self.scenario == 'TWO':
+                PopRange = [1000,5000,10000,20000,55765]
+                #'lower':1000
+                #'lower_med':5000
+                #'medium':10000
+                #'medium_med':20000
+                #'upper':55765
+
+                CostRange = [1.975, 6.35, 17.60, 45.10, 200]
+                #'lower':1.975
+                #'lower_med':6.35
+                #'medium':17.6
+                #'medium_med':45.1
+                #'upper':200 
+            
+                for idx in range(len(CostRange)):
+                    if CostRange[idx] > cost:
+                        return PopRange[idx]*(1/1000000)*areamin #densipop(Hab/km2) * convert(km2/m2) * areamin(m2)
+
+        
+        cost = 0
         for idx in range(len(scenrio_time)-1):
             costmap = self.mapgen.z_time[scenrio_time[idx]]
 
@@ -401,11 +466,24 @@ class ScenarioClass():
             y2 = round(path_y[idx+1]*(costmap.shape[1]-1))
             xx, yy, val = line_aa(x1, y1, x2, y2)
 
-            for idx in range(len(xx)-1):
-                cost = cost + costmap[xx[idx+1]][yy[idx+1]]*0.1
+            for idy in range(len(xx)-1):
+                cost = cost + weightFunc(costmap[xx[idy+1]][yy[idy+1]]*val[idy+1],areamin)
         
         self.pathcost = cost
         return cost
+    
+    def pathDist(self,path_x,path_y):
+        
+        dist = 0
+        for idx in range(len(path_x)-1):
+            dist = dist + distance(path_y[idx],path_x[idx],path_y[idx+1],path_x[idx+1])
+        
+        self.distcost = dist
+        return dist
+
+        
+
+
 
 if __name__ == "__main__":
 

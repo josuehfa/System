@@ -114,7 +114,7 @@ class MapGen():
         y = np.arange(self.nrows+1)*delta_d
         
         for t in range(self.time):
-            z = np.zeros((self.nrows+1, self.ncols+1), dtype=np.uint8) + 1
+            z = np.zeros((self.nrows+1, self.ncols+1), dtype=np.uint8)+1
             z = np.asarray(z,dtype=np.double) 
             self.z_time.append(z)
 
@@ -166,6 +166,8 @@ class MapGen():
                     (final_image*medium*m_factor)+\
                     (final_image*medium_med*mm_factor)+\
                     (final_image*upper*u_factor)
+
+        final_image = final_image/1.6 + 0.1
         #final_image = np.multiply(final_image, np.where(final_image >= 0.11, 20, 1))
         #final_image = np.multiply(final_image, np.where(final_image >= 0.23, 40, 1))
         #final_image = np.multiply(final_image, np.where(final_image >= 0.34, 80, 1))
@@ -381,7 +383,7 @@ class MapGen():
     def plot_map(self, t, axis):
         #Obstacle
         aux_im = []
-        aux_im.append(axis.pcolormesh(self.x, self.y, self.z_time[t]*0.01, cmap='rainbow', shading='nearest'))
+        aux_im.append(axis.pcolormesh(self.x, self.y, self.z_time[t]*0.01, cmap='twilight', shading='nearest'))
         if self.obs_time != [] :
             for idx, polygon in enumerate(self.obs_time[t]):
                 lat,lon = zip(*polygon[0])
@@ -424,7 +426,7 @@ if __name__ == "__main__":
     for t in range(time):
         #Obstacle
         aux_im = []
-        aux_im.append(axis.pcolormesh(mapgen.x, mapgen.y, mapgen.z_time[t]*delta_d, cmap='rainbow', shading='nearest'))
+        aux_im.append(axis.pcolormesh(mapgen.x, mapgen.y, mapgen.z_time[t]*0.01, cmap='twilight', shading='nearest'))
         if mapgen.obs_time != [] :
             for idx, polygon in enumerate(mapgen.obs_time[t]):
                 lat,lon = zip(*polygon[0])

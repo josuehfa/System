@@ -175,7 +175,6 @@ class AgentAnimation():
     def AddStartGoal(self):
         start_goal = [self.scenario.start_real[0:2],self.scenario.goal_real[0:2]]
         y,x = zip(*start_goal)
-        self.sg, = self.ax.plot(x,y,color='yellow', marker='o',markersize=6,linestyle='')
         self.annot_start = self.ax.annotate('Start',
             xy=(x[0],y[0]), xycoords='data',
             xytext=(-70, -80), textcoords='offset points',

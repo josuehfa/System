@@ -127,7 +127,7 @@ class OptimalPlanning():
             xx, yy, val = line_aa(x1, y1, x2, y2)
             cost = 0
             for idx in range(len(xx)-1):
-                cost = cost + self.costmap[xx[idx+1]][yy[idx+1]]
+                cost = cost + self.costmap[xx[idx+1]][yy[idx+1]]*val[idx+1]
             #cost = (cost/(len(xx)))
             return ob.Cost(cost)
 
@@ -181,7 +181,7 @@ class OptimalPlanning():
         lengthObj = ob.PathLengthOptimizationObjective(si)
         clearObj = self.ClearanceObjective(si,self.costmap)
         opt = ob.MultiOptimizationObjective(si)
-        opt.addObjective(lengthObj, 1.0)
+        opt.addObjective(lengthObj, 0.0)
         opt.addObjective(clearObj, 1.0)
         return opt
 
@@ -433,7 +433,7 @@ if __name__ == "__main__":
     dimension = '2D'
     planner = 'RRTstar'
 
-    processing_time = 0.1
+    processing_time = 0.5
 
     ims = []
     plans = []
@@ -449,7 +449,7 @@ if __name__ == "__main__":
     t = 0
     last_t = 0
     tried = 0
-    max_try = 2
+    max_try = 0
     pnt = 0
 
     while (run == True):
@@ -610,7 +610,7 @@ if __name__ == "__main__":
         
     
     cost = scenario.pathCost(path_x, path_y, time_res)
-    print('Custo do trajeto: ' + str(cost))
+    print('Custo do trajeto: ' + str(cost) + '(Hab)' )
 
     fig.clf()
     gc.collect()
@@ -622,10 +622,13 @@ if __name__ == "__main__":
 
     final_solution = {"lon":path_x,"lat":path_y}
 
-
-    plotSol.animedPlot(final_solution, time_res, scenario.mapgen, scenario.start_real, scenario.goal_real, scenario.region_real, scenario.obstacle_real,scenario,'CoreSystem/Results/path.html')
+    cost = scenario.pathDist(path_x, path_y)
+    print('Distancia do trajeto: ' + str(cost) + '(m)')
 
     print("Tempo total de processamento: "+ str(tm.time() - start_time) + ' seconds')
+
+    plotSol.animedPlot(final_solution, time_res, scenario.mapgen, scenario.start_real, scenario.goal_real, scenario.region_real, scenario.obstacle_real,scenario,'/home/josuehfa/System/CoreSystem/Results/path.html')
+
 
     from matplotlib import pyplot as plt 
     import numpy as np 
@@ -640,7 +643,7 @@ if __name__ == "__main__":
     #                    frames =len(path_y) , interval = 200, blit = True) 
     # Set up formatting for the movie files
     writermp4 = animation.FFMpegWriter(fps=60) 
-    im_ani.save('CoreSystem/Results/path.mp4', writer=writermp4)
+    im_ani.save('/home/josuehfa/System/CoreSystem/Results/path.mp4', writer=writermp4)
     plt.show()
 
     # initializing a figure in  
