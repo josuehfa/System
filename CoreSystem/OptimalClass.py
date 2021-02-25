@@ -1,5 +1,6 @@
 import sys
 import gc
+import json
 import time as tm
 try:
     from ompl import util as ou
@@ -181,7 +182,7 @@ class OptimalPlanning():
         lengthObj = ob.PathLengthOptimizationObjective(si)
         clearObj = self.ClearanceObjective(si,self.costmap)
         opt = ob.MultiOptimizationObjective(si)
-        opt.addObjective(lengthObj, 0.0)
+        opt.addObjective(lengthObj, 1.0)
         opt.addObjective(clearObj, 1.0)
         return opt
 
@@ -258,6 +259,9 @@ class OptimalPlanning():
 
         # Set the problem instance for our planner to solve
         optimizingPlanner.setProblemDefinition(pdef)
+
+        optimizingPlanner.setRewireFactor(1.1)
+
         optimizingPlanner.setup()
 
         # attempt to solve the planning problem in the given runtime
@@ -329,6 +333,15 @@ def plotResult(plan, axis, scenario, path_x, path_y, t):
     aux.append(scenario.mapgen.plot_map(round(t),axis))
     aux[-1] = aux[-1][0]
 
+    #start/goal
+    x = (scenario.start[0],scenario.goal[0])
+    y = (scenario.start[1],scenario.goal[1])
+    aux.append(axis.scatter(x, y, c='blue', marker='o'))
+    aux.append(axis.text(x[0]*0.70,y[0],r'Start'))
+    aux.append(axis.text(x[1]*1.02,y[1],r'Goal'))
+
+    
+    #aux[-1] = aux[-1][0]
     #Obstacle
     for polygon in plan.obstacle:
         lat,lon = zip(*polygon[0])
@@ -350,16 +363,17 @@ def plotResult(plan, axis, scenario, path_x, path_y, t):
     aux[-1]=aux[-1][0]
 
     #Solution
-    for sol in plan.solution:
-        aux.append(axis.plot(sol[0], sol[1], label=sol[2]))
-        aux[-1]=aux[-1][0]
-    aux.append(axis.plot(plan.solutionSampled[0][0], plan.solutionSampled[0][1], label='SolutionSampled'))
-    aux[-1]=aux[-1][0]   
-    axis.set(xlabel='Latitude', ylabel='Longitude', title='Solution Path')
-    axis.legend()
-    #ax.grid()
-    #ax.autoscale()
-    #plt.show()
+    #for sol in plan.solution:
+    #    aux.append(axis.plot(sol[0], sol[1], label=sol[2]))
+    #    aux[-1]=aux[-1][0]
+    #aux.append(axis.plot(plan.solutionSampled[0][0], plan.solutionSampled[0][1], label='SolutionSampled'))
+    #aux[-1]=aux[-1][0]   
+    #axis.set(xlabel='Latitude', ylabel='Longitude', title='Solution Path')
+    #axis.legend()
+
+    ##ax.grid()
+    ##ax.autoscale()
+    ##plt.show()
 
     #Path already did
     aux.append(axis.plot(path_x[:len(path_x)-1],path_y[:len(path_y)-1],linestyle='dashed',lw=1.5,color='red'))
@@ -429,11 +443,18 @@ if __name__ == "__main__":
 
     start_time = tm.time()
 
-    scenario = ScenarioClass('TWO')
+    cen = '1'
+    cen_string = 'ONE'
+
+    processing_time = 1
+
+    print('processing_time:' + str(processing_time))
+    path_to_save = '/home/josuehfa/System/CoreSystem/Results/Planejador/P' + cen + '/' + 'cenario_p' + cen + '_ct' + str(processing_time) + '.html'
+    json_to_save = '/home/josuehfa/System/CoreSystem/Results/Planejador/P' + cen + '/' + 'cenario_p' + cen + '_ct' + str(processing_time) + '.json'
+
+    scenario = ScenarioClass(cen_string)
     dimension = '2D'
     planner = 'RRTstar'
-
-    processing_time = 0.5
 
     ims = []
     plans = []
@@ -502,7 +523,7 @@ if __name__ == "__main__":
                 
             for idx, alg in enumerate(['RRTstar']):
                 plan_aux.append(OptimalPlanning((next_point[0],next_point[1]), scenario.goal, scenario.region, scenario.obstacle, planner, dimension, scenario.mapgen.z_time[round(t)]))
-                result = plan_aux[idx].plan(processing_time+tried, alg, 'WeightedLengthAndClearanceCombo',delta_d)
+                result = plan_aux[idx].plan(processing_time, alg, 'WeightedLengthAndClearanceCombo',delta_d)
                 if plan_aux[idx].solution != []:
                     cost_aut.append(plan_aux[idx].solution[0][3])
                 else:
@@ -606,11 +627,12 @@ if __name__ == "__main__":
         else:
             im_ani = animation.ArtistAnimation(fig, ims, interval=3000/time)
             #plt.show()
-        
-        
     
-    cost = scenario.pathCost(path_x, path_y, time_res)
-    print('Custo do trajeto: ' + str(cost) + '(Hab)' )
+    tempo_exec = str(tm.time() - start_time)
+    print("Tempo total de processamento: "+ tempo_exec + ' seconds')    
+    
+    pathcost = scenario.pathCost(path_x, path_y, time_res)
+    print('Custo do trajeto: ' + str(pathcost) + '(Hab)' )
 
     fig.clf()
     gc.collect()
@@ -622,13 +644,28 @@ if __name__ == "__main__":
 
     final_solution = {"lon":path_x,"lat":path_y}
 
-    cost = scenario.pathDist(path_x, path_y)
-    print('Distancia do trajeto: ' + str(cost) + '(m)')
+    distcost = scenario.pathDist(path_x, path_y)
+    print('Distancia do trajeto: ' + str(distcost) + '(m)')
 
-    print("Tempo total de processamento: "+ str(tm.time() - start_time) + ' seconds')
+    
 
-    plotSol.animedPlot(final_solution, time_res, scenario.mapgen, scenario.start_real, scenario.goal_real, scenario.region_real, scenario.obstacle_real,scenario,'/home/josuehfa/System/CoreSystem/Results/path.html')
+    plotSol.animedPlot(final_solution, time_res, scenario.mapgen, scenario.start_real, scenario.goal_real, scenario.region_real, scenario.obstacle_real,scenario,path_to_save)
 
+    json_data = final_solution
+    time_res = {'time_res':time_res}
+    pathcost = {'pathcost':pathcost}
+    distcost = {'distcost':distcost}
+    rrttime = {'rrttime':processing_time}
+    cen_string = {'cen_string':cen_string}
+    tempo_exec = {'tempo_exec':tempo_exec}
+    json_data.update(time_res)
+    json_data.update(cen_string)
+    json_data.update(rrttime)
+    json_data.update(pathcost)
+    json_data.update(distcost)
+    json_data.update(tempo_exec)
+    with open(json_to_save, 'w') as f:
+        json.dump(json_data, f)    
 
     from matplotlib import pyplot as plt 
     import numpy as np 
@@ -671,7 +708,7 @@ if __name__ == "__main__":
         return line, 
     anim = FuncAnimation(fig, animate, init_func = init, 
                         frames =len(path_y) , interval = 200, blit = True) 
-    plt.show()
+    #plt.show()
 
 
     #plan1 = OptimalPlanning((plan.solutionSampled[0][1][1], plan.solutionSampled[0][0][1]), goal, region, obstacle, planner, dimension)
@@ -687,257 +724,3 @@ if __name__ == "__main__":
     #plan.plotOptimal(0.1)
 
     
-
-
-
-
-
-## ----------------------------- ##
-
-#polygon = [(0.45, 0.45), 
-#               (0.45, 0.55),
-#               (0.55, 0.55), 
-#               (0.55, 0.45)]
-#    base = 0.2
-#    topo = 0.6
-#    obstacle = [(polygon, base, topo)]
-
-#polygon = [(-12.0, -47.98), (-12.0, -46.99),
-    #           (-12.0, -46.99), (-12.6, -46.99),
-    #           (-12.6, -46.99), (-12.6, -47.98),
-    #           (-12.6, -47.98), (-12.0, -47.98)]
-    #base = 20
-    #topo = 100
-    #obstacle = [(polygon, base, topo)]
-
-
-
-    # Solve the planning problem
-    #polygon = [(-3,-2),
-    #           (-3, 5), 
-    #           ( 6, 5),
-    #           ( 6,-2)]
-    #base = 2
-    #topo = 6
-    
-    #polygon2 = [(8, 9),
-    #            (8, 6),
-    #            (6, 6),
-    #            (6, 9)]
-    #type_obstacle = 'CB'  
-
-    #obstacle = [(polygon, base, topo, type_obstacle),(polygon2, base, topo,type_obstacle)]
-    #obstacle = [([(-12.200000000000001, -47.5), (-12.1, -47.5), (-12.1, -47.599999999999994), (-12.200000000000001, -47.599999999999994)], 0.2, 0.6), ([(-12.3, -47.5), (-12.2, -47.5), (-12.2, -47.599999999999994), (-12.3, -47.599999999999994)], 0.2, 0.6), ([(-12.3, -47.400000000000006), (-12.2, -47.400000000000006), (-12.2, -47.5), (-12.3, -47.5)], 0.2, 0.6), ([(-12.3, -47.1), (-12.2, -47.1), (-12.2, -47.199999999999996), (-12.3, -47.199999999999996)], 0.2, 0.6), ([(-12.4, -47.6), (-12.299999999999999, -47.6), (-12.299999999999999, -47.699999999999996), (-12.4, -47.699999999999996)], 0.2, 0.6), ([(-12.4, -47.5), (-12.299999999999999, -47.5), (-12.299999999999999, -47.599999999999994), (-12.4, -47.599999999999994)], 0.2, 0.6), ([(-12.4, -47.400000000000006), (-12.299999999999999, -47.400000000000006), (-12.299999999999999, -47.5), (-12.4, -47.5)], 0.2, 0.6), ([(-12.5, -47.7), (-12.399999999999999, -47.7), (-12.399999999999999, -47.8), (-12.5, -47.8)], 0.2, 0.6), ([(-12.5, -47.6), (-12.399999999999999, -47.6), (-12.399999999999999, -47.699999999999996), (-12.5, -47.699999999999996)], 0.2, 0.6), ([(-12.5, -47.5), (-12.399999999999999, -47.5), (-12.399999999999999, -47.599999999999994), (-12.5, -47.599999999999994)], 0.2, 0.6), ([(-12.5, -47.400000000000006), (-12.399999999999999, -47.400000000000006), (-12.399999999999999, -47.5), (-12.5, -47.5)], 0.2, 0.6), ([(-12.5, -47.300000000000004), (-12.399999999999999, -47.300000000000004), (-12.399999999999999, -47.4), (-12.5, -47.4)], 0.2, 0.6), ([(-12.600000000000001, -47.5), (-12.5, -47.5), (-12.5, -47.599999999999994), (-12.600000000000001, -47.599999999999994)], 0.2, 0.6), ([(-12.600000000000001, -47.400000000000006), (-12.5, -47.400000000000006), (-12.5, -47.5), (-12.600000000000001, -47.5)], 0.2, 0.6), ([(-12.600000000000001, -47.300000000000004), (-12.5, -47.300000000000004), (-12.5, -47.4), (-12.600000000000001, -47.4)], 0.2, 0.6)]
-
-    #start =(0.1,0.1,1) 
-    #goal = (0.9,0.9,8)
-    #start =(0.34,0.64,1) 
-    #goal = (0.9,0.2,1)
-    
-    #start =(-12.62, -47.86, 0.2) 
-    #goal = (-12.21, -47.28, 0.7)
-    #region = [(-12.0, -47.98), 
-    #        (-12.0, -46.99), 
-    #        (-12.67, -46.99), 
-    #        (-12.67, -47.98)]
-
-
-    #start_real = (-19.869245, -43.963622,1) #Escola de Eng
-    #goal_real = (-19.931071, -43.937778,1) #Praca da liberdade
-    
-    #start_real = (-19.853342, -44.002499,1) #Zoologico
-    #goal_real = (-19.927558, -43.911051) #Mangabeiras
-
-    # região da imagem testmap2
-    #region_real = [(-19.849635, -44.014423), 
-    #          (-19.849635, -43.900210),
-    #          (-19.934877, -43.900210),
-    #          (-19.934877, -44.014423)]
-
-
-    #start = realToPorcent(start_real,region_real)
-    #goal = realToPorcent(goal_real,region_real)
-
-    #region = [( 0, 0),
-    #          ( 1, 0),
-    #          ( 1, 1),
-    #          ( 0, 1)]
-
-
-    #ellipse = Ellipse((0.5, 0.5), 0.6, 0.6)
-        #ax.add_artist(ellipse)
-    
-
-
-    ### PlotOptimail.....
-
-        #ax.imshow(z, cmap='RdBu', vmin=z_min, vmax=z_max,
-        #      extent=[x.min(), x.max(), y.min(), y.max()],
-        #      interpolation='nearest', origin='lower', aspect='auto', animated=True)
-        #if i == 0:
-        #    ax.imshow(z, cmap='RdBu', vmin=z_min, vmax=z_max,
-        #      extent=[x.min(), x.max(), y.min(), y.max()],
-        #      interpolation='nearest', origin='lower', aspect='auto')
-        # ax.pcolormesh(x, y, z*0.02, cmap='RdBu', shading='nearest', vmin=z_min, vmax=z_max)
-        # X, Y = np.meshgrid(x, y)
-        # #ax.plot(X.flat, Y.flat, '.', color='m')
-        # try:
-        #     for sol in self.solution:
-        #         ax.plot(sol[1],sol[0],label=sol[2])
-        # except:
-        #     pass
-        # ax.set_title('image (nearest, aspect="auto")')
-        # #fig.colorbar(im, ax=ax)
-        # ax.set(xlabel='Latitude', ylabel='Longitude',
-        # title='Simple Plot')
-        # ax.legend()
-
-        # for sol in self.solution:
-        #     x_main=[]
-        #     y_main=[]
-        #     x_points = []
-        #     y_points = []
-        #     v_value = []
-        #     img = np.zeros((z.shape[0], z.shape[1]), dtype=np.uint8)
-        #     try:
-            #    for idx in range(len(sol[0])-1):
-            #        x1 = round(sol[1][idx]*(z.shape[0]-1))
-            #        y1 = round(sol[0][idx]*(z.shape[1]-1))
-            #        x2 = round(sol[1][idx+1]*(z.shape[0]-1))
-            #        y2 = round(sol[0][idx+1]*(z.shape[1]-1))
-            #        x_main.append(x1*mult)
-            #        y_main.append(y1*mult)
-            #        x_main.append(x2*mult)
-            #        y_main.append(y2*mult)
-            #        xx, yy, val = line_aa(x1, y1, x2, y2)
-            #        for i_ in range(len(xx)):
-            #            x_points.append(xx[i_]*mult)
-            #            y_points.append(yy[i_]*mult)
-            #            v_value.append(val[i_]*mult)
-            #        img[xx,yy] = val
-            #except:
-            #    pass
-                #for i_ in range(len(xx)):
-                #    img[xx[i_], yy[i_]] = val[i_]*100
-            #ax.pcolormesh(x_points, y_points, v_value, cmap='RdBu', shading='nearest', vmin=v_value, vmax=v_value)
-            #self.solutionSampled.append((x_main,y_main))
-            #ax.plot(x_points,y_points,'.')
-            #ax.plot(x_main,y_main)
-
-        #plt.show()
-    
-
-    # def plotSolutionPath(self,anima=False):
-    #     if anima == False:
-    #         if self.dimension == '2D':
-    #             fig, ax = plt.subplots()
-    #             #Obstacle
-    #             for polygon in self.obstacle:
-    #                 lat,lon = zip(*polygon[0])
-    #                 lat = list(lat)
-    #                 lon = list(lon)
-    #                 lat.append(polygon[0][0][0])
-    #                 lon.append(polygon[0][0][1])
-    #             #    ax.plot(lon, lat, linestyle='-', color='red')
-    #                 ax.fill(lon, lat, facecolor='gray', edgecolor='black')
-                
-    #             #Region
-    #             lat,lon = zip(*self.region)
-    #             lat = list(lat)
-    #             lon = list(lon)
-    #             lat.append(self.region[0][0])
-    #             lon.append(self.region[0][1])
-    #             ax.plot(lon, lat, linestyle='-.', color='green', label='Region of Interest')
-
-    #             #Solution
-    #             for solution in self.solution:
-    #                 ax.plot(solution[1], solution[0], label=solution[2])
-    #             ax.set(xlabel='Latitude', ylabel='Longitude', title='Solution Path')
-    #             ax.legend()
-    #             #ax.grid()
-    #             #ax.autoscale()
-    #             plt.show()
-
-    #         else:
-    #             print('Error inside plotSolutionPath')
-            
-    #     else:
-    #         if self.dimension == '2D':
-    #             fig, ax = plt.subplots()
-    #             #fig, ax = plt.subplots()
-    #             #Obstacle
-    #             for polygon in self.obstacle:
-    #                 x,y = zip(*polygon[0])
-    #                 line, = ax.plot(x, y, 'r-')
-    #             def init():
-    #                 ax.set_xlim(self.x_bound[0]*1.1, self.x_bound[1]*1.1)
-    #                 ax.set_ylim(self.y_bound[0]*1.1, self.y_bound[1]*1.1)
-    #                 return ln,
-    #             cont = 0
-    #             def update(frame):
-    #                 xdata.append(frame(0)[cont])
-    #                 ydata.append(frame(1)[cont])
-    #                 ln.set_data(xdata, ydata)
-    #                 cont = cont + 1
-    #                 return ln,
-    #             #Solution
-    #             for solution in self.solution:
-    #                 xdata, ydata = [], []
-    #                 ln, = plt.plot([], [], label=solution[2])
-    #                 ani = FuncAnimation(fig, update, frames=(solution[0], solution[1]),
-    #                                 init_func=init, blit=True)
-    #                 ax.set(xlabel='Latitude', ylabel='Longitude',
-    #                 title='Solution Path')
-    #                 ax.legend()
-    #                 #ax.grid()
-    #                 plt.show()
-    #                 input("Enter something")
-    #         elif self.dimension == '3D':
-    #             pass
-    #         else:
-    #             print('Error inside plotSolutionPath')
-
-    # def plotOptimal(self, mult, axis):
-    #     import random
-    #     import matplotlib.animation as animation
-    #     from mpl_toolkits.mplot3d import Axes3D
-    #     import numpy as np
-    #     import matplotlib.pyplot as plt
-
-    #     #data = np.loadtxt('path.txt')
-    #     #fig, ax = plt.subplots()
-    #     #ax = fig.gca(projection='3d')
-    #     #fig = plt.figure()
-    #     #ax = fig.add_subplot(1, 1, 1)
-    #     aux = []
-    #     #Obstacle
-    #     for polygon in self.obstacle:
-    #         lat,lon = zip(*polygon[0])
-    #         lat = list(lat)
-    #         lon = list(lon)
-    #         lat.append(polygon[0][0][0])
-    #         lon.append(polygon[0][0][1])
-    #     #    ax.plot(lon, lat, linestyle='-', color='red')
-    #         aux.append(axis.fill(lat, lon, facecolor='gray', edgecolor='black'))
-    #         aux[-1]=aux[-1][0]
-        
-    #     #Region
-    #     lat,lon = zip(*self.region)
-    #     lat = list(lat)
-    #     lon = list(lon)
-    #     lat.append(self.region[0][0])
-    #     lon.append(self.region[0][1])
-    #     aux.append(axis.plot(lon, lat, linestyle='-.', color='green', label='Region of Interest'))
-    #     aux[-1]=aux[-1][0]
-    #     #Solution
-    #     for sol in self.solution:
-    #         aux.append(axis.plot(sol[0], sol[1], label=sol[2]))
-    #         aux[-1]=aux[-1][0]
-    #     aux.append(axis.plot(self.solutionSampled[0][0], self.solutionSampled[0][1], label='SolutionSampled'))
-    #     aux[-1]=aux[-1][0]   
-    #     axis.set(xlabel='Latitude', ylabel='Longitude', title='Solution Path')
-    #     axis.legend()
-    #     #ax.grid()
-    #     #ax.autoscale()
-    #     #plt.show()
-    #     return aux

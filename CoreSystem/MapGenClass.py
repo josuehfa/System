@@ -122,7 +122,7 @@ class MapGen():
         self.y = y
         self.x = x
 
-    def createScenarioTwo(self):
+    def createScenarioTwo(self,areamin):
         '''
         Map of Scenario Two:
             - Use a image to create a nrow x ncol matrix with values of populational density of Belo Horizonte.
@@ -173,7 +173,19 @@ class MapGen():
         #final_image = np.multiply(final_image, np.where(final_image >= 0.34, 80, 1))
         #final_image = np.multiply(final_image, np.where(final_image >= 0.46, 160, 1))
         #final_image = np.multiply(final_image, np.where(final_image >= 0.56, 320, 1))
-        #final_image = final_image + 0.1        
+        #final_image = final_image + 0.1    
+
+        for idx in range(len(final_image)):
+            for idy in range(len(final_image)):
+                PopRange = [1000,5000,10000,20000,55765]
+                CostRange = [1.975, 6.35, 17.60, 45.10, 200]
+                for idc in range(len(CostRange)):
+                    if CostRange[idc] > final_image[idx][idy]:
+                        final_image[idx][idy] = PopRange[idc]*(1/1000000)*areamin
+                        break
+
+                
+
 
         for t in range(self.time):
             self.z_time.append(final_image)
@@ -271,7 +283,7 @@ class MapGen():
             image_croped = crop(image_resized, ((nrows/2, nrows/2), (nrows/2, nrows/2)), copy=False)
             image_rotate = rotate(image_croped,180)
             final_image = image_rotate[:,::-1]
-            final_image = np.multiply(final_image, np.where(final_image >= 0.1, 110, 1))
+            final_image = np.multiply(final_image, np.where(final_image >= 0.1, 110, 1)) + 0.1
             self.z_time.append(final_image)
         
 
@@ -323,7 +335,7 @@ class MapGen():
             final_image_pop = image_rotate_pop[:,::-1]
             final_image_pop = np.multiply(final_image_pop, np.where(final_image_pop >= 0.1, 110, 1))
 
-            final_image = 1.4*final_image_met + final_image_pop
+            final_image = 1.2*final_image_met + final_image_pop
             final_image = final_image + 0.1       
 
 
@@ -416,7 +428,7 @@ if __name__ == "__main__":
     mapgen = MapGen(nrows, ncols,time)
     #mapgen.create()
     #mapgen.createScenarioThree(vertiports,radius)
-    mapgen.createScenarioTwo()
+    mapgen.createScenarioTwo(50)
     #mapgen.createEmptyMap()
     #mapgen.createFromMap()
     #mapgen.plot_map(axis)
