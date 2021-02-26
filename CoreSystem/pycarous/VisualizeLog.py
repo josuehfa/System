@@ -30,7 +30,7 @@ if __name__ == "__main__":
     parser.add_argument("--record", action="store_true", help="record animation to file")
     parser.add_argument("--output", default="animation.mp4", help="video file name with .mp4 extension")
     parser.add_argument("--pad",type=float, default=0.0, help="extend the min/max values of the axes by the padding (in meters), default = 25.0 [m]")
-    parser.add_argument("--speed",type=int, default=1.0, help="increase playback speed by given factor")
+    parser.add_argument("--speed",type=int, default=10.0, help="increase playback speed by given factor")
     args = parser.parse_args()
 
     files = []
@@ -99,7 +99,7 @@ if __name__ == "__main__":
         xmin = min(lon_x)
         ymax = max(lat_y)
         ymin = min(lat_y)
-        VisualizeSimDataOptimal(pbs,scenario_time, scenario,allplans=args.allplans,showtraffic=not args.notraffic,xmin=xmin,ymin=ymin,xmax=xmax,ymax=ymax,playbkspeed=args.speed,interval=5,record=args.record,filename=args.output)
+        VisualizeSimDataOptimal(pbs,scenario_time, scenario,allplans=args.allplans,showtraffic=not args.notraffic,xmin=xmin,ymin=ymin,xmax=xmax,ymax=ymax,playbkspeed=args.speed,interval=5,record=False,filename=args.output)
 
     
 

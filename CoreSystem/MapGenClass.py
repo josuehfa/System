@@ -283,7 +283,7 @@ class MapGen():
             image_croped = crop(image_resized, ((nrows/2, nrows/2), (nrows/2, nrows/2)), copy=False)
             image_rotate = rotate(image_croped,180)
             final_image = image_rotate[:,::-1]
-            final_image = np.multiply(final_image, np.where(final_image >= 0.1, 110, 1)) + 0.1
+            final_image = np.multiply(final_image, np.where(final_image >= 0.1, 110, 1)) * 1.4
             self.z_time.append(final_image)
         
 
@@ -335,7 +335,7 @@ class MapGen():
             final_image_pop = image_rotate_pop[:,::-1]
             final_image_pop = np.multiply(final_image_pop, np.where(final_image_pop >= 0.1, 110, 1))
 
-            final_image = 1.2*final_image_met + final_image_pop
+            final_image = 1.4*final_image_met + final_image_pop
             final_image = final_image + 0.1       
 
 

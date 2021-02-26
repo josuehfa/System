@@ -305,8 +305,10 @@ class PlotlyResult():
         #0
         #Trace for solution  
         fig.append_trace(go.Scattermapbox(
-            lat=solution['lat'],
-            lon=solution['lon'],
+            #lat=solution['lat'],
+            #lon=solution['lon'],
+            lat=[],
+            lon=[],
             name='Solution Path',
             mode='markers+lines',
             marker=dict(size=5, color='blue')
@@ -346,10 +348,10 @@ class PlotlyResult():
         #4
         #Solution trace for contour
         fig.append_trace(go.Scatter(
-            x = solution['lon'], 
-            y = solution['lat'],
-            #x = [], 
-            #y = [],
+            #x = solution['lon'], 
+            #y = solution['lat'],
+            x = [], 
+            y = [],
             mode='markers+lines',
             name='Solution Path',
             marker=dict(size=5, color='red')
@@ -476,24 +478,24 @@ class PlotlyResult():
                 )])
 
         frames = []
-        #for idx, t in enumerate(time_res):
-            #frames.append(go.Frame(data=[go.Scattermapbox(
-            #                           lat=solution['lat'][:idx+1], 
-            #                           lon=solution['lon'][:idx+1],mode='markers+lines')],traces=[0]))
+        for idx, t in enumerate(time_res):
+            frames.append(go.Frame(data=[go.Scattermapbox(
+                                       lat=solution['lat'][:idx+1], 
+                                       lon=solution['lon'][:idx+1],mode='markers+lines')],traces=[0]))
              
-            #frames.append(go.Frame(data=[go.Scatter(
-            #                           x=solution['lon'][:idx], 
-            #                           y=solution['lat'][:idx],mode='markers+lines')],traces=[4]))
-            #frames.append(go.Frame(data=[go.Contour(x=costmap_x, y=costmap_y, z=costmap.z_time[t], line_smoothing=0, 
-            #                        colorscale=colorscale,
-            #                        name='Cost Time: '+str(t),
-            #                        contours=dict(
-            #                            start=costmap.z_time[t].min(), 
-            #                            end=costmap.z_time[t].max(), 
-            #                            size=1, 
-            #                            showlines=False))],traces=[5]))
+            frames.append(go.Frame(data=[go.Scatter(
+                                       x=solution['lon'][:idx], 
+                                       y=solution['lat'][:idx],mode='markers+lines')],traces=[4]))
+            frames.append(go.Frame(data=[go.Contour(x=costmap_x, y=costmap_y, z=costmap.z_time[t], line_smoothing=0, 
+                                    colorscale=colorscale,
+                                    name='Cost Time: '+str(t),
+                                    contours=dict(
+                                        start=costmap.z_time[t].min(), 
+                                        end=costmap.z_time[t].max(), 
+                                        size=1, 
+                                        showlines=False))],traces=[5]))
         fig.update(frames=frames)
-        plotly.offline.plot(fig, filename=filename)
+        plotly.offline.plot(fig, filename=filename,auto_open=False)
 
         
 

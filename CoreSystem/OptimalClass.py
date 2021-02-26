@@ -337,8 +337,8 @@ def plotResult(plan, axis, scenario, path_x, path_y, t):
     x = (scenario.start[0],scenario.goal[0])
     y = (scenario.start[1],scenario.goal[1])
     aux.append(axis.scatter(x, y, c='blue', marker='o'))
-    aux.append(axis.text(x[0]*0.70,y[0],r'Start'))
-    aux.append(axis.text(x[1]*1.02,y[1],r'Goal'))
+    aux.append(axis.text(x[0],y[0],r'Start'))
+    aux.append(axis.text(x[1],y[1],r'Goal'))
 
     
     #aux[-1] = aux[-1][0]
@@ -443,14 +443,14 @@ if __name__ == "__main__":
 
     start_time = tm.time()
 
-    cen = '1'
-    cen_string = 'ONE'
+    cen = '4'
+    cen_string = 'FIVE'
 
     processing_time = 1
 
     print('processing_time:' + str(processing_time))
-    path_to_save = '/home/josuehfa/System/CoreSystem/Results/Planejador/P' + cen + '/' + 'cenario_p' + cen + '_ct' + str(processing_time) + '.html'
-    json_to_save = '/home/josuehfa/System/CoreSystem/Results/Planejador/P' + cen + '/' + 'cenario_p' + cen + '_ct' + str(processing_time) + '.json'
+    path_to_save = '/home/josuehfa/System/CoreSystem/Results/Planejador/P' + cen + '/' + 'cenario_p' + cen + '_1D_1M4_1P_' + str(processing_time) + '.html'
+    json_to_save = '/home/josuehfa/System/CoreSystem/Results/Planejador/P' + cen + '/' + 'cenario_p' + cen + '_1D_1M4_1P_' + str(processing_time) + '.json'
 
     scenario = ScenarioClass(cen_string)
     dimension = '2D'
@@ -667,6 +667,8 @@ if __name__ == "__main__":
     with open(json_to_save, 'w') as f:
         json.dump(json_data, f)    
 
+    print(path_to_save)
+    
     from matplotlib import pyplot as plt 
     import numpy as np 
     from matplotlib.animation import FuncAnimation 

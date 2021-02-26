@@ -333,7 +333,7 @@ class SimEnvironment:
                 #Time to the last point 
                 if round(self.current_time*1.05,1) == round(ic.localPlans[0][-1][0],1):
                     tried = 0
-                    max_try = 1
+                    max_try = 0
                     while tried <= max_try:
                         plan_aux = []
                         cost_aut = []

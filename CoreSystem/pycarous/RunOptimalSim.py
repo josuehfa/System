@@ -10,6 +10,7 @@ from PlotlyClass import *
 from ScenarioClass import *
 import matplotlib.pyplot as plt
 import time
+import json
 import numpy as np
 import argparse
 from euclid import *
@@ -68,17 +69,20 @@ if args.cfs:
 
 #OptimalClass Startup
 start_time = time.time()
-scen_num = 'TWO'
+scen_num = 'FIVE'
 scenario = ScenarioClass(scen_num)
 dimension = '2D'
 planner = 'RRTstar'
-processing_time = 0.5
+processing_time = 1
 speed_aircraft = 4.5
+
+cen_string = scen_num
+
 
 plans = []
 fig = plt.figure()
 axis = plt.axes(xlim =(-0.2, 1.2),ylim =(-0.2, 1.2))
-delta_d = 1/scenario.nrows
+delta_d = (1/scenario.nrows)
 ims = []
 path_x = []
 path_y = []
@@ -148,7 +152,7 @@ if args.traffic != '':
     bearing = get_bearing(fp_start[idx-1][:2],fp_start[idx][:2])
     tf = [1, 300, bearing, 5, 5, 180+bearing, 0]
     sim.AddTraffic(tf[0],tfHomePos, *tf[1:])
-
+  
 # Initialize Icarous class
 if args.cfs:
     ic = IcarousRunner(HomePos, verbose=args.verbosity)
@@ -182,25 +186,49 @@ if args.uncertainty:
 # Run the Simulation
 sim.RunSimulationOptimal(scenario, plans, path_x, path_y, delta_d, processing_time, planner, dimension, ims, axis, time_res, speed_aircraft)
 
-cost = scenario.pathCost(path_x, path_y, time_res)
-print('Custo do trajeto: ' + str(cost))
+path_x_real = []
+path_y_real = []
 
 localCoords = []
 fig.clf()
 gc.collect()
 plotSol = PlotlyResult('','','')
 for idx in range(len(path_x)):
-    path_x[idx] = path_x[idx]*scenario.lon_range + min(scenario.lon_region)
-    path_y[idx] = path_y[idx]*scenario.lat_range + min(scenario.lat_region)
-    localCoords.append([path_y[idx],path_x[idx]])
+    path_x_real.append(path_x[idx]*scenario.lon_range + min(scenario.lon_region))
+    path_y_real.append(path_y[idx]*scenario.lat_range + min(scenario.lat_region))
+    localCoords.append([path_y_real[idx],path_x_real[idx]])
+
+pathcost = scenario.pathCost(path_x, path_y, time_res)
+print('Custo do trajeto: ' + str(pathcost) + '(Hab)' )
 
 
+distcost = scenario.pathDist(path_x_real, path_y_real)
+print('Distancia do trajeto: ' + str(distcost) + '(m)')
 
 # Save json log outputs
-sim.WriteLogOptimal(time_res,scen_num,localCoords,cost)
+sim.WriteLogOptimal(time_res,scen_num,localCoords,pathcost)
 
-final_solution = {"lon":path_x,"lat":path_y}
+final_solution = {"lon":path_x_real,"lat":path_y_real}
 plotSol.animedPlot(final_solution, time_res, scenario.mapgen, scenario.start_real, scenario.goal_real, scenario.region_real, scenario.obstacle_real,scenario,'/home/josuehfa/System/CoreSystem/Results/path.html')
+
+
+
+json_to_save='/home/josuehfa/System/CoreSystem/pycarous/data/results.json'
+json_data = final_solution
+time_res = {'time_res':time_res}
+pathcost = {'pathcost':pathcost}
+distcost = {'distcost':distcost}
+rrttime = {'rrttime':processing_time}
+cen_string = {'cen_string':cen_string}
+
+json_data.update(time_res)
+json_data.update(cen_string)
+json_data.update(rrttime)
+json_data.update(pathcost)
+json_data.update(distcost)
+with open(json_to_save, 'w') as f:
+    json.dump(json_data, f)    
+
 
 
 print(str(time.time() - start_time) + ' seconds')

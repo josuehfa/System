@@ -175,6 +175,7 @@ class AgentAnimation():
     def AddStartGoal(self):
         start_goal = [self.scenario.start_real[0:2],self.scenario.goal_real[0:2]]
         y,x = zip(*start_goal)
+        self.sg, = self.ax.plot(0,0,'y.')
         self.annot_start = self.ax.annotate('Start',
             xy=(x[0],y[0]), xycoords='data',
             xytext=(-70, -80), textcoords='offset points',
@@ -194,7 +195,7 @@ class AgentAnimation():
     def UpdateStartGoal(self):
         start_goal = [self.scenario.start_real[0:2],self.scenario.goal_real[0:2]]
         y,x = zip(*start_goal)
-        self.sg.set_data(x,y)
+        self.sg.set_data(np.array(x),np.array(y))
         self.annot_start.set_text('Start')
         self.annot_goal.set_text('Goal')
 
@@ -222,7 +223,7 @@ class AgentAnimation():
         #self.AddPath(np.array(pln_aux),'k.-')
 
 
-        idx = self.pathtime[i]+2
+        idx = self.pathtime[i]+4
         if idx >= max(self.pathtime):
             idx = max(self.pathtime)-1
 
@@ -238,7 +239,7 @@ class AgentAnimation():
         self.costmap_y = np.linspace(ymin, ymax, len(costmap.y))
         self.costmap_x = np.linspace(xmin, xmax, len(costmap.x))
         self.costmap = costmap
-        self.pcolormesh = self.ax.pcolormesh(self.costmap_x, self.costmap_y, self.costmap.z_time[self.costtime[0]]*0.01, cmap='rainbow', shading='nearest')
+        self.pcolormesh = self.ax.pcolormesh(self.costmap_x, self.costmap_y, self.costmap.z_time[self.costtime[0]]*0.01, cmap='twilight', shading='nearest')
         #self.ax.add_patch(self.pcolormesh)
 
     def UpdateCostMap(self,i):
@@ -248,7 +249,7 @@ class AgentAnimation():
 
     def AddZoom(self):
         position = self.last_position
-        self.pcolorzoom = self.axins.pcolormesh(self.costmap_x, self.costmap_y, self.costmap.z_time[self.costtime[0]]*0.01, cmap='rainbow', shading='nearest')
+        self.pcolorzoom = self.axins.pcolormesh(self.costmap_x, self.costmap_y, self.costmap.z_time[self.costtime[0]]*0.01, cmap='twilight', shading='nearest')
         x1, x2, y1, y2 = position[0]*1.000015, position[0]*0.999986,  position[1]*1.000024, position[1]*0.999975
         self.axins.set_xlim(x1, x2)
         self.axins.set_ylim(y1, y2)
@@ -306,17 +307,32 @@ class AgentAnimation():
             lon = list(lon)
             lat.append(polygon[0][0][0])
             lon.append(polygon[0][0][1])
-        #    ax.plot(lon, lat, linestyle='-', color='red')
-            self.obs, = self.ax.fill(lat, lon, facecolor='gray', edgecolor='black')
-            self.obsaxins, = self.axins.fill(lat, lon, facecolor='gray', edgecolor='black')
+            #ax.plot(lon, lat, linestyle='-', color='red')
+            self.obs, = self.ax.fill(lon, lat, facecolor='gray', edgecolor='black')
+            self.obsaxins, = self.axins.fill(lon, lat, facecolor='gray', edgecolor='black')
+            #lat = lat+[lat[0]]
+            #lon = lon+[lon[0]]
+            #self.obs, = self.ax.plot(lon+[lon[0]],lat+[lat[0]],'k-')
+            #self.obsaxins, = self.axins.plot(lon+[lon[0]],lat+[lat[0]],'k-')
     
     def UpdateObstacles(self):
         #Obstacle
         for polygon in self.scenario.obstacle_real:
-            self.obs.set_xy(polygon[0])
+            lat,lon = zip(*polygon[0])
+            lat = list(lat)
+            lon = list(lon)
+            lat.append(polygon[0][0][0])
+            lon.append(polygon[0][0][1])
+            lat = lat + [lat[0]]
+            lon = lon + [lon[0]]
+            poly = np.array([lon,lat]).T
+            self.obs.set_xy(poly)
             self.obs.set_fill(True)
-            self.obsaxins.set_xy(polygon[0])
+            self.obsaxins.set_xy(poly)
             self.obsaxins.set_fill(True)
+            
+            #self.obs.set_data(lon+[lon[0]],lat+[lat[0]])
+            #self.obsaxins.set_data(lon+[lon[0]],lat+[lat[0]])
 
     def UpdateBands(self,position,bands,sectors):
         numBands = bands["numBands"]
@@ -353,8 +369,8 @@ class AgentAnimation():
         i = int(i*self.speed)
         self.current_time = self.current_time + 0.05
         if i < self.minlen-1:
-            self.UpdateCostMap(i)
             self.UpdateObstacles()
+            self.UpdateCostMap(i)
             self.UpdateZoom(i)
             self.UpdateWaypoint(i)
             self.UpdateStartGoal()
