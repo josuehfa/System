@@ -15,6 +15,8 @@ class MapGen():
         self.y = []
         self.z = []
         self.z_time = []
+        self.z_pop_time =[]
+        self.z_met_time =[]
         self.obs_time = []
         self.verti_perimeters = []
 
@@ -292,7 +294,7 @@ class MapGen():
         self.y = y
         self.x = x
 
-    def createScenarioFive(self):
+    def createScenarioFive(self,areamin):
         '''
         Map of Scenario Five:
             - Use a image to create a nrow x ncol matrix with values of populational density of Belo Horizonte.
@@ -329,13 +331,56 @@ class MapGen():
             final_image_met = image_rotate_met[:,::-1]
             final_image_met = np.multiply(final_image_met, np.where(final_image_met >= 0.1, 110, 1))
 
-            original_pop = io.imread('/home/josuehfa/System/CoreSystem/ImageLib/popCalculated.png')
-            image_resized_pop = resize(original_pop, (nrows+1,ncols+1),anti_aliasing=True)
-            image_rotate_pop = rotate(image_resized_pop,180)
-            final_image_pop = image_rotate_pop[:,::-1]
-            final_image_pop = np.multiply(final_image_pop, np.where(final_image_pop >= 0.1, 110, 1))
+            #original_pop = io.imread('/home/josuehfa/System/CoreSystem/ImageLib/popCalculated.png')
+            #image_resized_pop = resize(original_pop, (nrows+1,ncols+1),anti_aliasing=True)
+            #image_rotate_pop = rotate(image_resized_pop,180)
+            #final_image_pop = image_rotate_pop[:,::-1]
+            #final_image_pop = np.multiply(final_image_pop, np.where(final_image_pop >= 0.1, 110, 1))
+            original = io.imread('/home/josuehfa/System/CoreSystem/ImageLib/popCalculated.png')
+            image_resized = resize(original, (nrows+1,ncols+1),anti_aliasing=True)
+            image_rotate = rotate(image_resized,180)
+            final_image_pop = image_rotate[:,::-1]
+            
+            lower = final_image_pop < 0.15
+            lower_med = (lower != True) * (final_image_pop < 0.25)
+            medium = (lower != True) * (lower_med != True) *  (final_image_pop < 0.35)
+            medium_med = (lower != True) * (lower_med != True) * (medium != True) *  (final_image_pop < 0.45)
+            upper = (lower != True) * (lower_med != True) * (medium != True) * (medium_med != True) * (final_image_pop < 1) 
 
-            final_image = 1.4*final_image_met + final_image_pop
+            l_factor = 20
+            lm_factor = 40
+            m_factor = 80
+            mm_factor = 160
+            u_factor = 320
+
+            final_image_pop = (final_image_pop*lower*l_factor)+\
+                        (final_image_pop*lower_med*lm_factor)+\
+                        (final_image_pop*medium*m_factor)+\
+                        (final_image_pop*medium_med*mm_factor)+\
+                        (final_image_pop*upper*u_factor)
+
+            final_image_pop = final_image_pop/1.6 + 0.1
+            #final_image = np.multiply(final_image, np.where(final_image >= 0.11, 20, 1))
+            #final_image = np.multiply(final_image, np.where(final_image >= 0.23, 40, 1))
+            #final_image = np.multiply(final_image, np.where(final_image >= 0.34, 80, 1))
+            #final_image = np.multiply(final_image, np.where(final_image >= 0.46, 160, 1))
+            #final_image = np.multiply(final_image, np.where(final_image >= 0.56, 320, 1))
+            #final_image = final_image + 0.1    
+
+            for idx in range(len(final_image_pop)):
+                for idy in range(len(final_image_pop)):
+                    PopRange = [1000,5000,10000,20000,55765]
+                    CostRange = [1.975, 6.35, 17.60, 45.10, 200]
+                    for idc in range(len(CostRange)):
+                        if CostRange[idc] > final_image_pop[idx][idy]:
+                            final_image_pop[idx][idy] = PopRange[idc]*(1/1000000)*areamin
+                            break
+
+            
+            self.z_pop_time.append(final_image_pop)
+            self.z_met_time.append(final_image_met)
+
+            final_image = 10*final_image_met +2*final_image_pop
             final_image = final_image + 0.1       
 
 
@@ -416,8 +461,8 @@ if __name__ == "__main__":
     from matplotlib import pyplot
     ims = []
     time = 10
-    nrows = 500
-    ncols = 500
+    nrows = 200
+    ncols = 200
     delta_d = 1/nrows
     fig = plt.figure()
     axis = plt.axes(xlim =(0, 1),  
@@ -428,17 +473,18 @@ if __name__ == "__main__":
     mapgen = MapGen(nrows, ncols,time)
     #mapgen.create()
     #mapgen.createScenarioThree(vertiports,radius)
-    mapgen.createScenarioTwo(50)
+    mapgen.createScenarioFive(3600)
     #mapgen.createEmptyMap()
     #mapgen.createFromMap()
-    #mapgen.plot_map(axis)
+    
     #mapgen.createScenarioFive()
     
     
     for t in range(time):
         #Obstacle
         aux_im = []
-        aux_im.append(axis.pcolormesh(mapgen.x, mapgen.y, mapgen.z_time[t]*0.01, cmap='twilight', shading='nearest'))
+        mapgen.plot_map(t,axis)
+        aux_im.append(axis.pcolormesh(mapgen.x, mapgen.y, mapgen.z_time[t]*0.02, cmap='twilight', shading='nearest'))
         if mapgen.obs_time != [] :
             for idx, polygon in enumerate(mapgen.obs_time[t]):
                 lat,lon = zip(*polygon[0])

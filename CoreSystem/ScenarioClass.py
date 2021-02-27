@@ -226,8 +226,8 @@ class ScenarioClass():
 
         #Parametros para criação do mapa
         self.time = 1
-        self.nrows = 250
-        self.ncols = 250
+        self.nrows = 200
+        self.ncols = 200
 
         distlat = distance(self.region_real[0][0],self.region_real[0][1],self.region_real[3][0],self.region_real[3][1])
         distlon = distance(self.region_real[1][0],self.region_real[1][1],self.region_real[2][0],self.region_real[2][1])
@@ -412,7 +412,10 @@ class ScenarioClass():
         self.goal_real = (-19.931071, -43.937778,0)
 
         #test
-        self.start_real = (-19.836548, -44.008020,0)
+        #self.start_real = (-19.836548, -44.008020,0)
+        #self.goal_real = (-19.916969, -43.909915,0)
+
+        self.start_real = (-19.869245, -43.963622,0) 
         self.goal_real = (-19.916969, -43.909915,0)
 
 
@@ -463,51 +466,66 @@ class ScenarioClass():
         self.time = 24
         self.nrows = 200
         self.ncols = 200
-        self.mapgen = MapGen(self.nrows, self.ncols,self.time)
-        self.mapgen.createScenarioFive()
-        pass
-
-    def pathCost(self,path_x,path_y,scenrio_time):
 
         distlat = distance(self.region_real[0][0],self.region_real[0][1],self.region_real[3][0],self.region_real[3][1])
         distlon = distance(self.region_real[1][0],self.region_real[1][1],self.region_real[2][0],self.region_real[2][1])
         areamin = (distlat*distlon)/(self.ncols*self.ncols)
-        
-        def weightFunc(cost,areamin):
 
-            if self.scenario == 'TWO':
-                PopRange = [1000,5000,10000,20000,55765]
-                #'lower':1000
-                #'lower_med':5000
-                #'medium':10000
-                #'medium_med':20000
-                #'upper':55765
 
-                CostRange = [1.975, 6.35, 17.60, 45.10, 200]
-                #'lower':1.975
-                #'lower_med':6.35
-                #'medium':17.6
-                #'medium_med':45.1
-                #'upper':200 
-            
-                for idx in range(len(CostRange)):
-                    if CostRange[idx] > cost:
-                        return PopRange[idx]*(1/1000000)*areamin #densipop(Hab/km2) * convert(km2/m2) * areamin(m2)
-            else:
-                return 1
-        
+        self.mapgen = MapGen(self.nrows, self.ncols,self.time)
+        self.mapgen.createScenarioFive(areamin)
+        pass
+
+    def pathCost(self,path_x,path_y,scenario_time, type_):
+                
         cost = 0
-        for idx in range(len(scenrio_time)-1):
-            costmap = self.mapgen.z_time[scenrio_time[idx]]
+        for idx in range(len(scenario_time)-1):
+            if (self.scenario == 'FIVE'):
+                if type_ == 'pop':
+                    costmap = self.mapgen.z_pop_time[scenario_time[idx]]
 
-            x1 = round(path_x[idx]*(costmap.shape[0]-1))
-            y1 = round(path_y[idx]*(costmap.shape[1]-1))
-            x2 = round(path_x[idx+1]*(costmap.shape[0]-1))
-            y2 = round(path_y[idx+1]*(costmap.shape[1]-1))
-            xx, yy, val = line_aa(x1, y1, x2, y2)
+                    x1 = round(path_x[idx]*(costmap.shape[0]-1))
+                    y1 = round(path_y[idx]*(costmap.shape[1]-1))
+                    x2 = round(path_x[idx+1]*(costmap.shape[0]-1))
+                    y2 = round(path_y[idx+1]*(costmap.shape[1]-1))
+                    xx, yy = line(x1, y1, x2, y2)
 
-            for idy in range(len(xx)-1):
-                cost = cost + costmap[xx[idy+1]][yy[idy+1]]*val[idy+1]
+                    for idy in range(len(xx)-1):
+                        cost = cost + costmap[yy[idy+1]][xx[idy+1]]
+                elif type_ == 'met':
+                    costmap = self.mapgen.z_met_time[scenario_time[idx]]
+
+                    x1 = round(path_x[idx]*(costmap.shape[0]-1))
+                    y1 = round(path_y[idx]*(costmap.shape[1]-1))
+                    x2 = round(path_x[idx+1]*(costmap.shape[0]-1))
+                    y2 = round(path_y[idx+1]*(costmap.shape[1]-1))
+                    xx, yy= line(x1, y1, x2, y2)
+
+                    for idy in range(len(xx)-1):
+                        cost = cost + costmap[yy[idy+1]][xx[idy+1]]
+                elif type_ == 'ponderado':
+                    costmap = self.mapgen.z_time[scenario_time[idx]]
+
+                    x1 = round(path_x[idx]*(costmap.shape[0]-1))
+                    y1 = round(path_y[idx]*(costmap.shape[1]-1))
+                    x2 = round(path_x[idx+1]*(costmap.shape[0]-1))
+                    y2 = round(path_y[idx+1]*(costmap.shape[1]-1))
+                    xx, yy = line(x1, y1, x2, y2)
+
+                    for idy in range(len(xx)-1):
+                        cost = cost + costmap[yy[idy+1]][xx[idy+1]]
+
+            else:
+                costmap = self.mapgen.z_time[scenario_time[idx]]
+
+                x1 = round(path_x[idx]*(costmap.shape[0]-1))
+                y1 = round(path_y[idx]*(costmap.shape[1]-1))
+                x2 = round(path_x[idx+1]*(costmap.shape[0]-1))
+                y2 = round(path_y[idx+1]*(costmap.shape[1]-1))
+                xx, yy = line(x1, y1, x2, y2)
+
+                for idy in range(len(xx)-1):
+                    cost = cost + costmap[yy[idy+1]][xx[idy+1]]
         
         self.pathcost = cost
         return cost
@@ -527,5 +545,5 @@ class ScenarioClass():
 
 if __name__ == "__main__":
 
-    scenario = ScenarioClass('TWO')
+    scenario = ScenarioClass('FIVE')
     pass

@@ -36,7 +36,14 @@ import matplotlib.animation as animation
 from matplotlib import pyplot
 from skimage.draw import *
 
-    
+
+peso_l = 12160 * 0.1 #12160 é a relação entre 0-1 e distancia da menor resolução
+peso_p = 2
+peso_m = 10
+
+num_rrt = 0
+cost_total = 0
+
 class OptimalPlanning():
     def __init__(self, start, goal, region, obstacle, planner, dimension, costmap):
         self.start = start
@@ -45,7 +52,8 @@ class OptimalPlanning():
         self.obstacle = obstacle
         self.planner = planner
         self.dimension = dimension
-        self.costmap = costmap
+        self.costmap_pop = costmap['pop']
+        self.costmap_met = costmap['met']
         self.solution = []
         self.solution_dict = {}
         self.solutionSampled = []
@@ -125,10 +133,10 @@ class OptimalPlanning():
             y1 = round(s1[0]*(self.costmap.shape[1]-1))
             x2 = round(s2[1]*(self.costmap.shape[0]-1))
             y2 = round(s2[0]*(self.costmap.shape[1]-1))
-            xx, yy, val = line_aa(x1, y1, x2, y2)
+            xx, yy = line(x1, y1, x2, y2)
             cost = 0
             for idx in range(len(xx)-1):
-                cost = cost + self.costmap[xx[idx+1]][yy[idx+1]]*val[idx+1]
+                cost = cost + self.costmap[xx[idx+1]][yy[idx+1]]
             #cost = (cost/(len(xx)))
             return ob.Cost(cost)
 
@@ -180,10 +188,12 @@ class OptimalPlanning():
 
     def getBalancedObjective1(self, si):
         lengthObj = ob.PathLengthOptimizationObjective(si)
-        clearObj = self.ClearanceObjective(si,self.costmap)
+        clearObj_pop = self.ClearanceObjective(si,self.costmap_pop)
+        clearObj_met = self.ClearanceObjective(si,self.costmap_met)
         opt = ob.MultiOptimizationObjective(si)
-        opt.addObjective(lengthObj, 1.0)
-        opt.addObjective(clearObj, 1.0)
+        opt.addObjective(lengthObj, peso_l)
+        opt.addObjective(clearObj_pop, peso_p)
+        opt.addObjective(clearObj_met, peso_m)
         return opt
 
     def getPathLengthObjWithCostToGo(self, si):
@@ -302,8 +312,8 @@ class OptimalPlanning():
         self.solution.append((solution_lat,solution_lon,plannerType,pathCost))
 
         for idx in range(len(solution_lat)):
-            sampled_lat.append(round(solution_lat[idx]*(self.costmap.shape[0]-1))*mult)
-            sampled_lon.append(round(solution_lon[idx]*(self.costmap.shape[1]-1))*mult)
+            sampled_lat.append(round(solution_lat[idx]*(self.costmap_pop.shape[0]-1))*mult)
+            sampled_lon.append(round(solution_lon[idx]*(self.costmap_pop.shape[1]-1))*mult)
         self.solutionSampled.append((sampled_lat,sampled_lon))
 
         dict_1 = {"solution":{"lat":solution_lat,"lon":solution_lon,"type":plannerType, "pathCost":pathCost}}
@@ -445,13 +455,13 @@ if __name__ == "__main__":
 
     cen = '4'
     cen_string = 'FIVE'
-
+    
     processing_time = 1
 
     print('processing_time:' + str(processing_time))
-    path_to_save = '/home/josuehfa/System/CoreSystem/Results/Planejador/P' + cen + '/' + 'cenario_p' + cen + '_1D_1M4_1P_' + str(processing_time) + '.html'
-    json_to_save = '/home/josuehfa/System/CoreSystem/Results/Planejador/P' + cen + '/' + 'cenario_p' + cen + '_1D_1M4_1P_' + str(processing_time) + '.json'
-
+    path_to_save = '/home/josuehfa/System/CoreSystem/Results/Planejador/P' + cen + '/' + 'cenario_p' + cen + '_rand_'+str(int(peso_l))+'L_'+str(peso_m)+'M_'+str(peso_p)+'P_4_' + str(processing_time) + '.html'
+    json_to_save = '/home/josuehfa/System/CoreSystem/Results/Planejador/P' + cen + '/' + 'cenario_p' + cen + '_rand_'+str(int(peso_l))+'L_'+str(peso_m)+'M_'+str(peso_p)+'P_4_' + str(processing_time) + '.json'
+    print('json_to_save:' + str(json_to_save))
     scenario = ScenarioClass(cen_string)
     dimension = '2D'
     planner = 'RRTstar'
@@ -470,7 +480,7 @@ if __name__ == "__main__":
     t = 0
     last_t = 0
     tried = 0
-    max_try = 0
+    max_try = 1
     pnt = 0
 
     while (run == True):
@@ -478,10 +488,17 @@ if __name__ == "__main__":
         cost_aut = []
         if len(plans) == 0:
             for idx, alg in enumerate(['RRTstar']):
-                plan_aux.append(OptimalPlanning(scenario.start, scenario.goal, scenario.region, scenario.obstacle, planner, dimension, scenario.mapgen.z_time[round(t)]))
+
+                costmap = {'pop':scenario.mapgen.z_pop_time[round(t)],'met':scenario.mapgen.z_met_time[round(t)]}
+
+                plan_aux.append(OptimalPlanning(scenario.start, scenario.goal, scenario.region, scenario.obstacle, planner, dimension, costmap))
                 result = plan_aux[idx].plan(5, alg, 'WeightedLengthAndClearanceCombo',delta_d)
                 if plan_aux[idx].solution != []:
                     cost_aut.append(plan_aux[idx].solution[0][3])
+                    #custo medio rrt
+                    num_rrt = num_rrt + 1
+                    cost_total = cost_total + plan_aux[idx].solution[0][3]
+
                 else:
                     cost_aut.append(np.inf)
             lower_cost = cost_aut.index(min(cost_aut))
@@ -522,10 +539,16 @@ if __name__ == "__main__":
                 #next_point = (plans[-1].solutionSampled[0][0][1], plans[-1].solutionSampled[0][1][1])
                 
             for idx, alg in enumerate(['RRTstar']):
-                plan_aux.append(OptimalPlanning((next_point[0],next_point[1]), scenario.goal, scenario.region, scenario.obstacle, planner, dimension, scenario.mapgen.z_time[round(t)]))
+                costmap = {'pop':scenario.mapgen.z_pop_time[round(t)],'met':scenario.mapgen.z_met_time[round(t)]}
+                plan_aux.append(OptimalPlanning((next_point[0],next_point[1]), scenario.goal, scenario.region, scenario.obstacle, planner, dimension, costmap))
                 result = plan_aux[idx].plan(processing_time, alg, 'WeightedLengthAndClearanceCombo',delta_d)
                 if plan_aux[idx].solution != []:
                     cost_aut.append(plan_aux[idx].solution[0][3])
+
+                    #custo medio rrt
+                    num_rrt = num_rrt + 1
+                    cost_total = cost_total + plan_aux[idx].solution[0][3]
+
                 else:
                     cost_aut.append(np.inf)
             lower_cost = cost_aut.index(min(cost_aut))
@@ -631,8 +654,22 @@ if __name__ == "__main__":
     tempo_exec = str(tm.time() - start_time)
     print("Tempo total de processamento: "+ tempo_exec + ' seconds')    
     
-    pathcost = scenario.pathCost(path_x, path_y, time_res)
-    print('Custo do trajeto: ' + str(pathcost) + '(Hab)' )
+    print('Numero de RRTs:' + str(num_rrt))
+    print('Custo Total das RRTs:' + str(cost_total))
+
+    cost_med = cost_total/num_rrt
+    print('Custo Medio das RRTs:' + str(cost_med))
+
+    popcost = scenario.pathCost(path_x, path_y, time_res, 'pop')
+    print('Custo da População: ' + str(popcost) + '(Hab)' )
+
+    metcost = scenario.pathCost(path_x, path_y, time_res, 'met')
+    print('Custo da meteorologia: ' + str(metcost) + '(dBZ)' )
+
+
+    pathcost = scenario.pathCost(path_x, path_y, time_res, 'ponderado')
+    print('Custo Ponderado: ' + str(pathcost)  )
+
 
     fig.clf()
     gc.collect()
@@ -653,11 +690,13 @@ if __name__ == "__main__":
 
     json_data = final_solution
     time_res = {'time_res':time_res}
-    pathcost = {'pathcost':pathcost}
+    pathcost = {'popcost':popcost,'metcost':metcost,'pathcost':pathcost}
     distcost = {'distcost':distcost}
     rrttime = {'rrttime':processing_time}
     cen_string = {'cen_string':cen_string}
     tempo_exec = {'tempo_exec':tempo_exec}
+    rrt_json = {'cost_med':cost_med,'rrtnumber':num_rrt,'cost_total':cost_total}
+    json_data.update(rrt_json)
     json_data.update(time_res)
     json_data.update(cen_string)
     json_data.update(rrttime)
