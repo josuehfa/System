@@ -8,22 +8,7 @@ This work presents the development of a system for UAS trajectory planning. This
 ## Simulation Results
 The results of this project are shown in the next subtopics: 
 
-### Local Path Planning using DAIDALUS
-- Running DAIDALUS for a frontal collision between the ownership aircraft and an intruder aircraft. 
-
-![Demo File](https://github.com/josuehfa/System/blob/master/simulation/frontalcolision.gif)
-
-### Global Path Planning using OMPL
-
-- Running the system considering costs of meteorological conditions, populational density and no-fly zones. 
-  
-![Demo File](https://github.com/josuehfa/System/blob/master/simulation/pathplanningresult.gif)
-
-
-### Integrated scenario with Local and Global Path Planning
-
-- Running the system considering the costs and risks related to collision with other aircraft and access to dangerous areas. 
-  - Legend:
+- Legend:
     - ![#000](https://via.placeholder.com/15/000/000000?text=+)  : Path planned
     - ![#ffff](https://via.placeholder.com/15/fff/000000?text=+) : Path executed by the UAS
     - ![#FF5733](https://via.placeholder.com/15/FF5733/000000?text=+) : Ownership Aircraft
@@ -31,6 +16,23 @@ The results of this project are shown in the next subtopics:
     - ![#FFFC27](https://via.placeholder.com/15/FFFC27/000000?text=+) - ![#ED251B](https://via.placeholder.com/15/ED251B/000000?text=+) : DAA bands
     - ![#6C6C6C](https://via.placeholder.com/15/6C6C6C/000000?text=+) : No-fly zones
     - ![#E4EFF9](https://via.placeholder.com/15/E4EFF9/000000?text=+) - ![#330083](https://via.placeholder.com/15/330083/000000?text=+) : Costs
+  
+
+### Local Path Planning using DAIDALUS
+Running DAIDALUS for a frontal collision between the ownership aircraft and an intruder aircraft. 
+
+![Demo File](https://github.com/josuehfa/System/blob/master/simulation/frontalcolision.gif)
+
+### Global Path Planning using OMPL
+
+Running the system considering costs of meteorological conditions, populational density and no-fly zones. 
+  
+![Demo File](https://github.com/josuehfa/System/blob/master/simulation/pathplanningresult.gif)
+
+
+### Integrated scenario with Local and Global Path Planning
+
+Running the system considering the costs and risks related to collision with other aircraft and access to dangerous areas. 
   
 
 ![Detect and Avoid Result](https://github.com/josuehfa/System/blob/master/simulation/finalresult_avoid.gif)
@@ -41,47 +43,94 @@ The results of this project are shown in the next subtopics:
 
 
 # System Setup 
-A system for path planning and navigation of UAS using ICAROUS, Ardupilot, RedeMet and others under MAVLink Protocol. 
+In order to setup a machine to run the simulations, you will need to install and compile some code.
 
-### Install dependencies
+## Install dependencies
+Fistly, you will need to install some general dependecies used by other components. 
 
-`pip install -r requeriments.txt`
-  
-`sudo apt-get install gcc python3-dev libxml2-dev libxslt-dev`
+Run the following commands in your terminal:
 
-`sudo apt-get install libwebkitgtk-dev libjpeg-dev libtiff-dev libgtk2.0-dev libsdl1.2-dev freeglut3 freeglut3-dev libnotify-dev libgstreamerd-3-dev`
-
-`sudo apt-get install python-wxgtk3.0`
-
-`sudo apt install python-opencv`
-
-`sudo apt install python3-opencv`
-
-`pip3 install pymavlink`
+- `pip install -r requeriments.txt`
+- `sudo apt-get install gcc python3-dev libxml2-dev libxslt-dev`
+- `sudo apt-get install libwebkitgtk-dev libjpeg-dev libtiff-dev libgtk2.0-dev libsdl1.2-dev freeglut3 freeglut3-dev libnotify-dev libgstreamerd-3-dev`
+- `sudo apt-get install python-wxgtk3.0`
+- `sudo apt install python-opencv`
+- `sudo apt install python3-opencv`
+- `pip3 install pymavlink`
 
 
-### Checkout ICAROUS
-`git clone --recursive https://github.com/nasa/icarous.git`
+## ICAROUS
+ICAROUS (Independent Configurable Architecture for Reliable Operations of Unmanned Systems) is a software architecture that enables the robust integration of mission specific software modules and highly assured core software modules for building safety-centric autonomous unmanned aircraft applications. The set of core software modules includes formally verified algorithms that detect, monitor, and control conformance to safety criteria; avoid stationary obstacles and maintain a safe distance from other users of the airspace; and compute resolution and recovery maneuvers, autonomously executed by the autopilot, when safety criteria are violated or about to be violated. ICAROUS is implemented using the NASA's core Flight Systems (cFS) middleware. The aforementioned functionalities are implemented as cFS applications which interact via a publish/subscribe messaging service provided by the cFS Software Bus.
+
+### User Guide
+
+#### Checkout
+- `git clone --recursive https://github.com/nasa/icarous.git`
 
 #### Installing and Compilation
-`cd icarous`
-`bash UpdateModules.sh`
-`make`
-`make install`
+- `cd icarous`
+- `bash UpdateModules.sh`
+- `make`
+- `make install`
   
 #### StartUp:
-`cd System/icarous/exe/cpu1`
-`./core-cpu1 -C 1 -I 0`
+- `cd System/icarous/exe/cpu1`
+- `./core-cpu1 -C 1 -I 0`
 
-### Checkout WebGS
-`git clone --recursive https://github.com/nasa/webgs.git`
+
+
+For more details abous ICAROUS read the User Guide.
+
+![User Guide](https://nasa.github.io/icarous/)
+
+
+### License
+The code in this repository is released under NASA's Open Source Agreement. 
+
+### Contact
+César A. Muñoz (cesar.a.munoz@nasa.gov), NASA Langley Research Center.
+
+
+
+## PolyCARP
+PolyCARP (Algorithms and Software for Computations with Polygons) is a package of algorithms, implemented in Java, C++, and Python, for computing containment, collision, resolution, and recovery information for polygons. The intended applications of PolyCARP are related, but not limited, to safety critical systems in air traffic management.
+
+### User Guide
+
+#### Checkout
+- `git clone --recursive https://github.com/nasa/PolyCARP.git`
+
+#### Installing
+You need to add the PolyCarp python folder in PYTHONPATH to use it inside ICAROUS and MAVProxy.
+- `export PYTHONPATH="System/PolyCARP/Python"`
+
+For technical information about the definitions and algorithms in this repository, visit ![http://shemesh.larc.nasa.gov/fm/PolyCARP.](http://shemesh.larc.nasa.gov/fm/PolyCARP)
+
+#### License
+The code in this repository is released under NASA's Open Source Agreement. 
+
+##### Contact
+César A. Muñoz (cesar.a.munoz@nasa.gov), NASA Langley Research Center
+
+
+
+## WebGS
+WebGS is a web-based ground control station that is compatible with ICAROUS (versions greater than 2.1.19) and capable of multi-aircraft simulations
+
+### User Guide
+
+#### Checkout 
+- `git clone --recursive https://github.com/nasa/webgs.git`
+
 #### Installing dependencies:
 
  1. NodeJS and NPM 
- 2. 
-`curl -sL https://deb.nodesource.com/setup_14.x | sudo -E bash -`
-`sudo apt-get install -y nodejs`
-
+     - ![Download NodeJS and NPM](https://nodejs.org/en/)
+       - `curl -sL https://deb.nodesource.com/setup_14.x | sudo -E bash -`
+       - `sudo apt-get install -y nodejs`
+     - Check if they were installed: 
+       - `node -v & npm -v`  
+ 
 #### Installing WebGS:
 `cd webgs`
 `./install.sh`
@@ -90,56 +139,78 @@ A system for path planning and navigation of UAS using ICAROUS, Ardupilot, RedeM
 
 The simplest way:
 
-`python3 start_webgs.py -DEV True`
+- `python3 start_webgs.py -DEV True`
  
-See more options inside WebGS Repository
+See more options inside WebGS Repository.
 
-### Checkout ArduPilot
-`git clone --recursive https://github.com/ArduPilot/ardupilot.git`
+![User Guide](https://github.com/nasa/webgs)
+
+#### License
+The code in this repository is released under NASA's Open Source Agreement. 
+
+##### Contact
+César A. Muñoz (cesar.a.munoz@nasa.gov), NASA Langley Research Center
+
+
+## ArduPilot
+Ardupilot is the most advanced, full-featured and reliable open source autopilot software available. It has been under development since 2010 by a team of diverse professional engineers and computer scientists. It is the only autopilot software capable of controlling almost any vehicle system imaginable, from conventional airplanes, multirotors, and helicopters, to boats and even submarines. And now being expanded to feature support for new emerging vehicle types such as quad-planes and compound helicopters.
+
+### User Guide
+
+#### Checkout 
+- `git clone --recursive https://github.com/ArduPilot/ardupilot.git`
 
 #### StartUp:
-`cd System/icarous/Scripts`
-`./runSITL.sh`
+- `cd System/icarous/Scripts`
+- `./runSITL.sh`
 
 
-### Checkout PolyCARP
-`git clone --recursive https://github.com/nasa/PolyCARP.git`
+## MAVProxy
+This is a MAVLink ground station written in python.
+Please see https://ardupilot.org/mavproxy/index.html for more information
 
-#### Installing
-You need to add the PolyCarp python folder in PYTHONPATH to use it inside ICAROUS and MAVProxy.
-`export PYTHONPATH="System/PolyCARP/Python"`
+### User Guide
 
-
-### Checkout MAVProxy
+#### Checkout 
 Following some tips about ICAROUS communication we need to use the release  1.8.20 
-`git clone --recursive https://github.com/ArduPilot/MAVProxy.git`
-`git checkout 6dd4a04`
+- `git clone --recursive https://github.com/ArduPilot/MAVProxy.git`
+- `git checkout 6dd4a04`
 
 #### Installing
 Use the script inside ICAROUS to install MAVProxy
-`cd System/icarous/Python/CustomModules`
-`bash SetupMavProxy.sh System`
+- `cd System/icarous/Python/CustomModules`
+- `bash SetupMavProxy.sh System`
 #### StartUp:
-`cd System/icarous/Scripts`
-`./runGS.sh`
+- `cd System/icarous/Scripts`
+- `./runGS.sh`
 
-### Checkout PyRedeMet
+## PyRedeMet
 
-`git clone --recursive  https://github.com/josuehfa/pyredemet.git`
+### User Guide
+
+#### Checkout 
+
+- `git clone --recursive  https://github.com/josuehfa/pyredemet.git`
 
 #### StartUp:
-You need to create an account inside RedeMet and get an API there.
+You need to create an account inside RedeMet(https://redemet.decea.gov.br/?i=integrador) and get an API there. 
 
-### OMPL
+Direct Link Here:(https://redemet.decea.gov.br/index.php?i=ajuda)
+
+## OMPL
+OMPL (Open Motion Planning Library) is a software package for computing motion plans using sampling-based algorithms. The content of the library is limited to motion planning algorithms, which means there is no environment specification, no collision detection or visualization. This is intentional as the library is designed to be easily integrated into systems that already provide the additional needed components
+
+### User Guide
+
 #### Download
 OMPL script link here:
-`https://ompl.kavrakilab.org/install-ompl-ubuntu.sh`
+- `https://ompl.kavrakilab.org/install-ompl-ubuntu.sh`
 #### Installing
 Make the script executable:
-`chmod u+x install-ompl-ubuntu.sh`
+- `chmod u+x install-ompl-ubuntu.sh`
   
 Run the script to install OMPL with Python bindings.
-`./install-ompl-ubuntu.sh --python`
+- `./install-ompl-ubuntu.sh --python`
 
 
 
