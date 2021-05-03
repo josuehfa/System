@@ -35,7 +35,7 @@ class AgentAnimation():
         self.filename = filename
         self.speed = playbkspeed
         self.last_position = [0,0,0]
-        self.axins = self.ax.inset_axes([0.65, 0.65, 0.3, 0.3])
+        self.axins = self.ax.inset_axes([0.02, 0.68, 0.3, 0.3])
         self.region = [(xmin,ymin),(xmax,ymax)]
         x_range = xmin-xmax
         y_range = ymin-ymax
@@ -175,7 +175,7 @@ class AgentAnimation():
     def AddStartGoal(self):
         start_goal = [self.scenario.start_real[0:2],self.scenario.goal_real[0:2]]
         y,x = zip(*start_goal)
-        self.sg, = self.ax.plot(0,0,'y.')
+        self.sg, = self.ax.plot(0,0,'r.')
         self.annot_start = self.ax.annotate('Start',
             xy=(x[0],y[0]), xycoords='data',
             xytext=(-70, -80), textcoords='offset points',

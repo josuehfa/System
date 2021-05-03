@@ -91,7 +91,8 @@ cost_aut = []
 time_res = []
 
 for idx, alg in enumerate(['RRTstar']):
-    plan_aux.append(OptimalPlanning(scenario.start, scenario.goal, scenario.region, scenario.obstacle, planner, dimension, scenario.mapgen.z_time[round(0)]))
+    costmap = {'pop':scenario.mapgen.z_pop_time[0],'met':scenario.mapgen.z_met_time[0]}
+    plan_aux.append(OptimalPlanning(scenario.start, scenario.goal, scenario.region, scenario.obstacle, planner, dimension, costmap))
     result = plan_aux[idx].plan(10, alg, 'WeightedLengthAndClearanceCombo',delta_d)
     if plan_aux[idx].solution != []:
         cost_aut.append(plan_aux[idx].solution[0][3])
@@ -122,19 +123,6 @@ lat = next_point[1]*scenario.lat_range + min(scenario.lat_region)
 lon = next_point[0]*scenario.lon_range + min(scenario.lon_region)
 fp_start.append([lat, lon, 5.0, speed_aircraft, [0, 0, 0], [0.0, 0, 0]])
 
-#fp_start = []
-#for idx in range(len(plans[-1].solution[0][0])):
-#    lat = plans[-1].solution[0][1][idx]*scenario.lat_range + min(scenario.lat_region)
-#    lon = plans[-1].solution[0][0][idx]*scenario.lon_range + min(scenario.lon_region)
-    
-    #[lat, lon, alt, wp_metric, tcp, tcp_value]
-    #fp = [[37.102177, -76.387207, 5.0, 1.0, [0, 0, 0], [0.0, 0, 0]]]
-#    if idx == 0 or idx == len(plans[-1].solution[0][0])-1:
-#        fp_start.append([lat, lon, 0.0, speed_aircraft, [0, 0, 0], [0.0, 0, 0]])
-#    else:
-#        fp_start.append([lat, lon, 5.0, speed_aircraft, [0, 0, 0], [0.0, 0, 0]])
-
-
 # Initialize simulation environment
 sim = SimEnvironment(fasttime=args.fasttime,verbose=args.verbosity)
 
@@ -150,7 +138,7 @@ if args.traffic != '':
     idx = 1
     tfHomePos = fp_start[idx][:3]
     bearing = get_bearing(fp_start[idx-1][:2],fp_start[idx][:2])
-    tf = [1, 300, bearing, 5, 5, 180+bearing, 0]
+    tf = [1, 70, bearing, 5, 5, 180+bearing, 0]
     sim.AddTraffic(tf[0],tfHomePos, *tf[1:])
   
 # Initialize Icarous class
@@ -198,7 +186,15 @@ for idx in range(len(path_x)):
     path_y_real.append(path_y[idx]*scenario.lat_range + min(scenario.lat_region))
     localCoords.append([path_y_real[idx],path_x_real[idx]])
 
-pathcost = scenario.pathCost(path_x, path_y, time_res)
+popcost = scenario.pathCost(path_x, path_y, time_res, 'pop')
+print('Custo da População: ' + str(popcost) + '(Hab)' )
+
+metcost = scenario.pathCost(path_x, path_y, time_res, 'met')
+print('Custo da meteorologia: ' + str(metcost) + '(dBZ)' )
+
+
+pathcost = scenario.pathCost(path_x, path_y, time_res, 'ponderado')
+print('Custo Ponderado: ' + str(pathcost)  )
 print('Custo do trajeto: ' + str(pathcost) + '(Hab)' )
 
 
@@ -216,7 +212,7 @@ plotSol.animedPlot(final_solution, time_res, scenario.mapgen, scenario.start_rea
 json_to_save='/home/josuehfa/System/CoreSystem/pycarous/data/results.json'
 json_data = final_solution
 time_res = {'time_res':time_res}
-pathcost = {'pathcost':pathcost}
+pathcost = {'popcost':popcost,'metcost':metcost,'pathcost':pathcost}
 distcost = {'distcost':distcost}
 rrttime = {'rrttime':processing_time}
 cen_string = {'cen_string':cen_string}

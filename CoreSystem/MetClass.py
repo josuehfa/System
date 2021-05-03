@@ -30,15 +30,6 @@ for t in range(time):
     final_image = np.multiply(final_image, np.where(final_image >= 0.1, 110, 1))
     z_time.append(final_image)
 
-    #import matplotlib.pyplot as plt
-    #fig,ax0 = plt.subplots(ncols=1, figsize=(8, 2))
-    #ax0.imshow(final_image)
-    #ax0.axis('off')
-    #fig.tight_layout()
-    #plt.show()
-
-
-
 
 import numpy as np
 import matplotlib.pyplot as plt

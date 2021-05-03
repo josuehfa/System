@@ -353,7 +353,8 @@ class SimEnvironment:
                             next_point = p1 + vector*delta_d
                             
                         for idx, alg in enumerate(['RRTstar']):
-                            plan_aux.append(OptimalPlanning((next_point[0],next_point[1]), scenario.goal, scenario.region, scenario.obstacle, planner, dimension, scenario.mapgen.z_time[round(cont)]))
+                            costmap = {'pop':scenario.mapgen.z_pop_time[round(cont)],'met':scenario.mapgen.z_met_time[round(cont)]}
+                            plan_aux.append(OptimalPlanning((next_point[0],next_point[1]), scenario.goal, scenario.region, scenario.obstacle, planner, dimension, costmap))
                             result = plan_aux[idx].plan(processing_time+tried, alg, 'WeightedLengthAndClearanceCombo',delta_d)
                             if plan_aux[idx].solution != []:
                                 cost_aut.append(plan_aux[idx].solution[0][3])
@@ -434,17 +435,6 @@ class SimEnvironment:
                     if cont >= len(scenario.mapgen.z_time)-1:
                         cont = len(scenario.mapgen.z_time)-1
 
-                    #fp_start = []
-                    #for idx in range(len(plans[-1].solution[0][0])):
-                    #    lat = plans[-1].solution[0][1][idx]*scenario.lat_range + min(scenario.lat_region)
-                    #    lon = plans[-1].solution[0][0][idx]*scenario.lon_range + min(scenario.lon_region)
-                        
-                        #[lat, lon, alt, wp_metric, tcp, tcp_value]
-                        #fp = [[37.102177, -76.387207, 5.0, 1.0, [0, 0, 0], [0.0, 0, 0]]]
-                    #    if idx == 0 or idx == len(plans[-1].solution[0][0])-1:
-                    #        fp_start.append([lat, lon, 0.0, speed_aircraft, [0, 0, 0], [0.0, 0, 0]])
-                    #    else:
-                    #        fp_start.append([lat, lon, 5.0, speed_aircraft, [0, 0, 0], [0.0, 0, 0]])
 
                     fp_start = []
                     #First Calculeted Waypoint

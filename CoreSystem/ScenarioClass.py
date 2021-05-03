@@ -414,10 +414,14 @@ class ScenarioClass():
         #test
         #self.start_real = (-19.836548, -44.008020,0)
         #self.goal_real = (-19.916969, -43.909915,0)
-
+        
+        #REAL !!!
         self.start_real = (-19.869245, -43.963622,0) 
         self.goal_real = (-19.916969, -43.909915,0)
+        #!!!!
 
+        # Chegada rapida para o pycarous
+        #self.goal_real =(-19.871096, -43.950294)
 
         #Região de Voo
         #self.region_real = [(-19.849635, -44.014423),(-19.849635, -43.900210),

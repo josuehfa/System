@@ -332,11 +332,6 @@ def plotResult(plan, axis, scenario, path_x, path_y, t):
     import numpy as np
     import matplotlib.pyplot as plt
 
-    #data = np.loadtxt('path.txt')
-    #fig, ax = plt.subplots()
-    #ax = fig.gca(projection='3d')
-    #fig = plt.figure()
-    #ax = fig.add_subplot(1, 1, 1)
     aux = []
     
     #CostMap
@@ -371,19 +366,6 @@ def plotResult(plan, axis, scenario, path_x, path_y, t):
     lon.append(plan.region[0][1])
     aux.append(axis.plot(lon, lat, linestyle='-.', color='green', label='Region of Interest'))
     aux[-1]=aux[-1][0]
-
-    #Solution
-    #for sol in plan.solution:
-    #    aux.append(axis.plot(sol[0], sol[1], label=sol[2]))
-    #    aux[-1]=aux[-1][0]
-    #aux.append(axis.plot(plan.solutionSampled[0][0], plan.solutionSampled[0][1], label='SolutionSampled'))
-    #aux[-1]=aux[-1][0]   
-    #axis.set(xlabel='Latitude', ylabel='Longitude', title='Solution Path')
-    #axis.legend()
-
-    ##ax.grid()
-    ##ax.autoscale()
-    ##plt.show()
 
     #Path already did
     aux.append(axis.plot(path_x[:len(path_x)-1],path_y[:len(path_y)-1],linestyle='dashed',lw=1.5,color='red'))
@@ -620,14 +602,7 @@ if __name__ == "__main__":
                 plans.pop()
                 continue
             
-        
 
-        #if (plans[-1].solutionSampled[0][1][0], plans[-1].solutionSampled[0][0][0]) == (plans[-2].solutionSampled[0][1][0], plans[-2].solutionSampled[0][0][0]):
-        #    print('Pop Solution')
-        #    plans.pop()    
-           # plans[-1]planspend(plans[-1].solutionSampled[0][0][0])
-            #path_x.append(plans[-1].solution[0][1][0])
-            #path_y.append(plans[-1].solution[0][0][0])
 
         goal_sampled = (round(scenario.goal[0]*(scenario.mapgen.z.shape[0]-1))*delta_d, round(scenario.goal[1]*(scenario.mapgen.z.shape[0]-1))*delta_d)
         if (plans[-1].solutionSampled[0][0][0], plans[-1].solutionSampled[0][1][0]) == goal_sampled:
@@ -640,13 +615,7 @@ if __name__ == "__main__":
             time_res.append(round(t))
             run = False
             im_ani = animation.ArtistAnimation(fig, ims, interval=3000/time)
-            #plt.show()
-        #elif (plan_aux[-1].solution == plans[-1].solution and len(plan_aux[-1].solution[0][0])==2):
-        #    path_x.append(plans[-1].solution[0][0][1])
-        #    path_y.append(plans[-1].solution[0][1][1])
-        #    run = False
-        #    im_ani = animation.ArtistAnimation(fig, ims, interval=3000/time)
-            
+    
         else:
             im_ani = animation.ArtistAnimation(fig, ims, interval=3000/time)
             #plt.show()
@@ -749,19 +718,6 @@ if __name__ == "__main__":
         return line, 
     anim = FuncAnimation(fig, animate, init_func = init, 
                         frames =len(path_y) , interval = 200, blit = True) 
-    #plt.show()
 
-
-    #plan1 = OptimalPlanning((plan.solutionSampled[0][1][1], plan.solutionSampled[0][0][1]), goal, region, obstacle, planner, dimension)
-    #result = plan1.plan(2, 'RRTstar', 'WeightedLengthAndClearanceCombo')
-    #plan1.plotOptimal(0.1)
-    
-
-    #for planner in ['BFMTstar', 'BITstar', 'FMTstar', 'InformedRRTstar', 'PRMstar', 'RRTstar', 'SORRTstar']:
-    #for planner in ['RRTstar', 'InformedRRTstar']:
-    #    result = plan.plan(2, planner, 'WeightedLengthAndClearanceCombo')
-    #print(plan.solution)WeightedLengthAndClearanceCombo   PathClearance  PathLength
-    #plan.plotSolutionPath(anima=False)
-    #plan.plotOptimal(0.1)
 
     
