@@ -79,15 +79,13 @@ ICAROUS (Independent Configurable Architecture for Reliable Operations of Unmann
 
 
 
-For more details abous ICAROUS read the User Guide.
-
-![User Guide](https://nasa.github.io/icarous/)
+For more details abous ICAROUS read the User Guide (https://nasa.github.io/icarous/)
 
 
 ### License
 The code in this repository is released under NASA's Open Source Agreement. 
 
-### Contact
+#### Contact
 César A. Muñoz (cesar.a.munoz@nasa.gov), NASA Langley Research Center.
 
 
@@ -104,12 +102,12 @@ PolyCARP (Algorithms and Software for Computations with Polygons) is a package o
 You need to add the PolyCarp python folder in PYTHONPATH to use it inside ICAROUS and MAVProxy.
 - `export PYTHONPATH="System/PolyCARP/Python"`
 
-For technical information about the definitions and algorithms in this repository, visit ![http://shemesh.larc.nasa.gov/fm/PolyCARP.](http://shemesh.larc.nasa.gov/fm/PolyCARP)
+For technical information about the definitions and algorithms in this repository, visit http://shemesh.larc.nasa.gov/fm/PolyCARP.
 
-#### License
+### License
 The code in this repository is released under NASA's Open Source Agreement. 
 
-##### Contact
+#### Contact
 César A. Muñoz (cesar.a.munoz@nasa.gov), NASA Langley Research Center
 
 
@@ -125,7 +123,7 @@ WebGS is a web-based ground control station that is compatible with ICAROUS (ver
 #### Installing dependencies:
 
  1. NodeJS and NPM 
-     - ![Download NodeJS and NPM](https://nodejs.org/en/)
+     - Download NodeJS and NPM (https://nodejs.org/en/)
        - `curl -sL https://deb.nodesource.com/setup_14.x | sudo -E bash -`
        - `sudo apt-get install -y nodejs`
      - Check if they were installed: 
@@ -141,14 +139,12 @@ The simplest way:
 
 - `python3 start_webgs.py -DEV True`
  
-See more options inside WebGS Repository.
+See more options inside WebGS Repository (https://github.com/nasa/webgs).
 
-![User Guide](https://github.com/nasa/webgs)
-
-#### License
+### License
 The code in this repository is released under NASA's Open Source Agreement. 
 
-##### Contact
+#### Contact
 César A. Muñoz (cesar.a.munoz@nasa.gov), NASA Langley Research Center
 
 
@@ -198,7 +194,7 @@ You need to create an account inside RedeMet(https://redemet.decea.gov.br/?i=int
 Direct Link Here:(https://redemet.decea.gov.br/index.php?i=ajuda)
 
 ## OMPL
-OMPL (Open Motion Planning Library) is a software package for computing motion plans using sampling-based algorithms. The content of the library is limited to motion planning algorithms, which means there is no environment specification, no collision detection or visualization. This is intentional as the library is designed to be easily integrated into systems that already provide the additional needed components
+OMPL (Open Motion Planning Library) is a software package for computing motion plans using sampling-based algorithms. The content of the library is limited to motion planning algorithms, which means there is no environment specification, no collision detection or visualization. This is intentional as the library is designed to be easily integrated into systems that already provide the additional needed components.
 
 ### User Guide
 
