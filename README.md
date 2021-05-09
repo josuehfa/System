@@ -50,13 +50,19 @@ Fistly, you will need to install some general dependecies used by other componen
 
 Run the following commands in your terminal:
 
-- `pip install -r requeriments.txt`
-- `sudo apt-get install gcc python3-dev libxml2-dev libxslt-dev`
-- `sudo apt-get install libwebkitgtk-dev libjpeg-dev libtiff-dev libgtk2.0-dev libsdl1.2-dev freeglut3 freeglut3-dev libnotify-dev libgstreamerd-3-dev`
-- `sudo apt-get install python-wxgtk3.0`
-- `sudo apt install python-opencv`
-- `sudo apt install python3-opencv`
-- `pip3 install pymavlink`
+`$ pip install -r requeriments.txt`
+
+`$ sudo apt-get install gcc python3-dev libxml2-dev libxslt-dev`
+
+`$ sudo apt-get install libwebkitgtk-dev libjpeg-dev libtiff-dev libgtk2.0-dev libsdl1.2-dev freeglut3 freeglut3-dev libnotify-dev libgstreamerd-3-dev`
+
+`$ sudo apt-get install python-wxgtk3.0`
+
+`$ sudo apt install python-opencv`
+
+`$ sudo apt install python3-opencv`
+
+`$ pip3 install pymavlink`
 
 
 ## ICAROUS
@@ -65,17 +71,21 @@ ICAROUS (Independent Configurable Architecture for Reliable Operations of Unmann
 ### User Guide
 
 #### Checkout
-- `git clone --recursive https://github.com/nasa/icarous.git`
+`$ git clone --recursive https://github.com/nasa/icarous.git`
 
 #### Installing and Compilation
-- `cd icarous`
-- `bash UpdateModules.sh`
-- `make`
-- `make install`
+`$ cd icarous`
+
+`$ bash UpdateModules.sh`
+
+`$ make`
+
+`$ make install`
   
 #### StartUp:
-- `cd System/icarous/exe/cpu1`
-- `./core-cpu1 -C 1 -I 0`
+`$ cd System/icarous/exe/cpu1`
+
+`$ ./core-cpu1 -C 1 -I 0`
 
 
 
@@ -96,11 +106,12 @@ PolyCARP (Algorithms and Software for Computations with Polygons) is a package o
 ### User Guide
 
 #### Checkout
-- `git clone --recursive https://github.com/nasa/PolyCARP.git`
+`$ git clone --recursive https://github.com/nasa/PolyCARP.git`
 
 #### Installing
 You need to add the PolyCarp python folder in PYTHONPATH to use it inside ICAROUS and MAVProxy.
-- `export PYTHONPATH="System/PolyCARP/Python"`
+
+`$ export PYTHONPATH="System/PolyCARP/Python"`
 
 For technical information about the definitions and algorithms in this repository, visit http://shemesh.larc.nasa.gov/fm/PolyCARP.
 
@@ -118,26 +129,31 @@ WebGS is a web-based ground control station that is compatible with ICAROUS (ver
 ### User Guide
 
 #### Checkout 
-- `git clone --recursive https://github.com/nasa/webgs.git`
+`$ git clone --recursive https://github.com/nasa/webgs.git`
 
 #### Installing dependencies:
 
  1. NodeJS and NPM 
      - Download NodeJS and NPM (https://nodejs.org/en/)
-       - `curl -sL https://deb.nodesource.com/setup_14.x | sudo -E bash -`
-       - `sudo apt-get install -y nodejs`
+     
+       `$ curl -sL https://deb.nodesource.com/setup_14.x | sudo -E bash -`
+       
+       `$ sudo apt-get install -y nodejs`
+       
      - Check if they were installed: 
-       - `node -v & npm -v`  
+     
+       `$ node -v & npm -v`  
  
 #### Installing WebGS:
-`cd webgs`
-`./install.sh`
+`$ cd webgs`
+
+`$ ./install.sh`
 
 #### StartUp:
 
 The simplest way:
 
-- `python3 start_webgs.py -DEV True`
+`$ python3 start_webgs.py -DEV True`
  
 See more options inside WebGS Repository (https://github.com/nasa/webgs).
 
@@ -154,11 +170,12 @@ Ardupilot is the most advanced, full-featured and reliable open source autopilot
 ### User Guide
 
 #### Checkout 
-- `git clone --recursive https://github.com/ArduPilot/ardupilot.git`
+`$ git clone --recursive https://github.com/ArduPilot/ardupilot.git`
 
 #### StartUp:
-- `cd System/icarous/Scripts`
-- `./runSITL.sh`
+`$ cd System/icarous/Scripts`
+
+`$ ./runSITL.sh`
 
 
 ## MAVProxy
@@ -169,16 +186,22 @@ Please see https://ardupilot.org/mavproxy/index.html for more information
 
 #### Checkout 
 Following some tips about ICAROUS communication we need to use the release  1.8.20 
-- `git clone --recursive https://github.com/ArduPilot/MAVProxy.git`
-- `git checkout 6dd4a04`
+
+`$ git clone --recursive https://github.com/ArduPilot/MAVProxy.git`
+
+`$ git checkout 6dd4a04`
 
 #### Installing
 Use the script inside ICAROUS to install MAVProxy
-- `cd System/icarous/Python/CustomModules`
-- `bash SetupMavProxy.sh System`
+
+`$ cd System/icarous/Python/CustomModules`
+
+`$ bash SetupMavProxy.sh System`
+
 #### StartUp:
-- `cd System/icarous/Scripts`
-- `./runGS.sh`
+`$ cd System/icarous/Scripts`
+
+`$ ./runGS.sh`
 
 ## PyRedeMet
 The Aeronautical Command Meteorology Network (REDEMET) aims to integrate meteorological products aimed at civil and military aviation, aiming to make access to this information faster, more efficient and safer. The REDEMET API is a product of application programming interfaces (APIs), which provides access to various meteorological products, now available on the REDEMET website, quickly and safely to be used for various purposes.
@@ -186,7 +209,7 @@ The Aeronautical Command Meteorology Network (REDEMET) aims to integrate meteoro
 
 #### Checkout 
 
-- `git clone --recursive  https://github.com/josuehfa/pyredemet.git`
+`$ git clone --recursive  https://github.com/josuehfa/pyredemet.git`
 
 #### StartUp:
 You need to create an account inside RedeMet(https://redemet.decea.gov.br/?i=integrador) and get an API there. 
@@ -199,21 +222,97 @@ OMPL (Open Motion Planning Library) is a software package for computing motion p
 ### User Guide
 
 #### Download
-OMPL script link here:
-- `https://ompl.kavrakilab.org/install-ompl-ubuntu.sh`
+[OMPL script link here](https://ompl.kavrakilab.org/install-ompl-ubuntu.sh)
+
 #### Installing
 Make the script executable:
-- `chmod u+x install-ompl-ubuntu.sh`
+
+`$ chmod u+x install-ompl-ubuntu.sh`
   
 Run the script to install OMPL with Python bindings.
-- `./install-ompl-ubuntu.sh --python`
+
+`$ ./install-ompl-ubuntu.sh --python`
+
+
+# Simulations
+
+## Executing Local Path Planning using DAIDALUS
+The idea of local path planning are executed with the help of DAIDALUS, DAIDALUS return bands where the aircraft can go in order to avoid the risk of colision with other aircrafts.
+
+<img src="https://nasa.github.io/daidalus/DAIDALUS_block_diag.png"
+     alt="DAIDALUS Logic"
+     style=" width=10%" />
+
+
+
+DAIDALUS encounter can be simulated in the visualization tool [UASChorus](https://shemesh.larc.nasa.gov/fm/ACCoRD/UASChorus.jar).
+
+In Windows/MAC OS systems, just download the file and double-click it. It assumes a Java Run Time environment, which is default in most systems. In a Linux box, go to a terminal and type
+
+`$ java jar UASChorus.jar`
+
+In UASChorus
+
+Go to File/Open in the main menu and open any encounter file, e.g., name.daa.
+
+By default, UASChorus is configured with a non-buffered well-clear volume (instantaneous bands). To load a different configuration, go to File/Load Configuration and load a configuration file, e.g., name.conf.
+
+To step through the scenario, go to Window/Sequence Control Panel and click either the execute button (to reproduce the scenario) or linear to generate a 1s linear projection on the current state.
+
+## Executing Global Path Planning using OMPL
 
 
 
 
 
-## RUN EXAMPLE
+## Executing Integrated scenario with Local and Global Path Planning
 
+A simple example simulating an encounter with a traffic intruder and considering the cost of path (populational density, restrited areas and meteorological) is provided. To simulate and visualize an animation of the simulation, try the following script:
+### Simulation
+`$ python3 RunOptimalSim.py`
+
+### Visualization
+The above simulation produces a .json log file with the callsign of the vehicle (SPEEDBIRD). Use the VisualizeLog.py script to visualize the simulation.
+
+`$ python3 VisualizeLog.py <SPEEDBIRD_CREATED.json>`
+
+### Advanced
+
+#### Edit Traffic Scenario
+There two basics ways to create new traffic scenarios, from a file 'traffic.txt' or direct in the code. See the following explanation in order to creare both:
+
+##### From File
+To add new scenarios with differente intruders, create a 'traffic.txt' file with the following informations:
+
+`# id, range [m], bearing [deg], altitude [m], speed [m/s], heading [deg], climb rate [m/s]`
+`1, 100, 80, 5, 2, 270, 0`
+`2, 130, 90, 10, 4, 90, 0`
+
+##### Inside the Code
+To add an intruder aircraft inside the code, you need to use the funciton `AddTraffic(self, idx, home, rng, brng, alt, speed, heading, crate, transmitter="GroundTruth")`, the parameters of this function are described below:
+
+ - idx: `traffic vehicle id`
+ - home: `home position (lat [deg], lon [deg], alt [m])`
+ - rng: `starting distance from home position [m]`
+ - brng: `starting bearing from home position [deg], 0 is North`
+ - alt: `starting altitude [m]`
+ - speed: `traffic speed [m/s]`
+ - heading: `traffic heading [deg], 0 is North`
+ - crate: `traffic climbrate [m/s]`
+ - transmitter: `A Transmitter to send V2V position data, ex: "ADS-B" or "GroundTruth"`
+        
+        
+ An example to how to use is presetented in the following code:
+`#[id, range [m], bearing [deg], altitude [m], speed [m/s], heading [deg], climb rate [m/s]]
+ tf = [1, 70, 80, 5, 5, 180, 0]
+ sim.AddTraffic(tf[0], start_position, *tf[1:])`
+
+
+# Advanced - Integration with other systems
+
+## Integrate with Ground Station
+
+## Integration with Simulators (FlightGear/XPlane)
 
 #### load mission flight plan
 wp load /home/josuehfa/System/icarous/Scripts/flightplan4.txt
