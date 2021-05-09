@@ -181,7 +181,7 @@ Use the script inside ICAROUS to install MAVProxy
 - `./runGS.sh`
 
 ## PyRedeMet
-
+The Aeronautical Command Meteorology Network (REDEMET) aims to integrate meteorological products aimed at civil and military aviation, aiming to make access to this information faster, more efficient and safer. The REDEMET API is a product of application programming interfaces (APIs), which provides access to various meteorological products, now available on the REDEMET website, quickly and safely to be used for various purposes.
 ### User Guide
 
 #### Checkout 
