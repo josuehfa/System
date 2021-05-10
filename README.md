@@ -8,15 +8,7 @@ This work presents the development of a system for UAS trajectory planning. This
 ## Simulation Results
 The results of this project are shown in the next subtopics: 
 
-- Legend:
-    - ![#000](https://via.placeholder.com/15/000/000000?text=+)  : Path planned
-    - ![#ffff](https://via.placeholder.com/15/fff/000000?text=+) : Path executed by the UAS
-    - ![#FF5733](https://via.placeholder.com/15/FF5733/000000?text=+) : Ownership Aircraft
-    - ![#001ABA](https://via.placeholder.com/15/001ABA/000000?text=+) : Intruder Aircraft
-    - ![#FFFC27](https://via.placeholder.com/15/FFFC27/000000?text=+) - ![#ED251B](https://via.placeholder.com/15/ED251B/000000?text=+) : DAA bands
-    - ![#6C6C6C](https://via.placeholder.com/15/6C6C6C/000000?text=+) : No-fly zones
-    - ![#E4EFF9](https://via.placeholder.com/15/E4EFF9/000000?text=+) - ![#330083](https://via.placeholder.com/15/330083/000000?text=+) : Costs
-  
+
 
 ### Local Path Planning using DAIDALUS
 Running DAIDALUS for a frontal collision between the ownership aircraft and an intruder aircraft. 
@@ -30,9 +22,18 @@ Running the system considering costs of meteorological conditions, populational 
 ![Demo File](https://github.com/josuehfa/System/blob/master/simulation/pathplanningresult.gif)
 
 
-### Integrated scenario with Local and Global Path Planning
+### Integrated Scenario with Local and Global Path Planning
 
 Running the system considering the costs and risks related to collision with other aircraft and access to dangerous areas. 
+
+- Legend:
+    - ![#000](https://via.placeholder.com/15/000/000000?text=+)  : Path planned
+    - ![#ffff](https://via.placeholder.com/15/fff/000000?text=+) : Path executed by the UAS
+    - ![#FF5733](https://via.placeholder.com/15/FF5733/000000?text=+) : Ownership Aircraft
+    - ![#001ABA](https://via.placeholder.com/15/001ABA/000000?text=+) : Intruder Aircraft
+    - ![#FFFC27](https://via.placeholder.com/15/FFFC27/000000?text=+) - ![#ED251B](https://via.placeholder.com/15/ED251B/000000?text=+) : DAA bands
+    - ![#6C6C6C](https://via.placeholder.com/15/6C6C6C/000000?text=+) : No-fly zones
+    - ![#E4EFF9](https://via.placeholder.com/15/E4EFF9/000000?text=+) - ![#330083](https://via.placeholder.com/15/330083/000000?text=+) : Costs
   
 
 ![Detect and Avoid Result](https://github.com/josuehfa/System/blob/master/simulation/finalresult_avoid.gif)
@@ -265,7 +266,7 @@ To step through the scenario, go to Window/Sequence Control Panel and click eith
 
 
 
-## Executing Integrated scenario with Local and Global Path Planning
+## Executing Integrated Scenario with Local and Global Path Planning
 
 A simple example simulating an encounter with a traffic intruder and considering the cost of path (populational density, restrited areas and meteorological) is provided. To simulate and visualize an animation of the simulation, try the following script:
 ### Simulation
