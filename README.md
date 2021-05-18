@@ -1,4 +1,3 @@
-
 # Introduction
 In recent years, the intense growth in the use of unmanned aircraft systems (UAS), which consists of one or more unmanned aircraft and the necessary elements for their operations, has caused changes in the relations that the society, the government and the market have with the aerospace industry. According to forecasts from the Aerospace Industries Association (AIA) and Avascent, unmanned aircraft will generate US$ 150 billion, in total expenditures, by 2036 and annually hold up to 60,000 research and development (R&D), manufacturing and services jobs. Due to the need to integrate these systems into the airspace in a safe manner, sharing this and producing low risks for third parties on the ground and cooperative and non-cooperative aircraft in operation. The UAS must comply with a series of requirements that aim to mitigate risks through the use of new computational systems. Among them, there is the use of Detect and Avoid System (DAA), which aims to see, feel or detect conflicting traffic and/or other dangerous conditions and take appropriate protective measures.
 
@@ -24,7 +23,7 @@ Running the system considering costs of meteorological conditions, populational 
 
 ### Integrated Scenario with Local and Global Path Planning
 
-Running the system considering the costs and risks related to collision with other aircraft and access to dangerous areas. 
+Running the system considering the costs and risks related to a collision with other aircraft and access to dangerous areas. 
 
 - Legend:
     - ![#000](https://via.placeholder.com/15/000/000000?text=+)  : Path planned
@@ -44,10 +43,10 @@ Running the system considering the costs and risks related to collision with oth
 
 
 # System Setup 
-In order to setup a machine to run the simulations, you will need to install and compile some code.
+In order to set up a machine to run the simulations, you will need to install and compile some code.
 
 ## Install dependencies
-Fistly, you will need to install some general dependecies used by other components. 
+Firstly, you will need to install some general dependencies used by other components. 
 
 Run the following commands in your terminal:
 
@@ -67,7 +66,7 @@ Run the following commands in your terminal:
 
 
 ## ICAROUS
-ICAROUS (Independent Configurable Architecture for Reliable Operations of Unmanned Systems) is a software architecture that enables the robust integration of mission specific software modules and highly assured core software modules for building safety-centric autonomous unmanned aircraft applications. The set of core software modules includes formally verified algorithms that detect, monitor, and control conformance to safety criteria; avoid stationary obstacles and maintain a safe distance from other users of the airspace; and compute resolution and recovery maneuvers, autonomously executed by the autopilot, when safety criteria are violated or about to be violated. ICAROUS is implemented using the NASA's core Flight Systems (cFS) middleware. The aforementioned functionalities are implemented as cFS applications which interact via a publish/subscribe messaging service provided by the cFS Software Bus.
+ICAROUS (Independent Configurable Architecture for Reliable Operations of Unmanned Systems) is a software architecture that enables the robust integration of mission-specific software modules and highly assured core software modules for building safety-centric autonomous unmanned aircraft applications. The set of core software modules includes formally verified algorithms that detect, monitor, and control conformance to safety criteria; avoid stationary obstacles and maintain a safe distance from other users of the airspace; and compute resolution and recovery maneuvers, autonomously executed by the autopilot, when safety criteria are violated or about to be violated. ICAROUS is implemented using the NASA's core Flight Systems (cFS) middleware. The aforementioned functionalities are implemented as cFS applications which interact via a publish/subscribe messaging service provided by the cFS Software Bus.
 
 ### User Guide
 
@@ -90,7 +89,7 @@ ICAROUS (Independent Configurable Architecture for Reliable Operations of Unmann
 
 
 
-For more details abous ICAROUS read the User Guide (https://nasa.github.io/icarous/)
+For more details about ICAROUS read the User Guide (https://nasa.github.io/icarous/)
 
 
 ### License
@@ -102,7 +101,7 @@ César A. Muñoz (cesar.a.munoz@nasa.gov), NASA Langley Research Center.
 
 
 ## PolyCARP
-PolyCARP (Algorithms and Software for Computations with Polygons) is a package of algorithms, implemented in Java, C++, and Python, for computing containment, collision, resolution, and recovery information for polygons. The intended applications of PolyCARP are related, but not limited, to safety critical systems in air traffic management.
+PolyCARP (Algorithms and Software for Computations with Polygons) is a package of algorithms, implemented in Java, C++, and Python, for computing containment, collision, resolution, and recovery information for polygons. The intended applications of PolyCARP are related, but not limited, to safety-critical systems in air traffic management.
 
 ### User Guide
 
@@ -186,7 +185,7 @@ Please see https://ardupilot.org/mavproxy/index.html for more information
 ### User Guide
 
 #### Checkout 
-Following some tips about ICAROUS communication we need to use the release  1.8.20 
+Following some tips about ICAROUS communication, we need to use the release  1.8.20 
 
 `$ git clone --recursive https://github.com/ArduPilot/MAVProxy.git`
 
@@ -238,7 +237,7 @@ Run the script to install OMPL with Python bindings.
 # Simulations
 
 ## Executing Local Path Planning using DAIDALUS
-The idea of local path planning are executed with the help of DAIDALUS, DAIDALUS return bands where the aircraft can go in order to avoid the risk of colision with other aircrafts.
+The local path planning is executed with the help of DAIDALUS, DAIDALUS return bands where the aircraft can go in order to avoid the risk of collision with other aircraft.
 
 <img src="https://nasa.github.io/daidalus/DAIDALUS_block_diag.png"
      alt="DAIDALUS Logic"
@@ -268,7 +267,7 @@ To step through the scenario, go to Window/Sequence Control Panel and click eith
 
 ## Executing Integrated Scenario with Local and Global Path Planning
 
-A simple example simulating an encounter with a traffic intruder and considering the cost of path (populational density, restrited areas and meteorological) is provided. To simulate and visualize an animation of the simulation, try the following script:
+A simple example simulating an encounter with a traffic intruder and considering the cost of path (populational density, restricted areas and meteorological) is provided. To simulate and visualize an animation of the simulation, try the following script:
 ### Simulation
 `$ python3 RunOptimalSim.py`
 
@@ -280,7 +279,7 @@ The above simulation produces a .json log file with the callsign of the vehicle 
 ### Advanced
 
 #### Edit Traffic Scenario
-There two basics ways to create new traffic scenarios, from a file 'traffic.txt' or direct in the code. See the following explanation in order to creare both:
+There two basics ways to create new traffic scenarios, from a file 'traffic.txt' or direct in the code. See the following explanation in order to create both:
 
 ##### From File
 To add new scenarios with differente intruders, create a 'traffic.txt' file with the following informations:
@@ -324,9 +323,4 @@ traffic load 46 107 5 0 100 0
 
 #### start mission from the home position
 long MISSION_START
-
-
-
-
-
 
