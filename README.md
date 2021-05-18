@@ -311,7 +311,9 @@ To add an intruder aircraft inside the code, you need to use the funciton `AddTr
 # Advanced - Integration with other systems
 
 ## Integrate with Ground Station
+ Please take a look at the following [script](https://github.com/josuehfa/System/blob/master/CoreSystem/pycarous/Batch.py). This is one way of using the pymavlink APIs to send/receive data to/from Icarous. This script imitates a ground station and essentially sends data to the ground station interface application in Icarous. The ground station port settings can be configured here [gsInterface0](https://github.com/nasa/icarous/blob/master/exe/ram/gsInterface0.cfg).
 
+If you are looking to send waypoints/geofences from an application running onboard instead of a ground station running offboard, you can implement your own cFS interface application application that will send/receive between your onboard application and Icarous. The internal message definitions for waypoints and geofences are [here](https://github.com/nasa/icarous/blob/master/apps/Icarouslib/fsw/platform_inc/Icarous_msg.h).
 ## Integration with Simulators (FlightGear/XPlane)
 
 #### load mission flight plan
